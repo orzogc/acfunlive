@@ -143,7 +143,7 @@ func (s streamer) recordLive(liveURL string, ch chan control) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
-			log.Println("下载" + s.ID + "（" + s.uidStr() + "）" + "的直播发生错误")
+			log.Println("下载" + s.ID + "（" + s.uidStr() + "）" + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			recMutex.Lock()
 			delete(recordMap, s.UID)
 			recMutex.Unlock()
