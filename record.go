@@ -149,11 +149,18 @@ func (s streamer) recordLive(liveURL string) {
 		}
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
 		udpPort++
-		cmd = exec.CommandContext(ctx, ffmpegFile, "-timeout", "20000000", "-i", liveURL, "-c", "copy", outFile, "-c", "copy", "-f", "mpegts", udpURL)
+		cmd = exec.CommandContext(ctx, ffmpegFile,
+			"-timeout", "10000000",
+			"-i", liveURL,
+			"-c", "copy", outFile,
+			"-c", "copy", "-f", "mpegts", udpURL)
 		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播")
 		fmt.Println("播放器的观看地址是：\n" + udpURL)
 	} else {
-		cmd = exec.CommandContext(ctx, ffmpegFile, "-timeout", "20000000", "-i", liveURL, "-c", "copy", outFile)
+		cmd = exec.CommandContext(ctx, ffmpegFile,
+			"-timeout", "10000000",
+			"-i", liveURL,
+			"-c", "copy", outFile)
 	}
 
 	stdin, err := cmd.StdinPipe()

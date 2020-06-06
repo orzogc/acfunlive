@@ -1,4 +1,4 @@
-module acfun_live
+module github.com/orzogc/acfun_live
 
 go 1.14
 
