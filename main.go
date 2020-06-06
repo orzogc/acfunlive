@@ -33,7 +33,8 @@ const (
 	startCycle control = iota
 	stopCycle
 	//startRecord
-	//stopRecord
+	stopRecord
+	liveOff
 	quit
 )
 
@@ -203,6 +204,8 @@ func (s streamer) cycle() {
 
 	logPrintln("开始监听" + s.ID + "（" + s.uidStr() + "）" + "的直播状态")
 
+	recCh := make(chan control, 5)
+
 	isLive := false
 	for {
 		select {
@@ -214,8 +217,7 @@ func (s streamer) cycle() {
 				if !isLive {
 					isLive = true
 					title := s.getTitle()
-					logPrintln(s.ID + "（" + s.uidStr() + "）" + "正在直播：")
-					fmt.Println(title)
+					logPrintln(s.ID + "（" + s.uidStr() + "）" + "正在直播：\n" + title)
 					hlsURL, flvURL := s.getStreamURL()
 					if hlsURL == "" {
 						log.Println("无法获取" + s.ID + "的直播源，尝试重启循环")
@@ -226,18 +228,15 @@ func (s streamer) cycle() {
 						ch <- restart
 						return
 					}
-					fmt.Println(s.ID + "的直播观看地址：")
-					fmt.Println(livePage + s.uidStr())
-					fmt.Println(s.ID + "直播源的hls和flv地址分别是：")
-					fmt.Println(hlsURL)
-					fmt.Println(flvURL)
+					fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
+					fmt.Println(s.ID + "直播源的hls和flv地址分别是：\n" + hlsURL + "\n" + flvURL)
 
 					if s.Notify {
 						desktopNotify(s.ID + "正在直播")
 					}
 					if s.Record {
 						// 下载hls直播源，想下载flv直播源的话可手动更改此处
-						go s.recordLive(hlsURL)
+						go s.recordLive(hlsURL, recCh)
 					}
 				}
 			} else {
@@ -246,6 +245,8 @@ func (s streamer) cycle() {
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
 					}
+
+					recCh <- liveOff
 				}
 				isLive = false
 			}
@@ -254,7 +255,7 @@ func (s streamer) cycle() {
 			rand.Seed(time.Now().UnixNano())
 			min := 20
 			max := 30
-			duration := rand.Intn(max-min+1) + min
+			duration := rand.Intn(max-min) + min
 			time.Sleep(time.Duration(duration) * time.Second)
 		}
 	}

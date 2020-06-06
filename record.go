@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -19,6 +20,7 @@ var udpPort = 50158
 type record struct {
 	stdin  io.WriteCloser
 	cancel context.CancelFunc
+	ch     chan control
 }
 
 // recordMap的锁
@@ -81,12 +83,43 @@ func delRecord(uid uint) {
 // 开始下载指定主播的直播
 func startRec(uid uint, restream bool) {
 	s := streamer{UID: uid, ID: getID(uid), Restream: restream}
+
+	recMutex.Lock()
+	_, ok := recordMap[s.UID]
+	recMutex.Unlock()
+	if ok {
+		fmt.Println("已经在下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
+		return
+	}
+
 	hlsURL, _ := s.getStreamURL()
 	if hlsURL == "" {
 		fmt.Println(s.ID + "不在直播，取消下载")
 		return
 	}
-	go s.recordLive(hlsURL)
+
+	recCh := make(chan control, 5)
+	go s.recordLive(hlsURL, recCh)
+
+	go func() {
+		for {
+			if !s.isLiveOn() {
+				recCh <- liveOff
+				break
+			}
+
+			// 大约每二十几秒获取一次主播的直播状态
+			rand.Seed(time.Now().UnixNano())
+			min := 20
+			max := 30
+			duration := rand.Intn(max-min) + min
+			time.Sleep(time.Duration(duration) * time.Second)
+		}
+
+		recMutex.Lock()
+		delete(recordMap, s.UID)
+		recMutex.Unlock()
+	}()
 }
 
 // 开始停止下载指定主播的直播
@@ -96,8 +129,8 @@ func stopRec(uid uint) {
 	recMutex.Unlock()
 	if ok {
 		fmt.Println("开始结束该主播的下载")
-		stdin := rec.stdin
-		io.WriteString(stdin, "q")
+		rec.ch <- stopRecord
+		io.WriteString(rec.stdin, "q")
 		time.Sleep(20 * time.Second)
 		rec.cancel()
 	} else {
@@ -106,7 +139,7 @@ func stopRec(uid uint) {
 }
 
 // 下载主播的直播
-func (s streamer) recordLive(liveURL string) {
+func (s streamer) recordLive(liveURL string, ch chan control) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
@@ -116,14 +149,6 @@ func (s streamer) recordLive(liveURL string) {
 			recMutex.Unlock()
 		}
 	}()
-
-	recMutex.Lock()
-	_, ok := recordMap[s.UID]
-	recMutex.Unlock()
-	if ok {
-		fmt.Println("已经在下载" + s.ID + "的直播")
-		return
-	}
 
 	ffmpegFile := "ffmpeg"
 	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
@@ -135,8 +160,7 @@ func (s streamer) recordLive(liveURL string) {
 	logPrintln("开始下载" + s.ID + "（" + s.uidStr() + "）" + "的直播")
 	recordTime := getTime()
 	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
-	fmt.Println("本次下载的文件保存在" + outFile)
-	fmt.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
+	fmt.Println("本次下载的文件保存在" + outFile + "\n" + "如果想提前结束下载，运行stoprecord " + s.uidStr())
 	desktopNotify("开始下载" + s.ID + "的直播")
 	// 运行ffmpeg下载直播
 	var cmd *exec.Cmd
@@ -150,15 +174,14 @@ func (s streamer) recordLive(liveURL string) {
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
 		udpPort++
 		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "10000000",
+			"-timeout", "30000000",
 			"-i", liveURL,
 			"-c", "copy", outFile,
 			"-c", "copy", "-f", "mpegts", udpURL)
-		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播")
-		fmt.Println("播放器的观看地址是：\n" + udpURL)
+		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播" + "\n" + "播放器的观看地址是：\n" + udpURL)
 	} else {
 		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "10000000",
+			"-timeout", "30000000",
 			"-i", liveURL,
 			"-c", "copy", outFile)
 	}
@@ -166,13 +189,33 @@ func (s streamer) recordLive(liveURL string) {
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)
 	defer stdin.Close()
-	rec := record{stdin: stdin, cancel: cancel}
+	rec := record{stdin: stdin, cancel: cancel, ch: ch}
 	recMutex.Lock()
 	recordMap[s.UID] = rec
 	recMutex.Unlock()
 
 	err = cmd.Run()
 	checkErr(err)
+
+	if s.isLiveOn() {
+		select {
+		case msg := <-ch:
+			switch msg {
+			case liveOff:
+				// 一般就是主播短时间内重开直播
+				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播，如果是临时下载，请运行startrecord " + s.uidStr() + "重新下载")
+				desktopNotify(s.ID + "可能短时间内重开直播")
+				return
+			case stopRecord:
+			}
+		default:
+			// 由于某种原因导致下载意外结束
+			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，重启下载")
+			desktopNotify("因意外结束下载" + s.ID + "的直播，重启下载")
+			go s.recordLive(liveURL, ch)
+			return
+		}
+	}
 
 	recMutex.Lock()
 	delete(recordMap, s.UID)
