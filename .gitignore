@@ -1,3 +1,7 @@
+acfun_live
+acfun_logo.ico
+*.json
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
