@@ -80,17 +80,10 @@ func delRecord(uid uint) {
 
 // 开始下载指定主播的直播
 func startRec(uid uint, restream bool) {
-	recMutex.Lock()
-	_, ok := recordMap[uid]
-	recMutex.Unlock()
-	if ok {
-		fmt.Println("已经在下载该主播的直播")
-		return
-	}
 	s := streamer{UID: uid, ID: getID(uid), Restream: restream}
 	hlsURL, _ := s.getStreamURL()
 	if hlsURL == "" {
-		fmt.Println("该主播不在直播，取消下载")
+		fmt.Println(s.ID + "不在直播，取消下载")
 		return
 	}
 	go s.recordLive(hlsURL)
@@ -105,7 +98,7 @@ func stopRec(uid uint) {
 		fmt.Println("开始结束该主播的下载")
 		stdin := rec.stdin
 		io.WriteString(stdin, "q")
-		time.Sleep(30 * time.Second)
+		time.Sleep(20 * time.Second)
 		rec.cancel()
 	} else {
 		fmt.Println("没有在下载该主播的直播")
@@ -123,6 +116,14 @@ func (s streamer) recordLive(liveURL string) {
 			recMutex.Unlock()
 		}
 	}()
+
+	recMutex.Lock()
+	_, ok := recordMap[s.UID]
+	recMutex.Unlock()
+	if ok {
+		fmt.Println("已经在下载" + s.ID + "的直播")
+		return
+	}
 
 	ffmpegFile := "ffmpeg"
 	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
@@ -162,6 +163,7 @@ func (s streamer) recordLive(liveURL string) {
 	recMutex.Lock()
 	recordMap[s.UID] = rec
 	recMutex.Unlock()
+
 	err = cmd.Run()
 	checkErr(err)
 
