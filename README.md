@@ -2,7 +2,7 @@
 AcFun直播通知和下载助手（命令行版本）
 
 ### 运行依赖
-- ffmpeg（Windows需要将ffmpeg.exe放在本程序所在文件夹内）
+- ffmpeg（下载直播需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 使用方法
 `acfun_live -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行help查看详细命令说明）
