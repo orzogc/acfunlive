@@ -186,6 +186,8 @@ func (s streamer) cycle() {
 		}
 	}()
 
+	const liveURL = "https://live.acfun.cn/live/"
+
 	chMutex.Lock()
 	ch := chMap[s.UID]
 	chMutex.Unlock()
@@ -224,6 +226,8 @@ func (s streamer) cycle() {
 						ch <- restart
 						return
 					}
+					fmt.Println(s.ID + "的直播观看地址：")
+					fmt.Println(liveURL + s.uidStr())
 					fmt.Println(s.ID + "直播源的hls和flv地址分别是：")
 					fmt.Println(hlsURL)
 					fmt.Println(flvURL)
