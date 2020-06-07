@@ -80,7 +80,7 @@ func delRecord(uid uint) {
 	saveConfig()
 }
 
-// 开始下载指定主播的直播
+// 临时下载指定主播的直播
 func startRec(uid uint, restream bool) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -130,7 +130,7 @@ func startRec(uid uint, restream bool) {
 	}()
 }
 
-// 开始停止下载指定主播的直播
+// 停止下载指定主播的直播
 func stopRec(uid uint) {
 	recMutex.Lock()
 	rec, ok := recordMap[uid]
@@ -226,7 +226,7 @@ func (s streamer) recordLive(ch chan control) {
 			case liveOff:
 				// 一般就是主播短时间内重开直播
 				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播，如果是临时下载，请运行startrecord " + s.uidStr() + "重新下载")
-				desktopNotify(s.ID + "可能短时间内重开直播，下载结束")
+				desktopNotify(s.ID + "可能短时间内重开直播")
 				return
 			case stopRecord:
 			}
