@@ -177,6 +177,7 @@ func main() {
 				// 结束下载直播
 				recMutex.Lock()
 				for _, rec := range recordMap {
+					rec.ch <- stopRecord
 					io.WriteString(rec.stdin, "q")
 				}
 				recMutex.Unlock()
