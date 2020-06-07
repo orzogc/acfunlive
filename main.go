@@ -174,7 +174,7 @@ func main() {
 					ch <- msg
 				}
 				chMutex.Unlock()
-				// 结束录像
+				// 结束下载直播
 				recMutex.Lock()
 				for _, rec := range recordMap {
 					stdin := rec.stdin
