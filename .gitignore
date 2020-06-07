@@ -1,6 +1,8 @@
 acfun_live
 acfun_logo.ico
 *.json
+*.mp4
+*.flv
 
 # Binaries for programs and plugins
 *.exe
