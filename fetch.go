@@ -48,7 +48,7 @@ func (s streamer) isLiveOn() (isLive bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in isLiveOn(), the error is:", err)
-			log.Println("获取" + s.ID + "（" + s.uidStr() + "）" + "的直播状态时出错，尝试重新运行")
+			log.Println("获取" + s.longID() + "的直播状态时出错，尝试重新运行")
 			isLive = s.isLiveOn()
 		}
 	}()

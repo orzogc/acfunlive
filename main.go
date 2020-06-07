@@ -64,6 +64,10 @@ func (s streamer) uidStr() string {
 	return fmt.Sprint(s.UID)
 }
 
+func (s streamer) longID() string {
+	return s.ID + "（" + s.uidStr() + "）"
+}
+
 // 命令行参数处理
 func argsHandle() bool {
 	const usageStr = "本程序用于AcFun主播的开播提醒和自动下载直播"

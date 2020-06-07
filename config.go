@@ -150,7 +150,7 @@ func cycleConfig(ctx context.Context) {
 						if s.UID == olds.UID {
 							if s != olds {
 								// olds的设置被改变
-								logPrintln(s.ID + "（" + s.uidStr() + "）" + "的设置被修改，重新设置")
+								logPrintln(s.longID() + "的设置被修改，重新设置")
 								restart := controlMsg{s: s, c: startCycle}
 								chMutex.Lock()
 								ch := chMap[s.UID]
@@ -161,7 +161,7 @@ func cycleConfig(ctx context.Context) {
 						} else {
 							if i == len(oldStreamers)-1 {
 								// s为新增的主播
-								logPrintln("新增" + s.ID + "（" + s.uidStr() + "）" + "的设置")
+								logPrintln("新增" + s.longID() + "的设置")
 								start := controlMsg{s: s, c: startCycle}
 								chMutex.Lock()
 								ch := chMap[0]
@@ -179,7 +179,7 @@ func cycleConfig(ctx context.Context) {
 						} else {
 							if i == len(streamers)-1 {
 								// olds为被删除的主播
-								logPrintln(olds.ID + "（" + s.uidStr() + "）" + "的设置被删除")
+								logPrintln(olds.longID() + "的设置被删除")
 								stop := controlMsg{s: olds, c: stopCycle}
 								chMutex.Lock()
 								ch := chMap[olds.UID]
