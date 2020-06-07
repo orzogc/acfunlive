@@ -8,6 +8,27 @@ import (
 	"time"
 )
 
+// 处理管道信号
+func (s streamer) handleMsg(msg controlMsg) {
+	switch msg.c {
+	case startCycle:
+		logPrintln("重启监听" + s.ID + "（" + s.uidStr() + "）" + "的直播状态")
+		chMutex.Lock()
+		ch := chMap[0]
+		chMutex.Unlock()
+		ch <- msg
+	case stopCycle:
+		logPrintln("删除" + s.ID)
+		chMutex.Lock()
+		delete(chMap, s.UID)
+		chMutex.Unlock()
+	case quit:
+		logPrintln("正在退出" + s.ID + "（" + s.uidStr() + "）" + "的循环")
+	default:
+		log.Println("未知controlMsg：", msg)
+	}
+}
+
 // 循环获取指定主播的直播状态，通知开播和自动下载直播
 func (s streamer) cycle() {
 	defer func() {
@@ -70,7 +91,7 @@ func (s streamer) cycle() {
 						desktopNotify(s.ID + "正在直播")
 					}
 					if s.Record {
-						// 下载hls直播源，想下载flv直播源的话可手动更改此处
+						// 下载直播源
 						go s.recordLive(recCh)
 					}
 				}

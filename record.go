@@ -151,6 +151,7 @@ func (s streamer) recordLive(ch chan control) {
 		}
 	}()
 
+	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _ := s.getStreamURL()
 	if liveURL == "" {
 		log.Println("无法获取" + s.ID + "（" + s.uidStr() + "）" + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
@@ -205,7 +206,7 @@ func (s streamer) recordLive(ch chan control) {
 	err = cmd.Run()
 	//checkErr(err)
 	if err != nil {
-		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，重启下载：", err)
+		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，尝试重启下载：", err)
 		desktopNotify("下载" + s.ID + "的直播发生错误，尝试重启下载")
 	}
 
@@ -222,7 +223,7 @@ func (s streamer) recordLive(ch chan control) {
 			}
 		default:
 			// 由于某种原因导致下载意外结束
-			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，重启下载")
+			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，尝试重启下载")
 			desktopNotify("因意外结束下载" + s.ID + "的直播，尝试重启下载")
 			go s.recordLive(ch)
 			return

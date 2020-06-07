@@ -9,27 +9,6 @@ import (
 	"strings"
 )
 
-// 处理管道信号
-func (s streamer) handleMsg(msg controlMsg) {
-	switch msg.c {
-	case startCycle:
-		logPrintln("重启监听" + s.ID + "（" + s.uidStr() + "）" + "的直播状态")
-		chMutex.Lock()
-		ch := chMap[0]
-		chMutex.Unlock()
-		ch <- msg
-	case stopCycle:
-		logPrintln("删除" + s.ID)
-		chMutex.Lock()
-		delete(chMap, s.UID)
-		chMutex.Unlock()
-	case quit:
-		logPrintln("正在退出" + s.ID + "（" + s.uidStr() + "）" + "的循环")
-	default:
-		log.Println("未知controlMsg：", msg)
-	}
-}
-
 // 打印错误命令信息
 func printErr() {
 	fmt.Println("请输入正确的命令，输入help查看全部命令的解释")
