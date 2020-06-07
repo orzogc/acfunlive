@@ -95,13 +95,14 @@ func (s streamer) cycle() {
 						// 查看下载是否已经启动
 						recMutex.Lock()
 						rec, ok := recordMap[s.UID]
-						recMutex.Unlock()
 						if ok {
+							// 有下载时recordLive()会自行处理
 							recCh = rec.ch
 						} else {
 							// 没有下载时启动下载直播源
 							go s.recordLive(recCh)
 						}
+						recMutex.Unlock()
 					}
 				}
 			} else {

@@ -117,12 +117,6 @@ func stopRec(uid uint) {
 	}
 }
 
-func delRecMap(uid uint) {
-	recMutex.Lock()
-	delete(recordMap, uid)
-	recMutex.Unlock()
-}
-
 // 下载主播的直播
 func (s streamer) recordLive(ch chan control) {
 	defer func() {
@@ -130,7 +124,9 @@ func (s streamer) recordLive(ch chan control) {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
 			log.Println("下载" + s.ID + "（" + s.uidStr() + "）" + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			desktopNotify("下载" + s.ID + "的直播发生错误")
-			delRecMap(s.UID)
+			recMutex.Lock()
+			delete(recordMap, s.UID)
+			recMutex.Unlock()
 		}
 	}()
 
@@ -150,7 +146,6 @@ func (s streamer) recordLive(ch chan control) {
 	if liveURL == "" {
 		log.Println("无法获取" + s.ID + "（" + s.uidStr() + "）" + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
 		desktopNotify("无法获取" + s.ID + "的直播源，退出下载")
-		delRecMap(s.UID)
 		return
 	}
 
@@ -174,7 +169,6 @@ func (s streamer) recordLive(ch chan control) {
 		if udpPort > 65535 {
 			log.Println("UDP端口不能超过65535，请重新运行本程序")
 			desktopNotify("UDP端口不能超过65535，请重新运行本程序")
-			delRecMap(s.UID)
 			return
 		}
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
@@ -205,10 +199,12 @@ func (s streamer) recordLive(ch chan control) {
 		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，尝试重启下载：", err)
 	}
 
+	recMutex.Lock()
 	if s.isLiveOn() {
 		select {
 		case msg := <-ch:
 			switch msg {
+			// 收到退出信号
 			case stopRecord:
 			}
 		default:
@@ -217,8 +213,9 @@ func (s streamer) recordLive(ch chan control) {
 			go s.recordLive(ch)
 		}
 	}
+	delete(recordMap, s.UID)
+	recMutex.Unlock()
 
-	delRecMap(s.UID)
 	logPrintln(s.ID + "（" + s.uidStr() + "）" + "的直播下载已经结束")
 	desktopNotify(s.ID + "的直播下载已经结束")
 }
