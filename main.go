@@ -177,8 +177,7 @@ func main() {
 				// 结束下载直播
 				recMutex.Lock()
 				for _, rec := range recordMap {
-					stdin := rec.stdin
-					io.WriteString(stdin, "q")
+					io.WriteString(rec.stdin, "q")
 				}
 				recMutex.Unlock()
 				// 等待30秒，等待其他goroutine结束

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -43,7 +44,15 @@ func fetchLivePage(uid uint) *goquery.Document {
 }
 
 // 查看主播是否在直播
-func (s streamer) isLiveOn() bool {
+func (s streamer) isLiveOn() (isLive bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Recovering from panic in isLiveOn(), the error is:", err)
+			log.Println("获取" + s.ID + "（" + s.uidStr() + "）" + "的直播状态时出错，尝试重新运行")
+			isLive = s.isLiveOn()
+		}
+	}()
+
 	doc := fetchLivePage(s.UID)
 
 	if doc.Find("p.closed-tip").Text() == "直播已结束" {

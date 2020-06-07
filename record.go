@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -18,9 +17,10 @@ var udpPort = 50158
 
 // record用来传递下载信息
 type record struct {
-	stdin  io.WriteCloser
-	cancel context.CancelFunc
-	ch     chan control
+	stdin     io.WriteCloser
+	cancel    context.CancelFunc
+	ch        chan control
+	isLiveOff bool
 }
 
 // recordMap的锁
@@ -82,15 +82,6 @@ func delRecord(uid uint) {
 
 // 临时下载指定主播的直播
 func startRec(uid uint, restream bool) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println("Recovering from panic in startRec(), the error is:", err)
-			log.Println("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，停止下载，如要重启下载，请运行startrecord " + fmt.Sprint(uid))
-			desktopNotify("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，停止下载")
-			stopRec(uid)
-		}
-	}()
-
 	s := streamer{UID: uid, ID: getID(uid), Restream: restream}
 
 	recMutex.Lock()
@@ -106,24 +97,8 @@ func startRec(uid uint, restream bool) {
 		return
 	}
 
-	recCh := make(chan control, 5)
+	recCh := make(chan control, 20)
 	go s.recordLive(recCh)
-
-	go func() {
-		for {
-			if !s.isLiveOn() {
-				recCh <- liveOff
-				break
-			}
-
-			// 大约每二十几秒获取一次主播的直播状态
-			rand.Seed(time.Now().UnixNano())
-			min := 20
-			max := 30
-			duration := rand.Intn(max-min) + min
-			time.Sleep(time.Duration(duration) * time.Second)
-		}
-	}()
 }
 
 // 停止下载指定主播的直播
@@ -142,6 +117,12 @@ func stopRec(uid uint) {
 	}
 }
 
+func delRecMap(uid uint) {
+	recMutex.Lock()
+	delete(recordMap, uid)
+	recMutex.Unlock()
+}
+
 // 下载主播的直播
 func (s streamer) recordLive(ch chan control) {
 	defer func() {
@@ -149,9 +130,7 @@ func (s streamer) recordLive(ch chan control) {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
 			log.Println("下载" + s.ID + "（" + s.uidStr() + "）" + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			desktopNotify("下载" + s.ID + "的直播发生错误")
-			recMutex.Lock()
-			delete(recordMap, s.UID)
-			recMutex.Unlock()
+			delRecMap(s.UID)
 		}
 	}()
 
@@ -171,6 +150,7 @@ func (s streamer) recordLive(ch chan control) {
 	if liveURL == "" {
 		log.Println("无法获取" + s.ID + "（" + s.uidStr() + "）" + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
 		desktopNotify("无法获取" + s.ID + "的直播源，退出下载")
+		delRecMap(s.UID)
 		return
 	}
 
@@ -194,6 +174,7 @@ func (s streamer) recordLive(ch chan control) {
 		if udpPort > 65535 {
 			log.Println("UDP端口不能超过65535，请重新运行本程序")
 			desktopNotify("UDP端口不能超过65535，请重新运行本程序")
+			delRecMap(s.UID)
 			return
 		}
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
@@ -232,7 +213,7 @@ func (s streamer) recordLive(ch chan control) {
 			switch msg {
 			case liveOff:
 				// 一般就是主播短时间内重开直播
-				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播，如果是临时下载，请运行startrecord " + s.uidStr() + "重新下载")
+				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播")
 				//desktopNotify(s.ID + "可能短时间内重开直播")
 			case stopRecord:
 			}
@@ -244,9 +225,7 @@ func (s streamer) recordLive(ch chan control) {
 		}
 	}
 
-	recMutex.Lock()
-	delete(recordMap, s.UID)
-	recMutex.Unlock()
+	delRecMap(s.UID)
 	logPrintln(s.ID + "（" + s.uidStr() + "）" + "的直播下载已经结束")
 	desktopNotify(s.ID + "的直播下载已经结束")
 }

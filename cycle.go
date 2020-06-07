@@ -37,19 +37,6 @@ func (s streamer) cycle() {
 			log.Println("Recovering from panic in cycle(), the error is:", err)
 			log.Println(s.ID + "（" + s.uidStr() + "）" + "的循环处理发生错误")
 
-			if s.Record {
-				recMutex.Lock()
-				rec, ok := recordMap[s.UID]
-				recMutex.Unlock()
-				if ok {
-					fmt.Println("开始结束下载" + s.ID + "的直播")
-					rec.ch <- stopRecord
-					io.WriteString(rec.stdin, "q")
-					time.Sleep(20 * time.Second)
-					rec.cancel()
-				}
-			}
-
 			restart := controlMsg{s: s, c: startCycle}
 			chMutex.Lock()
 			ch := chMap[0]
@@ -75,7 +62,7 @@ func (s streamer) cycle() {
 
 	logPrintln("开始监听" + s.ID + "（" + s.uidStr() + "）" + "的直播状态")
 
-	recCh := make(chan control, 5)
+	recCh := make(chan control, 20)
 
 	isLive := false
 	for {
@@ -106,8 +93,23 @@ func (s streamer) cycle() {
 						desktopNotify(s.ID + "正在直播")
 					}
 					if s.Record {
-						// 下载直播源
-						go s.recordLive(recCh)
+						// 查看下载是否已经启动
+						recMutex.Lock()
+						rec, ok := recordMap[s.UID]
+						recMutex.Unlock()
+						if ok {
+							if rec.isLiveOff {
+								// 短时间内直播重开
+								io.WriteString(rec.stdin, "q")
+								go s.recordLive(recCh)
+							} else {
+								// 直播时循环被重新启动
+								recCh = rec.ch
+							}
+						} else {
+							// 没有下载时启动下载直播源
+							go s.recordLive(recCh)
+						}
 					}
 				}
 			} else {
@@ -117,7 +119,16 @@ func (s streamer) cycle() {
 						desktopNotify(s.ID + "已经下播")
 					}
 
-					recCh <- liveOff
+					if s.Record {
+						recMutex.Lock()
+						rec, ok := recordMap[s.UID]
+						if ok {
+							rec.isLiveOff = true
+							recordMap[s.UID] = rec
+							rec.ch <- liveOff
+						}
+						recMutex.Unlock()
+					}
 				}
 				isLive = false
 			}
