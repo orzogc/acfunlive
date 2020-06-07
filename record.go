@@ -186,6 +186,7 @@ func (s streamer) recordLive(ch chan control) {
 	if s.Restream {
 		if udpPort > 65535 {
 			log.Println("UDP端口不能超过65535，请重新运行本程序")
+			desktopNotify("UDP端口不能超过65535，请重新运行本程序")
 			return
 		}
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
@@ -215,7 +216,7 @@ func (s streamer) recordLive(ch chan control) {
 	//checkErr(err)
 	if err != nil {
 		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，尝试重启下载：", err)
-		desktopNotify("下载" + s.ID + "的直播发生错误，尝试重启下载")
+		//desktopNotify("下载" + s.ID + "的直播发生错误，尝试重启下载")
 	}
 
 	if s.isLiveOn() {
@@ -225,7 +226,7 @@ func (s streamer) recordLive(ch chan control) {
 			case liveOff:
 				// 一般就是主播短时间内重开直播
 				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播，如果是临时下载，请运行startrecord " + s.uidStr() + "重新下载")
-				desktopNotify(s.ID + "可能短时间内重开直播")
+				desktopNotify(s.ID + "可能短时间内重开直播，下载结束")
 				return
 			case stopRecord:
 			}
