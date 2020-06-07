@@ -30,7 +30,7 @@ const (
 	stopCycle
 	//startRecord
 	stopRecord
-	liveOff
+	//liveOff
 	quit
 )
 

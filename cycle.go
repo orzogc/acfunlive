@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"math/rand"
 	"time"
@@ -98,14 +97,7 @@ func (s streamer) cycle() {
 						rec, ok := recordMap[s.UID]
 						recMutex.Unlock()
 						if ok {
-							if rec.isLiveOff {
-								// 短时间内直播重开
-								io.WriteString(rec.stdin, "q")
-								go s.recordLive(recCh)
-							} else {
-								// 直播时循环被重新启动
-								recCh = rec.ch
-							}
+							recCh = rec.ch
 						} else {
 							// 没有下载时启动下载直播源
 							go s.recordLive(recCh)
@@ -117,17 +109,6 @@ func (s streamer) cycle() {
 					logPrintln(s.ID + "（" + s.uidStr() + "）" + "已经下播")
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
-					}
-
-					if s.Record {
-						recMutex.Lock()
-						rec, ok := recordMap[s.UID]
-						if ok {
-							rec.isLiveOff = true
-							recordMap[s.UID] = rec
-							rec.ch <- liveOff
-						}
-						recMutex.Unlock()
 					}
 				}
 				isLive = false

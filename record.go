@@ -17,10 +17,10 @@ var udpPort = 50158
 
 // record用来传递下载信息
 type record struct {
-	stdin     io.WriteCloser
-	cancel    context.CancelFunc
-	ch        chan control
-	isLiveOff bool
+	stdin  io.WriteCloser
+	cancel context.CancelFunc
+	ch     chan control
+	//isLiveOff bool
 }
 
 // recordMap的锁
@@ -201,26 +201,19 @@ func (s streamer) recordLive(ch chan control) {
 	recMutex.Unlock()
 
 	err = cmd.Run()
-	//checkErr(err)
 	if err != nil {
 		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，尝试重启下载：", err)
-		//desktopNotify("下载" + s.ID + "的直播发生错误，尝试重启下载")
 	}
 
 	if s.isLiveOn() {
 		select {
 		case msg := <-ch:
 			switch msg {
-			case liveOff:
-				// 一般就是主播短时间内重开直播
-				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播")
-				//desktopNotify(s.ID + "可能短时间内重开直播")
 			case stopRecord:
 			}
 		default:
 			// 由于某种原因导致下载意外结束
 			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，尝试重启下载")
-			//desktopNotify("因意外结束下载" + s.ID + "的直播，尝试重启下载")
 			go s.recordLive(ch)
 		}
 	}
