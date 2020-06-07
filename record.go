@@ -85,8 +85,8 @@ func startRec(uid uint, restream bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in startRec(), the error is:", err)
-			log.Println("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，如要重启下载，请运行startrecord " + fmt.Sprint(uid))
-			desktopNotify("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误")
+			log.Println("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，停止下载，如要重启下载，请运行startrecord " + fmt.Sprint(uid))
+			desktopNotify("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，停止下载")
 			stopRec(uid)
 		}
 	}()
@@ -123,10 +123,6 @@ func startRec(uid uint, restream bool) {
 			duration := rand.Intn(max-min) + min
 			time.Sleep(time.Duration(duration) * time.Second)
 		}
-
-		recMutex.Lock()
-		delete(recordMap, s.UID)
-		recMutex.Unlock()
 	}()
 }
 
@@ -158,6 +154,17 @@ func (s streamer) recordLive(ch chan control) {
 			recMutex.Unlock()
 		}
 	}()
+
+	// 只能有一个在下载
+	for {
+		recMutex.Lock()
+		_, ok := recordMap[s.UID]
+		recMutex.Unlock()
+		if !ok {
+			break
+		}
+		time.Sleep(time.Second)
+	}
 
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _ := s.getStreamURL()
@@ -226,16 +233,14 @@ func (s streamer) recordLive(ch chan control) {
 			case liveOff:
 				// 一般就是主播短时间内重开直播
 				logPrintln(s.ID + "（" + s.uidStr() + "）" + "可能短时间内重开直播，如果是临时下载，请运行startrecord " + s.uidStr() + "重新下载")
-				desktopNotify(s.ID + "可能短时间内重开直播")
-				return
+				//desktopNotify(s.ID + "可能短时间内重开直播")
 			case stopRecord:
 			}
 		default:
 			// 由于某种原因导致下载意外结束
 			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，尝试重启下载")
-			desktopNotify("因意外结束下载" + s.ID + "的直播，尝试重启下载")
+			//desktopNotify("因意外结束下载" + s.ID + "的直播，尝试重启下载")
 			go s.recordLive(ch)
-			return
 		}
 	}
 
