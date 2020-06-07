@@ -92,14 +92,14 @@ func startRec(uid uint, restream bool) {
 		return
 	}
 
-	hlsURL, _ := s.getStreamURL()
-	if hlsURL == "" {
+	_, flvURL := s.getStreamURL()
+	if flvURL == "" {
 		fmt.Println(s.ID + "不在直播，取消下载")
 		return
 	}
 
 	recCh := make(chan control, 5)
-	go s.recordLive(hlsURL, recCh)
+	go s.recordLive(recCh)
 
 	go func() {
 		for {
@@ -139,16 +139,24 @@ func stopRec(uid uint) {
 }
 
 // 下载主播的直播
-func (s streamer) recordLive(liveURL string, ch chan control) {
+func (s streamer) recordLive(ch chan control) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
 			log.Println("下载" + s.ID + "（" + s.uidStr() + "）" + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
+			desktopNotify("下载" + s.ID + "的直播发生错误")
 			recMutex.Lock()
 			delete(recordMap, s.UID)
 			recMutex.Unlock()
 		}
 	}()
+
+	liveURL, _ := s.getStreamURL()
+	if liveURL == "" {
+		log.Println("无法获取" + s.ID + "（" + s.uidStr() + "）" + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
+		desktopNotify("无法获取" + s.ID + "的直播源，退出下载")
+		return
+	}
 
 	ffmpegFile := "ffmpeg"
 	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
@@ -174,14 +182,14 @@ func (s streamer) recordLive(liveURL string, ch chan control) {
 		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
 		udpPort++
 		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "30000000",
+			"-timeout", "10000000",
 			"-i", liveURL,
 			"-c", "copy", outFile,
 			"-c", "copy", "-f", "mpegts", udpURL)
 		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播" + "\n" + "播放器的观看地址是：\n" + udpURL)
 	} else {
 		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "30000000",
+			"-timeout", "10000000",
 			"-i", liveURL,
 			"-c", "copy", outFile)
 	}
@@ -195,7 +203,11 @@ func (s streamer) recordLive(liveURL string, ch chan control) {
 	recMutex.Unlock()
 
 	err = cmd.Run()
-	checkErr(err)
+	//checkErr(err)
+	if err != nil {
+		log.Println("下载"+s.ID+"（"+s.uidStr()+"）"+"的直播出现错误，重启下载：", err)
+		desktopNotify("下载" + s.ID + "的直播发生错误，尝试重启下载")
+	}
 
 	if s.isLiveOn() {
 		select {
@@ -211,8 +223,8 @@ func (s streamer) recordLive(liveURL string, ch chan control) {
 		default:
 			// 由于某种原因导致下载意外结束
 			logPrintln("因意外结束下载" + s.ID + "（" + s.uidStr() + "）" + "的直播，重启下载")
-			desktopNotify("因意外结束下载" + s.ID + "的直播，重启下载")
-			go s.recordLive(liveURL, ch)
+			desktopNotify("因意外结束下载" + s.ID + "的直播，尝试重启下载")
+			go s.recordLive(ch)
 			return
 		}
 	}
