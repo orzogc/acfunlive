@@ -82,6 +82,15 @@ func delRecord(uid uint) {
 
 // 开始下载指定主播的直播
 func startRec(uid uint, restream bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Recovering from panic in startRec(), the error is:", err)
+			log.Println("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误，如要重启下载，请运行startrecord " + fmt.Sprint(uid))
+			desktopNotify("临时下载" + fmt.Sprint(uid) + "直播的循环出现错误")
+			stopRec(uid)
+		}
+	}()
+
 	s := streamer{UID: uid, ID: getID(uid), Restream: restream}
 
 	recMutex.Lock()

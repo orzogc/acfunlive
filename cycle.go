@@ -37,15 +37,17 @@ func (s streamer) cycle() {
 			log.Println("Recovering from panic in cycle(), the error is:", err)
 			log.Println(s.ID + "（" + s.uidStr() + "）" + "的循环处理发生错误")
 
-			recMutex.Lock()
-			rec, ok := recordMap[s.UID]
-			recMutex.Unlock()
-			if ok {
-				fmt.Println("开始结束下载" + s.ID + "的直播")
-				rec.ch <- stopRecord
-				io.WriteString(rec.stdin, "q")
-				time.Sleep(20 * time.Second)
-				rec.cancel()
+			if s.Record {
+				recMutex.Lock()
+				rec, ok := recordMap[s.UID]
+				recMutex.Unlock()
+				if ok {
+					fmt.Println("开始结束下载" + s.ID + "的直播")
+					rec.ch <- stopRecord
+					io.WriteString(rec.stdin, "q")
+					time.Sleep(20 * time.Second)
+					rec.cancel()
+				}
 			}
 
 			restart := controlMsg{s: s, c: startCycle}
