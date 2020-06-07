@@ -92,8 +92,7 @@ func startRec(uid uint, restream bool) {
 		return
 	}
 
-	_, flvURL := s.getStreamURL()
-	if flvURL == "" {
+	if !s.isLiveOn() {
 		fmt.Println(s.ID + "不在直播，取消下载")
 		return
 	}
