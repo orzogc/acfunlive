@@ -35,7 +35,8 @@ func handleInput() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in handleInput(), the error is:", err)
-			log.Println("输入处理发生错误")
+			log.Println("输入处理发生错误，尝试重启输入处理")
+			go handleInput()
 		}
 	}()
 

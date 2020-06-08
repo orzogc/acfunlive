@@ -35,7 +35,7 @@ func (s streamer) cycle() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in cycle(), the error is:", err)
-			log.Println(s.longID() + "的循环处理发生错误")
+			log.Println(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
 			chMutex.Lock()
