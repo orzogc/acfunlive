@@ -60,10 +60,12 @@ func logPrintln(log string) {
 	fmt.Println(timeStr + " " + log)
 }
 
+// 将UID转换成字符串
 func (s streamer) uidStr() string {
 	return fmt.Sprint(s.UID)
 }
 
+// 返回ID（UID）形式的字符串
 func (s streamer) longID() string {
 	return s.ID + "（" + s.uidStr() + "）"
 }
