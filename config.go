@@ -126,6 +126,7 @@ func cycleConfig(ctx context.Context) {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in cycleConfig(), the error is:", err)
 			log.Println("循环读取设置文件" + configFile + "时出错，请重新运行本程序")
+			desktopNotify("循环读取设置文件" + configFile + "时出错，请重新运行本程序")
 		}
 	}()
 
