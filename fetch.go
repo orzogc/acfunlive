@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -39,7 +40,7 @@ func fetchPage(page string) *goquery.Document {
 
 // 爬取主播wap版直播页面
 func fetchLivePage(uid uint) *goquery.Document {
-	upLivePage := acLivePage + fmt.Sprint(uid)
+	upLivePage := acLivePage + strconv.Itoa(int(uid))
 	return fetchPage(upLivePage)
 }
 
@@ -149,7 +150,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	serviceToken := string(v.GetStringBytes("acfun.api.visitor_st"))
 
 	// 获取直播源的地址需要userId、did和对应的令牌
-	streamPage := "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=OUTSIDE_IOS_H5&userId=" + fmt.Sprint(userID) + "&did=" + did + "&acfun.api.visitor_st=" + serviceToken
+	streamPage := "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=OUTSIDE_IOS_H5&userId=" + strconv.Itoa(userID) + "&did=" + did + "&acfun.api.visitor_st=" + serviceToken
 
 	form = url.Values{}
 	// authorId就是主播的uid

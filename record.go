@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -171,7 +172,7 @@ func (s streamer) recordLive(ch chan control) {
 			desktopNotify("UDP端口不能超过65535，请重新运行本程序")
 			return
 		}
-		udpURL := "udp://@127.0.0.1:" + fmt.Sprint(udpPort)
+		udpURL := "udp://@127.0.0.1:" + strconv.Itoa(udpPort)
 		udpPort++
 		cmd = exec.CommandContext(ctx, ffmpegFile,
 			"-timeout", "10000000",

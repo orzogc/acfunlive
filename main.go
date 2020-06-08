@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -62,7 +63,7 @@ func logPrintln(log string) {
 
 // 将UID转换成字符串
 func (s streamer) uidStr() string {
-	return fmt.Sprint(s.UID)
+	return strconv.Itoa(int(s.UID))
 }
 
 // 返回ID（UID）形式的字符串
