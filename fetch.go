@@ -198,8 +198,10 @@ func printStreamURL(uid uint) {
 	s := streamer{UID: uid, ID: id}
 
 	if s.isLiveOn() {
-		fmt.Println(s.longID() + "正在直播")
+		title := s.getTitle()
 		hlsURL, flvURL := s.getStreamURL()
+		fmt.Println(s.longID() + "正在直播：")
+		fmt.Println(title)
 		fmt.Println(s.longID() + "直播源的hls和flv地址分别是：")
 		fmt.Println(hlsURL)
 		fmt.Println(flvURL)
