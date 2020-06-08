@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const livePage = "https://live.acfun.cn/live/"
+
 // 处理管道信号
 func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
@@ -42,8 +44,6 @@ func (s streamer) cycle() {
 			ch <- restart
 		}
 	}()
-
-	const livePage = "https://live.acfun.cn/live/"
 
 	chMutex.Lock()
 	ch := chMap[s.UID]

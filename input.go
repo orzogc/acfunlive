@@ -11,7 +11,8 @@ import (
 )
 
 // 帮助信息
-const helpMsg = `adduid 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
+const helpMsg = `listlive：列出正在直播的主播
+adduid 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 deluid 数字：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 addrecuid 数字：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
 delrecuid 数字：取消自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -42,6 +43,13 @@ func handleInput() {
 		cmd := strings.Fields(scanner.Text())
 		if len(cmd) == 1 {
 			switch cmd[0] {
+			case "listlive":
+				fmt.Println("正在直播的主播：")
+				for _, s := range streamers {
+					if s.isLiveOn() {
+						fmt.Println(s.longID() + "：" + livePage + s.uidStr())
+					}
+				}
 			case "help":
 				fmt.Println(helpMsg)
 			case "quit":
