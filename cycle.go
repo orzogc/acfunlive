@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -75,18 +74,20 @@ func (s streamer) cycle() {
 					isLive = true
 					title := s.getTitle()
 					logPrintln(s.longID() + "正在直播：\n" + title)
-					hlsURL, flvURL := s.getStreamURL()
-					if flvURL == "" {
-						log.Println("无法获取" + s.ID + "的直播源，尝试重启循环")
-						restart := controlMsg{s: s, c: startCycle}
-						chMutex.Lock()
-						ch := chMap[0]
-						chMutex.Unlock()
-						ch <- restart
-						return
-					}
-					fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
-					fmt.Println(s.ID + "直播源的hls和flv地址分别是：\n" + hlsURL + "\n" + flvURL)
+					/*
+						hlsURL, flvURL := s.getStreamURL()
+						if flvURL == "" {
+							log.Println("无法获取" + s.ID + "的直播源，尝试重启循环")
+							restart := controlMsg{s: s, c: startCycle}
+							chMutex.Lock()
+							ch := chMap[0]
+							chMutex.Unlock()
+							ch <- restart
+							return
+						}
+						fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
+						fmt.Println(s.ID + "直播源的hls和flv地址分别是：\n" + hlsURL + "\n" + flvURL)
+					*/
 
 					if s.Notify {
 						desktopNotify(s.ID + "正在直播")
