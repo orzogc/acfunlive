@@ -27,7 +27,7 @@ func (s streamer) handleMsg(msg controlMsg) {
 	case quit:
 		logPrintln("正在退出" + s.longID() + "的循环")
 	default:
-		log.Println("未知controlMsg：", msg)
+		log.Println("未知的controlMsg：", msg)
 	}
 }
 
@@ -60,8 +60,6 @@ func (s streamer) cycle() {
 	}
 
 	logPrintln("开始监听" + s.longID() + "的直播状态")
-
-	recCh := make(chan control, 20)
 
 	isLive := false
 	for {
@@ -96,13 +94,10 @@ func (s streamer) cycle() {
 					if s.Record {
 						// 查看下载是否已经启动
 						recMutex.Lock()
-						rec, ok := recordMap[s.UID]
-						if ok {
-							// 有下载时recordLive()会自行处理
-							recCh = rec.ch
-						} else {
-							// 没有下载时启动下载直播源
-							go s.recordLive(recCh)
+						_, ok := recordMap[s.UID]
+						if !ok {
+							// 没有下载时启动下载直播源，有下载时recordLive()会自行处理
+							go s.recordLive()
 						}
 						recMutex.Unlock()
 					} else {

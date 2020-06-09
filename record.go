@@ -98,8 +98,7 @@ func startRec(uid uint, restream bool) {
 		return
 	}
 
-	recCh := make(chan control, 20)
-	go s.recordLive(recCh)
+	go s.recordLive()
 }
 
 // 停止下载指定主播的直播
@@ -119,7 +118,7 @@ func stopRec(uid uint) {
 }
 
 // 下载主播的直播
-func (s streamer) recordLive(ch chan control) {
+func (s streamer) recordLive() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println("Recovering from panic in recordLive(), the error is:", err)
@@ -190,6 +189,7 @@ func (s streamer) recordLive(ch chan control) {
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)
 	defer stdin.Close()
+	ch := make(chan control, 20)
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
 	recMutex.Lock()
 	recordMap[s.UID] = rec
@@ -207,11 +207,13 @@ func (s streamer) recordLive(ch chan control) {
 			switch msg {
 			// 收到退出信号
 			case stopRecord:
+			default:
+				log.Println("未知的controlMsg：", msg)
 			}
 		default:
 			// 由于某种原因导致下载意外结束
 			logPrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
-			go s.recordLive(ch)
+			go s.recordLive()
 		}
 	}
 	delete(recordMap, s.UID)
