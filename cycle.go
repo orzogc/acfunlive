@@ -72,8 +72,8 @@ func (s streamer) cycle() {
 				if !isLive {
 					isLive = true
 					title := s.getTitle()
-					logPrintln(s.longID() + "正在直播：\n" + title)
-					fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
+					logPrintln(s.longID() + "正在直播：" + title)
+					fmt.Println(s.ID + "的直播观看地址：" + livePage + s.uidStr())
 					/*
 						hlsURL, flvURL := s.getStreamURL()
 						if flvURL == "" {
@@ -89,7 +89,7 @@ func (s streamer) cycle() {
 					*/
 
 					if s.Notify {
-						desktopNotify(s.ID + "正在直播")
+						desktopNotify(s.ID + "正在直播：" + title)
 					}
 					if s.Record {
 						// 查看下载是否已经启动

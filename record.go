@@ -178,7 +178,7 @@ func (s streamer) recordLive() {
 			"-i", liveURL,
 			"-c", "copy", outFile,
 			"-c", "copy", "-f", "mpegts", udpURL)
-		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播" + "\n" + "播放器的观看地址是：\n" + udpURL)
+		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播，播放器的观看地址是：" + udpURL)
 	} else {
 		cmd = exec.CommandContext(ctx, ffmpegFile,
 			"-timeout", "10000000",
