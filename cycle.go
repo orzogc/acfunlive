@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -74,6 +75,7 @@ func (s streamer) cycle() {
 					isLive = true
 					title := s.getTitle()
 					logPrintln(s.longID() + "正在直播：\n" + title)
+					fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
 					/*
 						hlsURL, flvURL := s.getStreamURL()
 						if flvURL == "" {
@@ -85,7 +87,6 @@ func (s streamer) cycle() {
 							ch <- restart
 							return
 						}
-						fmt.Println(s.ID + "的直播观看地址：\n" + livePage + s.uidStr())
 						fmt.Println(s.ID + "直播源的hls和flv地址分别是：\n" + hlsURL + "\n" + flvURL)
 					*/
 
@@ -104,6 +105,8 @@ func (s streamer) cycle() {
 							go s.recordLive(recCh)
 						}
 						recMutex.Unlock()
+					} else {
+						fmt.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
 					}
 				}
 			} else {
