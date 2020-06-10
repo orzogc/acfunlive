@@ -82,8 +82,6 @@ func argsHandle() bool {
 	addRecordUID := flag.Uint("addrecuid", 0, "自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
 	delRecordUID := flag.Uint("delrecuid", 0, "取消自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
 	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播获取其直播源地址，数字为主播的uid（在主播的网页版个人主页查看）")
-	addrestreamUID := flag.Uint("addrstuid", 0, "下载指定主播的直播同时将直播流推向本地UDP端口，节省边下载边观看同一直播的流量，但播放器的播放画面可能有点卡顿，需要主播的uid（在主播的网页版个人主页查看），需要事先设置自动下载指定主播的直播")
-	delrestreamUID := flag.Uint("delrstuid", 0, "取消下载指定主播的直播同时将直播流推向本地端口，需要主播的uid（在主播的网页版个人主页查看）")
 	isListen := flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
 	flag.Parse()
 
@@ -111,12 +109,6 @@ func argsHandle() bool {
 		if *getStreamURL != 0 {
 			printStreamURL(*getStreamURL)
 		}
-		if *addrestreamUID != 0 {
-			addRestream(*addrestreamUID)
-		}
-		if *delrestreamUID != 0 {
-			delRestream(*delrestreamUID)
-		}
 	}
 
 	return *isListen
@@ -140,6 +132,8 @@ func initialize() {
 		newConfigFile, err := os.Create(configFileLocation)
 		checkErr(err)
 		defer newConfigFile.Close()
+		_, err = newConfigFile.WriteString("[]")
+		checkErr(err)
 		logPrintln("创建设置文件" + configFile)
 	}
 	loadConfig()

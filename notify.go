@@ -35,7 +35,7 @@ func addNotify(uid uint) {
 			return
 		}
 
-		newStreamer := streamer{UID: uid, ID: id, Notify: true, Record: false, Restream: false}
+		newStreamer := streamer{UID: uid, ID: id, Notify: true, Record: false}
 		sMutex.Lock()
 		streamers = append(streamers, newStreamer)
 		sMutex.Unlock()

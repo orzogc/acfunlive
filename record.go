@@ -9,12 +9,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 )
-
-var udpPort = 50158
 
 // record用来传递下载信息
 type record struct {
@@ -52,7 +49,7 @@ func addRecord(uid uint) {
 			return
 		}
 
-		newStreamer := streamer{UID: uid, ID: id, Notify: false, Record: true, Restream: false}
+		newStreamer := streamer{UID: uid, ID: id, Notify: false, Record: true}
 		sMutex.Lock()
 		streamers = append(streamers, newStreamer)
 		sMutex.Unlock()
@@ -69,7 +66,6 @@ func delRecord(uid uint) {
 		if s.UID == uid {
 			if s.Notify {
 				streamers[i].Record = false
-				streamers[i].Restream = false
 			} else {
 				deleteStreamer(uid)
 			}
@@ -82,8 +78,8 @@ func delRecord(uid uint) {
 }
 
 // 临时下载指定主播的直播
-func startRec(uid uint, restream bool) {
-	s := streamer{UID: uid, ID: getID(uid), Restream: restream}
+func startRec(uid uint) {
+	s := streamer{UID: uid, ID: getID(uid)}
 
 	recMutex.Lock()
 	_, ok := recordMap[s.UID]
@@ -161,30 +157,14 @@ func (s streamer) recordLive() {
 	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
 	fmt.Println("本次下载的文件保存在" + outFile + "\n" + "如果想提前结束下载，运行stoprecord " + s.uidStr())
 	desktopNotify("开始下载" + s.ID + "的直播")
+
 	// 运行ffmpeg下载直播
-	var cmd *exec.Cmd
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if s.Restream {
-		if udpPort > 65535 {
-			log.Println("UDP端口不能超过65535，请重新运行本程序")
-			desktopNotify("UDP端口不能超过65535，请重新运行本程序")
-			return
-		}
-		udpURL := "udp://@127.0.0.1:" + strconv.Itoa(udpPort)
-		udpPort++
-		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "10000000",
-			"-i", liveURL,
-			"-c", "copy", outFile,
-			"-c", "copy", "-f", "mpegts", udpURL)
-		fmt.Println("现在可以利用本地UDP端口观看" + s.ID + "的直播，播放器的观看地址是：" + udpURL)
-	} else {
-		cmd = exec.CommandContext(ctx, ffmpegFile,
-			"-timeout", "10000000",
-			"-i", liveURL,
-			"-c", "copy", outFile)
-	}
+	cmd := exec.CommandContext(ctx, ffmpegFile,
+		"-timeout", "10000000",
+		"-i", liveURL,
+		"-c", "copy", outFile)
 
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)

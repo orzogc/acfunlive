@@ -18,11 +18,10 @@ var configFileLocation string
 
 // 主播的设置数据
 type streamer struct {
-	UID      uint
-	ID       string
-	Notify   bool
-	Record   bool
-	Restream bool
+	UID    uint
+	ID     string
+	Notify bool
+	Record bool
 }
 
 // streamers的锁
@@ -76,48 +75,6 @@ func deleteStreamer(uid uint) {
 			fmt.Println("删除" + s.ID + "的设置数据")
 		}
 	}
-}
-
-// 设置将下载的直播流同时推向本地端口
-func addRestream(uid uint) {
-	isExist := false
-	sMutex.Lock()
-	for i, s := range streamers {
-		if s.UID == uid {
-			isExist = true
-			if s.Record {
-				if s.Restream {
-					fmt.Println("已经设置过将" + s.ID + "的直播流同时推向本地端口")
-				} else {
-					streamers[i].Restream = true
-					fmt.Println("成功设置将" + s.ID + "的直播流同时推向本地端口")
-				}
-			} else {
-				fmt.Println("请先设置自动下载" + s.ID + "的直播")
-			}
-		}
-	}
-	sMutex.Unlock()
-
-	if !isExist {
-		fmt.Println("请先设置自动下载该主播的直播")
-	}
-
-	saveConfig()
-}
-
-// 取消将下载的直播流同时推向本地端口
-func delRestream(uid uint) {
-	sMutex.Lock()
-	for i, s := range streamers {
-		if s.UID == uid {
-			streamers[i].Restream = false
-			fmt.Println("成功取消将" + s.ID + "的直播流同时推向本地端口")
-		}
-	}
-	sMutex.Unlock()
-
-	saveConfig()
 }
 
 // 循环判断设置文件是否被修改，是的话重新设置

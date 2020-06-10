@@ -19,9 +19,6 @@ delrecuid 数字：取消自动下载指定主播的直播，数字为主播的u
 getdlurl 数字：查看指定主播是否在直播，如在直播获取其直播源地址，数字为主播的uid（在主播的网页版个人主页查看）
 startrecord 数字：临时下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播，这次为一次性的下载
 stoprecord 数字：正在下载指定主播的直播时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
-addrstuid 数字：下载指定主播的直播同时将直播流推向本地UDP端口，节省边下载边观看同一直播的流量，但播放器的播放画面可能有点卡顿，数字为主播的uid（在主播的网页版个人主页查看），需要事先设置自动下载指定主播的直播
-delrstuid 数字：取消下载指定主播的直播同时将直播流推向本地端口，数字为主播的uid（在主播的网页版个人主页查看）
-startrecrst 数字：临时下载指定主播的直播并将直播流推向本地UDP端口，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播，这次为一次性的下载
 quit：退出本程序，退出需要等待半分钟
 help：本帮助信息`
 
@@ -108,7 +105,7 @@ func handleInput() {
 					printErr()
 					break
 				}
-				startRec(uint(uid), false)
+				startRec(uint(uid))
 			case "stoprecord":
 				uid, err := strconv.ParseUint(cmd[1], 10, 64)
 				if err != nil {
@@ -116,27 +113,6 @@ func handleInput() {
 					break
 				}
 				stopRec(uint(uid))
-			case "addrstuid":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
-				if err != nil {
-					printErr()
-					break
-				}
-				addRestream(uint(uid))
-			case "delrstuid":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
-				if err != nil {
-					printErr()
-					break
-				}
-				delRestream(uint(uid))
-			case "startrecrst":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
-				if err != nil {
-					printErr()
-					break
-				}
-				startRec(uint(uid), true)
 			default:
 				printErr()
 			}
