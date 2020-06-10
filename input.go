@@ -12,6 +12,7 @@ import (
 
 // 帮助信息
 const helpMsg = `listlive：列出正在直播的主播
+listrecord：列出正在下载的直播
 addnotify 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 delnotify 数字：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 addrecord 数字：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -49,8 +50,12 @@ func handleInput() {
 						fmt.Println(s.longID() + "：" + livePage + s.uidStr())
 					}
 				}
-			case "help":
-				fmt.Println(helpMsg)
+			case "listrecord":
+				fmt.Println("正在下载的直播：")
+				for uid := range recordMap {
+					s := streamer{UID: uid, ID: getID(uid)}
+					fmt.Println(s.longID() + "：" + s.getTitle())
+				}
 			case "quit":
 				fmt.Println("正在准备退出，请等待...")
 				chMutex.Lock()
@@ -59,6 +64,8 @@ func handleInput() {
 				q := controlMsg{c: quit}
 				ch <- q
 				return
+			case "help":
+				fmt.Println(helpMsg)
 			default:
 				printErr()
 			}
