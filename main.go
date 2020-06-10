@@ -41,6 +41,8 @@ type controlMsg struct {
 	c control
 }
 
+var isListen *bool
+
 // 检查错误
 func checkErr(err error) {
 	if err != nil {
@@ -77,12 +79,13 @@ func argsHandle() bool {
 
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
-	addUID := flag.Uint("adduid", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
-	delUID := flag.Uint("deluid", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
-	addRecordUID := flag.Uint("addrecuid", 0, "自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
-	delRecordUID := flag.Uint("delrecuid", 0, "取消自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
-	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播获取其直播源地址，数字为主播的uid（在主播的网页版个人主页查看）")
-	isListen := flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
+	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
+	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
+	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
+	addRecordUID := flag.Uint("addrecord", 0, "自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
+	delRecordUID := flag.Uint("delrecord", 0, "取消自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
+	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的uid（在主播的网页版个人主页查看）")
+	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
@@ -94,11 +97,11 @@ func argsHandle() bool {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
-		if *addUID != 0 {
-			addNotify(*addUID)
+		if *addNotifyUID != 0 {
+			addNotify(*addNotifyUID)
 		}
-		if *delUID != 0 {
-			delNotify(*delUID)
+		if *delNotifyUID != 0 {
+			delNotify(*delNotifyUID)
 		}
 		if *addRecordUID != 0 {
 			addRecord(*addRecordUID)
@@ -108,6 +111,9 @@ func argsHandle() bool {
 		}
 		if *getStreamURL != 0 {
 			printStreamURL(*getStreamURL)
+		}
+		if *startRecord != 0 {
+			startRec(*startRecord)
 		}
 	}
 
@@ -145,7 +151,7 @@ func main() {
 
 	if argsHandle() {
 		if len(streamers) == 0 {
-			fmt.Println("请订阅指定主播的开播提醒，运行acfun_live -h查看帮助")
+			fmt.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
 		}
 

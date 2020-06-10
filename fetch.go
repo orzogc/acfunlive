@@ -201,11 +201,8 @@ func printStreamURL(uid uint) {
 	if s.isLiveOn() {
 		title := s.getTitle()
 		hlsURL, flvURL := s.getStreamURL()
-		fmt.Println(s.longID() + "正在直播：")
-		fmt.Println(title)
-		fmt.Println(s.longID() + "直播源的hls和flv地址分别是：")
-		fmt.Println(hlsURL)
-		fmt.Println(flvURL)
+		fmt.Println(s.longID() + "正在直播：" + title)
+		fmt.Println(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
 	} else {
 		fmt.Println(s.longID() + "不在直播")
 	}

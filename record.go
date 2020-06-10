@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -155,7 +156,10 @@ func (s streamer) recordLive() {
 	logPrintln("开始下载" + s.longID() + "的直播")
 	recordTime := getTime()
 	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
-	fmt.Println("本次下载的文件保存在" + outFile + "\n" + "如果想提前结束下载，运行stoprecord " + s.uidStr())
+	fmt.Println("本次下载的文件保存在" + outFile)
+	if *isListen {
+		fmt.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
+	}
 	desktopNotify("开始下载" + s.ID + "的直播")
 
 	// 运行ffmpeg下载直播
@@ -174,6 +178,11 @@ func (s streamer) recordLive() {
 	recMutex.Lock()
 	recordMap[s.UID] = rec
 	recMutex.Unlock()
+
+	if !*isListen {
+		cmd.Stdin = os.Stdin
+		fmt.Println("按q退出下载")
+	}
 
 	err = cmd.Run()
 	if err != nil {
