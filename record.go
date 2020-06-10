@@ -93,7 +93,12 @@ func startRec(uid uint) {
 		return
 	}
 
-	go s.recordLive()
+	// 查看程序是否只在下载单个直播
+	if isSingleRec {
+		s.recordLive()
+	} else {
+		go s.recordLive()
+	}
 }
 
 // 停止下载指定主播的直播
@@ -177,7 +182,7 @@ func (s streamer) recordLive() {
 	recordMap[s.UID] = rec
 	recMutex.Unlock()
 
-	if !*isListen {
+	if isSingleRec {
 		cmd.Stdin = os.Stdin
 		logger.Println("按q退出下载")
 	}
@@ -198,9 +203,12 @@ func (s streamer) recordLive() {
 				timePrintln("未知的controlMsg：", msg)
 			}
 		default:
-			// 由于某种原因导致下载意外结束
-			timePrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
-			go s.recordLive()
+			// 程序处于监听状态时重启下载，否则不重启
+			if *isListen {
+				// 由于某种原因导致下载意外结束
+				timePrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
+				go s.recordLive()
+			}
 		}
 	}
 	delete(recordMap, s.UID)

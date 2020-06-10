@@ -44,6 +44,9 @@ type controlMsg struct {
 // 程序是否处于监听状态
 var isListen *bool
 
+// 程序是否在下载单个直播
+var isSingleRec bool = false
+
 // 可以同步输出的logger
 var logger = log.New(os.Stdout, "", 0)
 
@@ -79,7 +82,7 @@ func (s streamer) longID() string {
 }
 
 // 命令行参数处理
-func argsHandle() bool {
+func argsHandle() {
 	const usageStr = "本程序用于AcFun主播的开播提醒和自动下载直播"
 
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
@@ -118,11 +121,10 @@ func argsHandle() bool {
 			printStreamURL(*getStreamURL)
 		}
 		if *startRecord != 0 {
+			isSingleRec = true
 			startRec(*startRecord)
 		}
 	}
-
-	return *isListen
 }
 
 // 程序初始化
@@ -154,7 +156,9 @@ func initialize() {
 func main() {
 	initialize()
 
-	if argsHandle() {
+	argsHandle()
+
+	if *isListen {
 		if len(streamers) == 0 {
 			logger.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
