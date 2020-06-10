@@ -48,12 +48,14 @@ func handleInput() {
 						logger.Println(s.longID() + "：" + livePage + s.uidStr())
 					}
 				}
+				logger.Println("正在直播的主播列出完毕")
 			case "listrecord":
 				logger.Println("正在下载的直播：")
 				for uid := range recordMap {
 					s := streamer{UID: uid, ID: getID(uid)}
 					logger.Println(s.longID() + "：" + s.getTitle())
 				}
+				logger.Println("正在下载的直播列出完毕")
 			case "quit":
 				logger.Println("正在准备退出，请等待...")
 				chMutex.Lock()
