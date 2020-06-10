@@ -2,10 +2,8 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -48,8 +46,8 @@ func fetchLivePage(uid uint) *goquery.Document {
 func (s streamer) isLiveOn() (isLive bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Recovering from panic in isLiveOn(), the error is:", err)
-			log.Println("获取" + s.longID() + "的直播状态时出错，尝试重新运行")
+			timePrintln("Recovering from panic in isLiveOn(), the error is:", err)
+			timePrintln("获取" + s.longID() + "的直播状态时出错，尝试重新运行")
 			isLive = s.isLiveOn()
 		}
 	}()
@@ -194,6 +192,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	return hlsURL, flvURL
 }
 
+// 查看指定主播是否在直播和输出其直播源
 func printStreamURL(uid uint) {
 	id := getID(uid)
 	s := streamer{UID: uid, ID: id}
@@ -201,9 +200,13 @@ func printStreamURL(uid uint) {
 	if s.isLiveOn() {
 		title := s.getTitle()
 		hlsURL, flvURL := s.getStreamURL()
-		fmt.Println(s.longID() + "正在直播：" + title)
-		fmt.Println(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
+		logger.Println(s.longID() + "正在直播：" + title)
+		if flvURL == "" {
+			logger.Println("无法获取" + s.longID() + "的直播源，请重新运行命令")
+		} else {
+			logger.Println(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
+		}
 	} else {
-		fmt.Println(s.longID() + "不在直播")
+		logger.Println(s.longID() + "不在直播")
 	}
 }

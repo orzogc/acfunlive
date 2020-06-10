@@ -2,8 +2,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"math/rand"
 	"time"
 )
@@ -14,20 +12,20 @@ const livePage = "https://live.acfun.cn/live/"
 func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
-		logPrintln("重启监听" + s.longID() + "的直播状态")
+		timePrintln("重启监听" + s.longID() + "的直播状态")
 		chMutex.Lock()
 		ch := chMap[0]
 		chMutex.Unlock()
 		ch <- msg
 	case stopCycle:
-		logPrintln("删除" + s.longID())
+		timePrintln("删除" + s.longID())
 		chMutex.Lock()
 		delete(chMap, s.UID)
 		chMutex.Unlock()
 	case quit:
-		logPrintln("正在退出" + s.longID() + "的循环")
+		timePrintln("正在退出" + s.longID() + "的循环")
 	default:
-		log.Println("未知的controlMsg：", msg)
+		timePrintln("未知的controlMsg：", msg)
 	}
 }
 
@@ -35,8 +33,8 @@ func (s streamer) handleMsg(msg controlMsg) {
 func (s streamer) cycle() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Recovering from panic in cycle(), the error is:", err)
-			log.Println(s.longID() + "的循环处理发生错误，尝试重启循环")
+			timePrintln("Recovering from panic in cycle(), the error is:", err)
+			timePrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
 			chMutex.Lock()
@@ -59,7 +57,7 @@ func (s streamer) cycle() {
 		}
 	}
 
-	logPrintln("开始监听" + s.longID() + "的直播状态")
+	timePrintln("开始监听" + s.longID() + "的直播状态")
 
 	isLive := false
 	for {
@@ -72,8 +70,8 @@ func (s streamer) cycle() {
 				if !isLive {
 					isLive = true
 					title := s.getTitle()
-					logPrintln(s.longID() + "正在直播：" + title)
-					fmt.Println(s.ID + "的直播观看地址：" + livePage + s.uidStr())
+					timePrintln(s.longID() + "正在直播：" + title)
+					logger.Println(s.ID + "的直播观看地址：" + livePage + s.uidStr())
 					/*
 						hlsURL, flvURL := s.getStreamURL()
 						if flvURL == "" {
@@ -101,12 +99,12 @@ func (s streamer) cycle() {
 						}
 						recMutex.Unlock()
 					} else {
-						fmt.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
+						logger.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
 					}
 				}
 			} else {
 				if isLive {
-					logPrintln(s.longID() + "已经下播")
+					timePrintln(s.longID() + "已经下播")
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
 					}

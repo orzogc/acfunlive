@@ -41,12 +41,16 @@ type controlMsg struct {
 	c control
 }
 
+// 程序是否处于监听状态
 var isListen *bool
+
+// 可以同步输出的logger
+var logger = log.New(os.Stdout, "", 0)
 
 // 检查错误
 func checkErr(err error) {
 	if err != nil {
-		log.Panicln(err)
+		logger.Panicln(err)
 	}
 }
 
@@ -57,10 +61,11 @@ func getTime() string {
 	return timeStr
 }
 
-// 打印log信息
-func logPrintln(log string) {
-	timeStr := getTime()
-	fmt.Println(timeStr + " " + log)
+// 打印带时间戳的log信息
+func timePrintln(logs ...interface{}) {
+	//logger.Print(getTime() + " ")
+	logs = append([]interface{}{getTime()}, logs...)
+	logger.Println(logs...)
 }
 
 // 将UID转换成字符串
@@ -89,12 +94,12 @@ func argsHandle() bool {
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
-		fmt.Println("请输入正确的参数")
-		fmt.Println(usageStr)
+		logger.Println("请输入正确的参数")
+		logger.Println(usageStr)
 		flag.PrintDefaults()
 	} else {
 		if *shortHelp || *longHelp {
-			fmt.Println(usageStr)
+			logger.Println(usageStr)
 			flag.PrintDefaults()
 		}
 		if *addNotifyUID != 0 {
@@ -130,7 +135,7 @@ func initialize() {
 
 	_, err = os.Stat(logoFileLocation)
 	if os.IsNotExist(err) {
-		logPrintln("下载AcFun的logo")
+		timePrintln("下载AcFun的logo")
 		fetchAcLogo()
 	}
 
@@ -140,7 +145,7 @@ func initialize() {
 		defer newConfigFile.Close()
 		_, err = newConfigFile.WriteString("[]")
 		checkErr(err)
-		logPrintln("创建设置文件" + configFile)
+		timePrintln("创建设置文件" + configFile)
 	}
 	loadConfig()
 	oldStreamers = append([]streamer(nil), streamers...)
@@ -151,11 +156,11 @@ func main() {
 
 	if argsHandle() {
 		if len(streamers) == 0 {
-			fmt.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
+			logger.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
 		}
 
-		logPrintln("本程序开始监听主播的直播状态")
+		timePrintln("本程序开始监听主播的直播状态")
 
 		mainCh := make(chan controlMsg, 20)
 		chMap[0] = mainCh
@@ -168,7 +173,7 @@ func main() {
 		defer cancel()
 		go cycleConfig(ctx)
 
-		fmt.Println("现在可以输入命令修改设置，输入help查看全部命令的解释")
+		logger.Println("现在可以输入命令修改设置，输入help查看全部命令的解释")
 		go handleInput()
 
 		for {
@@ -194,10 +199,10 @@ func main() {
 				recMutex.Unlock()
 				// 等待30秒，等待其他goroutine结束
 				time.Sleep(30 * time.Second)
-				logPrintln("本程序结束运行")
+				timePrintln("本程序结束运行")
 				return
 			default:
-				log.Println("未知controlMsg：", msg)
+				timePrintln("未知controlMsg：", msg)
 			}
 		}
 	}

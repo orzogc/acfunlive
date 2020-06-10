@@ -3,8 +3,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -25,15 +23,15 @@ help：本帮助信息`
 
 // 打印错误命令信息
 func printErr() {
-	fmt.Println("请输入正确的命令，输入help查看全部命令的解释")
+	logger.Println("请输入正确的命令，输入help查看全部命令的解释")
 }
 
 // 处理输入
 func handleInput() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Recovering from panic in handleInput(), the error is:", err)
-			log.Println("输入处理发生错误，尝试重启输入处理")
+			timePrintln("Recovering from panic in handleInput(), the error is:", err)
+			timePrintln("输入处理发生错误，尝试重启输入处理")
 			go handleInput()
 		}
 	}()
@@ -44,20 +42,20 @@ func handleInput() {
 		if len(cmd) == 1 {
 			switch cmd[0] {
 			case "listlive":
-				fmt.Println("正在直播的主播：")
+				logger.Println("正在直播的主播：")
 				for _, s := range streamers {
 					if s.isLiveOn() {
-						fmt.Println(s.longID() + "：" + livePage + s.uidStr())
+						logger.Println(s.longID() + "：" + livePage + s.uidStr())
 					}
 				}
 			case "listrecord":
-				fmt.Println("正在下载的直播：")
+				logger.Println("正在下载的直播：")
 				for uid := range recordMap {
 					s := streamer{UID: uid, ID: getID(uid)}
-					fmt.Println(s.longID() + "：" + s.getTitle())
+					logger.Println(s.longID() + "：" + s.getTitle())
 				}
 			case "quit":
-				fmt.Println("正在准备退出，请等待...")
+				logger.Println("正在准备退出，请等待...")
 				chMutex.Lock()
 				ch := chMap[0]
 				chMutex.Unlock()
@@ -65,7 +63,7 @@ func handleInput() {
 				ch <- q
 				return
 			case "help":
-				fmt.Println(helpMsg)
+				logger.Println(helpMsg)
 			default:
 				printErr()
 			}
@@ -128,6 +126,6 @@ func handleInput() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Println("Reading standard input err:", err)
+		timePrintln("Reading standard input err:", err)
 	}
 }

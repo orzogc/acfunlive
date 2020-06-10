@@ -2,8 +2,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gen2brain/beeep"
 )
 
@@ -19,10 +17,10 @@ func addNotify(uid uint) {
 		if s.UID == uid {
 			isExist = true
 			if s.Notify {
-				fmt.Println("已经订阅过" + s.ID + "的开播提醒")
+				logger.Println("已经订阅过" + s.ID + "的开播提醒")
 			} else {
 				streamers[i].Notify = true
-				fmt.Println("成功订阅" + s.ID + "的开播提醒")
+				logger.Println("成功订阅" + s.ID + "的开播提醒")
 			}
 		}
 	}
@@ -31,7 +29,7 @@ func addNotify(uid uint) {
 	if !isExist {
 		id := getID(uid)
 		if id == "" {
-			fmt.Println("不存在这个用户")
+			logger.Println("不存在这个用户")
 			return
 		}
 
@@ -39,7 +37,7 @@ func addNotify(uid uint) {
 		sMutex.Lock()
 		streamers = append(streamers, newStreamer)
 		sMutex.Unlock()
-		fmt.Println("成功订阅" + id + "的开播提醒")
+		logger.Println("成功订阅" + id + "的开播提醒")
 	}
 
 	saveConfig()
@@ -55,7 +53,7 @@ func delNotify(uid uint) {
 			} else {
 				deleteStreamer(uid)
 			}
-			fmt.Println("成功取消订阅" + s.ID + "的开播提醒")
+			logger.Println("成功取消订阅" + s.ID + "的开播提醒")
 		}
 	}
 	sMutex.Unlock()

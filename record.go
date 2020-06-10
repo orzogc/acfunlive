@@ -3,9 +3,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,10 +32,10 @@ func addRecord(uid uint) {
 		if s.UID == uid {
 			isExist = true
 			if s.Record {
-				fmt.Println("已经设置过自动下载" + s.ID + "的直播")
+				logger.Println("已经设置过自动下载" + s.ID + "的直播")
 			} else {
 				streamers[i].Record = true
-				fmt.Println("成功设置自动下载" + s.ID + "的直播")
+				logger.Println("成功设置自动下载" + s.ID + "的直播")
 			}
 		}
 	}
@@ -46,7 +44,7 @@ func addRecord(uid uint) {
 	if !isExist {
 		id := getID(uid)
 		if id == "" {
-			fmt.Println("不存在这个用户")
+			logger.Println("不存在这个用户")
 			return
 		}
 
@@ -54,7 +52,7 @@ func addRecord(uid uint) {
 		sMutex.Lock()
 		streamers = append(streamers, newStreamer)
 		sMutex.Unlock()
-		fmt.Println("成功设置自动下载" + id + "的直播")
+		logger.Println("成功设置自动下载" + id + "的直播")
 	}
 
 	saveConfig()
@@ -70,7 +68,7 @@ func delRecord(uid uint) {
 			} else {
 				deleteStreamer(uid)
 			}
-			fmt.Println("成功取消自动下载" + s.ID + "的直播")
+			logger.Println("成功取消自动下载" + s.ID + "的直播")
 		}
 	}
 	sMutex.Unlock()
@@ -86,12 +84,12 @@ func startRec(uid uint) {
 	_, ok := recordMap[s.UID]
 	recMutex.Unlock()
 	if ok {
-		fmt.Println("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
+		logger.Println("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
 		return
 	}
 
 	if !s.isLiveOn() {
-		fmt.Println(s.ID + "不在直播，取消下载")
+		logger.Println(s.ID + "不在直播，取消下载")
 		return
 	}
 
@@ -104,13 +102,13 @@ func stopRec(uid uint) {
 	rec, ok := recordMap[uid]
 	recMutex.Unlock()
 	if ok {
-		fmt.Println("开始结束该主播的下载")
+		logger.Println("开始结束该主播的下载")
 		rec.ch <- stopRecord
 		io.WriteString(rec.stdin, "q")
 		time.Sleep(20 * time.Second)
 		rec.cancel()
 	} else {
-		fmt.Println("没有在下载该主播的直播")
+		logger.Println("没有在下载该主播的直播")
 	}
 }
 
@@ -118,8 +116,8 @@ func stopRec(uid uint) {
 func (s streamer) recordLive() {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println("Recovering from panic in recordLive(), the error is:", err)
-			log.Println("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
+			timePrintln("Recovering from panic in recordLive(), the error is:", err)
+			timePrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			desktopNotify("下载" + s.ID + "的直播发生错误")
 			recMutex.Lock()
 			delete(recordMap, s.UID)
@@ -141,7 +139,7 @@ func (s streamer) recordLive() {
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _ := s.getStreamURL()
 	if liveURL == "" {
-		log.Println("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
+		timePrintln("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
 		desktopNotify("无法获取" + s.ID + "的直播源，退出下载")
 		return
 	}
@@ -153,12 +151,12 @@ func (s streamer) recordLive() {
 	}
 
 	title := s.getTitle()
-	logPrintln("开始下载" + s.longID() + "的直播")
+	timePrintln("开始下载" + s.longID() + "的直播")
 	recordTime := getTime()
 	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
-	fmt.Println("本次下载的文件保存在" + outFile)
+	logger.Println("本次下载的文件保存在" + outFile)
 	if *isListen {
-		fmt.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
+		logger.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
 	}
 	desktopNotify("开始下载" + s.ID + "的直播")
 
@@ -181,12 +179,12 @@ func (s streamer) recordLive() {
 
 	if !*isListen {
 		cmd.Stdin = os.Stdin
-		fmt.Println("按q退出下载")
+		logger.Println("按q退出下载")
 	}
 
 	err = cmd.Run()
 	if err != nil {
-		log.Println("下载"+s.longID()+"的直播出现错误，尝试重启下载：", err)
+		timePrintln("下载"+s.longID()+"的直播出现错误，尝试重启下载：", err)
 	}
 
 	recMutex.Lock()
@@ -197,17 +195,17 @@ func (s streamer) recordLive() {
 			// 收到退出信号
 			case stopRecord:
 			default:
-				log.Println("未知的controlMsg：", msg)
+				timePrintln("未知的controlMsg：", msg)
 			}
 		default:
 			// 由于某种原因导致下载意外结束
-			logPrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
+			timePrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
 			go s.recordLive()
 		}
 	}
 	delete(recordMap, s.UID)
 	recMutex.Unlock()
 
-	logPrintln(s.longID() + "的直播下载已经结束")
+	timePrintln(s.longID() + "的直播下载已经结束")
 	desktopNotify(s.ID + "的直播下载已经结束")
 }
