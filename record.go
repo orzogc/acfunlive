@@ -89,7 +89,7 @@ func startRec(uid uint) {
 	}
 
 	if !s.isLiveOn() {
-		logger.Println(s.ID + "不在直播，取消下载")
+		logger.Println(s.longID() + "不在直播，取消下载")
 		return
 	}
 
