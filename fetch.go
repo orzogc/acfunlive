@@ -17,7 +17,15 @@ import (
 )
 
 // 爬取主播wap版直播页面
-func fetchLivePage(uid uint) *goquery.Document {
+func fetchLivePage(uid uint) (doc *goquery.Document) {
+	defer func() {
+		if err := recover(); err != nil {
+			timePrintln("Recovering from panic in fetchLivePage(), the error is:", err)
+			timePrintln("获取uid为" + strconv.Itoa(int(uid)) + "的直播页面时出错，尝试重新运行")
+			doc = fetchLivePage(uid)
+		}
+	}()
+
 	const acLivePage = "https://m.acfun.cn/live/detail/"
 	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
@@ -32,22 +40,14 @@ func fetchLivePage(uid uint) *goquery.Document {
 	checkErr(err)
 	defer resp.Body.Close()
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	doc, err = goquery.NewDocumentFromReader(resp.Body)
 	checkErr(err)
 
 	return doc
 }
 
 // 查看主播是否在直播
-func (s streamer) isLiveOn() (isLive bool) {
-	defer func() {
-		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in isLiveOn(), the error is:", err)
-			timePrintln("获取" + s.longID() + "的直播状态时出错，尝试重新运行")
-			isLive = s.isLiveOn()
-		}
-	}()
-
+func (s streamer) isLiveOn() bool {
 	doc := fetchLivePage(s.UID)
 
 	if doc.Find("p.closed-tip").Text() == "直播已结束" {
@@ -95,6 +95,14 @@ func fetchAcLogo() {
 
 // 获取AcFun的直播源，分为hls和flv两种
 func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
+	defer func() {
+		if err := recover(); err != nil {
+			timePrintln("Recovering from panic in getStreamURL(), the error is:", err)
+			timePrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
+			hlsURL, flvURL = s.getStreamURL()
+		}
+	}()
+
 	const acLivePage = "https://live.acfun.cn/live/"
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
@@ -169,9 +177,8 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	flvURL = string(representation[0].GetStringBytes("url"))
 
 	i := strings.Index(flvURL, streamName)
-	streamHlsURL := strings.Replace(flvURL[0:i], "pull", "hlspull", 1)
 	// 这是码率最高的hls视频源
-	hlsURL = streamHlsURL + streamName + ".m3u8"
+	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull", "hlspull") + streamName + ".m3u8"
 
 	return hlsURL, flvURL
 }
