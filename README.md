@@ -15,4 +15,6 @@ AcFun直播通知和下载助手（命令行版本）
 
 `acfunlive -delrecuid 23682490` 取消下载uid为23682490的用户的直播
 
+`acfunlive -getdlurl 23682490` 查看uid为23682490的用户是否在直播，获取其直播源
+
 运行`acfunlive -h`查看更多设置参数
