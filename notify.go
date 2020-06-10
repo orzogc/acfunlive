@@ -7,7 +7,7 @@ import (
 	"github.com/gen2brain/beeep"
 )
 
-const logoFile = "acfun_logo.ico"
+const logoFile = "acfunlogo.ico"
 
 var logoFileLocation string
 

@@ -127,7 +127,7 @@ func initialize() {
 	exePath, err := os.Executable()
 	checkErr(err)
 	exeDir = filepath.Dir(exePath)
-	logoFileLocation = filepath.Join(exeDir, configFile)
+	logoFileLocation = filepath.Join(exeDir, logoFile)
 	configFileLocation = filepath.Join(exeDir, configFile)
 
 	_, err = os.Stat(logoFileLocation)
