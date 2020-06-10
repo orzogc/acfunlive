@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,14 +16,14 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-const acLivePage = "https://m.acfun.cn/live/detail/"
+// 爬取主播wap版直播页面
+func fetchLivePage(uid uint) *goquery.Document {
+	const acLivePage = "https://m.acfun.cn/live/detail/"
+	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
-const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
-
-// 爬取页面
-func fetchPage(page string) *goquery.Document {
+	upLivePage := acLivePage + strconv.Itoa(int(uid))
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", page, nil)
+	req, err := http.NewRequest("GET", upLivePage, nil)
 	checkErr(err)
 
 	// 需要设置手机版user-agent
@@ -33,13 +34,8 @@ func fetchPage(page string) *goquery.Document {
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	checkErr(err)
-	return doc
-}
 
-// 爬取主播wap版直播页面
-func fetchLivePage(uid uint) *goquery.Document {
-	upLivePage := acLivePage + strconv.Itoa(int(uid))
-	return fetchPage(upLivePage)
+	return doc
 }
 
 // 查看主播是否在直播
@@ -99,16 +95,11 @@ func fetchAcLogo() {
 
 // 获取AcFun的直播源，分为hls和flv两种
 func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
-	const acPage = "https://m.acfun.cn"
+	const acLivePage = "https://live.acfun.cn/live/"
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
+	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
-	client := &http.Client{}
-
-	req, err := http.NewRequest("GET", acPage, nil)
-	checkErr(err)
-	// 需要设置手机版user-agent，下同
-	req.Header.Set("User-Agent", userAgent)
-	resp, err := client.Do(req)
+	resp, err := http.Get(acLivePage + strconv.Itoa(int(s.UID)))
 	checkErr(err)
 	defer resp.Body.Close()
 
@@ -119,14 +110,14 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 			didCookie = cookie
 		}
 	}
-	did := didCookie.Value
+	deviceID := didCookie.Value
 
+	client := &http.Client{}
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
-	req, err = http.NewRequest("POST", loginPage, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest("POST", loginPage, strings.NewReader(form.Encode()))
 	checkErr(err)
 
-	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	// 需要did的cookie
 	req.AddCookie(didCookie)
@@ -148,18 +139,12 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	serviceToken := string(v.GetStringBytes("acfun.api.visitor_st"))
 
 	// 获取直播源的地址需要userId、did和对应的令牌
-	streamPage := "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=OUTSIDE_IOS_H5&userId=" + strconv.Itoa(userID) + "&did=" + did + "&acfun.api.visitor_st=" + serviceToken
+	streamURL := fmt.Sprintf(playURL, userID, deviceID, serviceToken)
 
 	form = url.Values{}
 	// authorId就是主播的uid
 	form.Set("authorId", s.uidStr())
-	req, err = http.NewRequest("POST", streamPage, strings.NewReader(form.Encode()))
-	checkErr(err)
-
-	req.Header.Set("User-Agent", userAgent)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err = client.Do(req)
+	resp, err = http.PostForm(streamURL, form)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
@@ -171,7 +156,6 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 		return "", ""
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
-	//fmt.Println(string(videoPlayRes))
 	v, err = p.ParseBytes(videoPlayRes)
 	checkErr(err)
 	streamName := string(v.GetStringBytes("streamName"))
