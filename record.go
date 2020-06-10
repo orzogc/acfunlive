@@ -93,11 +93,12 @@ func startRec(uid uint) {
 		return
 	}
 
-	// 查看程序是否只在下载单个直播
-	if isSingleRec {
-		s.recordLive()
-	} else {
+	// 查看程序是否处于监听状态
+	if *isListen {
 		go s.recordLive()
+	} else {
+		// 程序只在单独下载一个直播，不用goroutine，防止程序提前结束运行
+		s.recordLive()
 	}
 }
 
@@ -182,9 +183,10 @@ func (s streamer) recordLive() {
 	recordMap[s.UID] = rec
 	recMutex.Unlock()
 
-	if isSingleRec {
+	if !*isListen {
+		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
 		cmd.Stdin = os.Stdin
-		logger.Println("按q退出下载")
+		logger.Println("按q键退出下载")
 	}
 
 	err = cmd.Run()

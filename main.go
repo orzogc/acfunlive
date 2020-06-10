@@ -44,9 +44,6 @@ type controlMsg struct {
 // 程序是否处于监听状态
 var isListen *bool
 
-// 程序是否在下载单个直播
-var isSingleRec bool = false
-
 // 可以同步输出的logger
 var logger = log.New(os.Stdout, "", 0)
 
@@ -121,7 +118,6 @@ func argsHandle() {
 			printStreamURL(*getStreamURL)
 		}
 		if *startRecord != 0 {
-			isSingleRec = true
 			startRec(*startRecord)
 		}
 	}
