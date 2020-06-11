@@ -14,6 +14,12 @@ const configFile = "config.json"
 
 var configFileLocation string
 
+// modify的锁
+var moMutex sync.Mutex
+
+// 设置修改标记
+var modify = make(map[uint]bool)
+
 // 主播的设置数据
 type streamer struct {
 	UID    uint
@@ -106,12 +112,15 @@ func cycleConfig(ctx context.Context) {
 					for i, olds := range oldStreamers {
 						if s.UID == olds.UID {
 							if s != olds {
-								// olds的设置被改变
+								// olds的设置被修改
 								timePrintln(s.longID() + "的设置被修改，重新设置")
 								restart := controlMsg{s: s, c: startCycle}
 								chMutex.Lock()
 								ch := chMap[s.UID]
 								chMutex.Unlock()
+								moMutex.Lock()
+								modify[s.UID] = true
+								moMutex.Unlock()
 								ch <- restart
 							}
 							break
@@ -123,6 +132,9 @@ func cycleConfig(ctx context.Context) {
 								chMutex.Lock()
 								ch := chMap[0]
 								chMutex.Unlock()
+								moMutex.Lock()
+								modify[s.UID] = true
+								moMutex.Unlock()
 								ch <- start
 							}
 						}

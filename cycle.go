@@ -78,16 +78,25 @@ func (s streamer) cycle() {
 						desktopNotify(s.ID + "正在直播：" + title)
 					}
 					if s.Record {
-						go s.recordLive()
 						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
 						recMutex.Lock()
 						rec, ok := recordMap[s.UID]
 						recMutex.Unlock()
 						if ok {
-							rec.ch <- stopRecord
-							io.WriteString(rec.stdin, "q")
-							time.Sleep(20 * time.Second)
-							rec.cancel()
+							// 如果设置被修改，不重启已有的下载
+							moMutex.Lock()
+							modified := modify[s.UID]
+							moMutex.Unlock()
+							if !modified {
+								go s.recordLive()
+								rec.ch <- stopRecord
+								io.WriteString(rec.stdin, "q")
+								time.Sleep(20 * time.Second)
+								rec.cancel()
+							}
+						} else {
+							// 没有下载时就直接启动下载
+							go s.recordLive()
 						}
 					} else {
 						logger.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
@@ -111,6 +120,12 @@ func (s streamer) cycle() {
 				}
 				isLive = false
 			}
+
+			moMutex.Lock()
+			if modify[s.UID] {
+				modify[s.UID] = false
+			}
+			moMutex.Unlock()
 
 			// 大约每二十几秒获取一次主播的直播状态
 			rand.Seed(time.Now().UnixNano())
