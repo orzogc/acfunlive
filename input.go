@@ -51,10 +51,12 @@ func handleInput() {
 				logger.Println("正在直播的主播列出完毕")
 			case "listrecord":
 				logger.Println("正在下载的直播：")
+				recMutex.Lock()
 				for uid := range recordMap {
 					s := streamer{UID: uid, ID: getID(uid)}
 					logger.Println(s.longID() + "：" + s.getTitle())
 				}
+				recMutex.Unlock()
 				logger.Println("正在下载的直播列出完毕")
 			case "quit":
 				logger.Println("正在准备退出，请等待...")

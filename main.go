@@ -29,9 +29,8 @@ type control int
 const (
 	startCycle control = iota
 	stopCycle
-	//startRecord
+	liveOff
 	stopRecord
-	//liveOff
 	quit
 )
 

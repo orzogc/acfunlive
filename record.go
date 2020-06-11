@@ -18,7 +18,6 @@ type record struct {
 	stdin  io.WriteCloser
 	cancel context.CancelFunc
 	ch     chan control
-	//isLiveOff bool
 }
 
 // recordMap的锁
@@ -114,6 +113,10 @@ func stopRec(uid uint) {
 		io.WriteString(rec.stdin, "q")
 		time.Sleep(20 * time.Second)
 		rec.cancel()
+		// 需要删除recordMap里相应的key
+		recMutex.Lock()
+		delete(recordMap, uid)
+		recMutex.Unlock()
 	} else {
 		logger.Println("没有在下载该主播的直播")
 	}
@@ -131,17 +134,6 @@ func (s streamer) recordLive() {
 			recMutex.Unlock()
 		}
 	}()
-
-	// 只能有一个在下载
-	for {
-		recMutex.Lock()
-		_, ok := recordMap[s.UID]
-		recMutex.Unlock()
-		if !ok {
-			break
-		}
-		time.Sleep(time.Second)
-	}
 
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _ := s.getStreamURL()
@@ -202,12 +194,13 @@ func (s streamer) recordLive() {
 		timePrintln("下载"+s.longID()+"的直播出现错误，尝试重启下载：", err)
 	}
 
-	recMutex.Lock()
 	if s.isLiveOn() {
 		select {
 		case msg := <-ch:
 			switch msg {
-			// 收到退出信号
+			// 受到下播的信号
+			case liveOff:
+			// 收到停止下载的信号
 			case stopRecord:
 			default:
 				timePrintln("未知的controlMsg：", msg)
@@ -217,14 +210,16 @@ func (s streamer) recordLive() {
 			if *isListen {
 				// 由于某种原因导致下载意外结束
 				timePrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
-				// 防止某些情况下刷屏
+				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
 				go s.recordLive()
 			}
 		}
+	} else {
+		recMutex.Lock()
+		delete(recordMap, s.UID)
+		recMutex.Unlock()
 	}
-	delete(recordMap, s.UID)
-	recMutex.Unlock()
 
 	timePrintln(s.longID() + "的直播下载已经结束")
 	desktopNotify(s.ID + "的直播下载已经结束")

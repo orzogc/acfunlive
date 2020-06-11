@@ -2,6 +2,7 @@
 package main
 
 import (
+	"io"
 	"math/rand"
 	"time"
 )
@@ -72,32 +73,22 @@ func (s streamer) cycle() {
 					title := s.getTitle()
 					timePrintln(s.longID() + "正在直播：" + title)
 					logger.Println(s.ID + "的直播观看地址：" + livePage + s.uidStr())
-					/*
-						hlsURL, flvURL := s.getStreamURL()
-						if flvURL == "" {
-							log.Println("无法获取" + s.ID + "的直播源，尝试重启循环")
-							restart := controlMsg{s: s, c: startCycle}
-							chMutex.Lock()
-							ch := chMap[0]
-							chMutex.Unlock()
-							ch <- restart
-							return
-						}
-						fmt.Println(s.ID + "直播源的hls和flv地址分别是：\n" + hlsURL + "\n" + flvURL)
-					*/
 
 					if s.Notify {
 						desktopNotify(s.ID + "正在直播：" + title)
 					}
 					if s.Record {
-						// 查看下载是否已经启动
+						go s.recordLive()
+						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
 						recMutex.Lock()
-						_, ok := recordMap[s.UID]
-						if !ok {
-							// 没有下载时启动下载直播源，有下载时recordLive()会自行处理
-							go s.recordLive()
-						}
+						rec, ok := recordMap[s.UID]
 						recMutex.Unlock()
+						if ok {
+							rec.ch <- stopRecord
+							io.WriteString(rec.stdin, "q")
+							time.Sleep(20 * time.Second)
+							rec.cancel()
+						}
 					} else {
 						logger.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
 					}
@@ -108,6 +99,15 @@ func (s streamer) cycle() {
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
 					}
+					if s.Record {
+						recMutex.Lock()
+						rec, ok := recordMap[s.UID]
+						recMutex.Unlock()
+						if ok {
+							rec.ch <- liveOff
+						}
+					}
+
 				}
 				isLive = false
 			}
