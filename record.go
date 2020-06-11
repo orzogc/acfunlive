@@ -7,10 +7,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 )
 
 // record用来传递下载信息
@@ -151,15 +152,25 @@ func (s streamer) recordLive() {
 
 	timePrintln("开始下载" + s.longID() + "的直播")
 	title := s.getTitle()
-	// 转换一些特殊字符
-	if strings.Contains(title, "/") {
-		title = strings.ReplaceAll(title, "/", " ")
-	}
-	if strings.Contains(title, "\\") {
-		title = strings.ReplaceAll(title, "\\", " ")
-	}
+	// 转换文件名不允许的特殊字符
+	re := regexp.MustCompile(`[<>:"/\\|?*]`)
+	title = re.ReplaceAllString(title, "_")
 	recordTime := getTime()
-	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
+	filename := recordTime + " " + s.ID + " " + title
+	// linux下限制文件名长度
+	if runtime.GOOS == "linux" {
+		if len(filename) > 250 {
+			filename = filename[:250]
+		}
+	}
+	outFile := filepath.Join(exeDir, filename+".mp4")
+	// windows下全路径文件名不能过长
+	if runtime.GOOS == "windows" {
+		if utf8.RuneCountInString(outFile) > 259 {
+			timePrintln("全路径文件名太长，取消下载")
+			return
+		}
+	}
 	logger.Println("本次下载的文件保存在" + outFile)
 	if *isListen {
 		logger.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
