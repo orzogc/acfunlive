@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -156,8 +157,15 @@ func (s streamer) recordLive() {
 		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 	}
 
-	title := s.getTitle()
 	timePrintln("开始下载" + s.longID() + "的直播")
+	title := s.getTitle()
+	// 转换一些特殊字符
+	if strings.Contains(title, "/") {
+		title = strings.ReplaceAll(title, "/", " ")
+	}
+	if strings.Contains(title, "\\") {
+		title = strings.ReplaceAll(title, "\\", " ")
+	}
 	recordTime := getTime()
 	outFile := filepath.Join(exeDir, recordTime+" "+s.ID+" "+title+".mp4")
 	logger.Println("本次下载的文件保存在" + outFile)
@@ -209,6 +217,8 @@ func (s streamer) recordLive() {
 			if *isListen {
 				// 由于某种原因导致下载意外结束
 				timePrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
+				// 防止某些情况下刷屏
+				time.Sleep(2 * time.Second)
 				go s.recordLive()
 			}
 		}
