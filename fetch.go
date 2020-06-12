@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/valyala/fastjson"
 )
@@ -30,7 +31,9 @@ func fetchLiveRoom() {
 	defer func() {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
-			timePrintln("获取AcFun直播间的json时发生错误，尝试重新运行")
+			timePrintln("获取AcFun直播间API的json时发生错误，尝试重新运行")
+			// 延迟两秒，防止意外情况下刷屏
+			time.Sleep(2 * time.Second)
 			fetchLiveRoom()
 		}
 	}()
@@ -85,7 +88,16 @@ func (s streamer) getTitle() string {
 }
 
 // 根据uid获取主播的id
-func getID(uid uint) string {
+func getID(uid uint) (id string) {
+	defer func() {
+		if err := recover(); err != nil {
+			timePrintln("Recovering from panic in getID(), the error is:", err)
+			timePrintln("获取uid为" + strconv.Itoa(int(uid)) + "的主播的ID时出现错误，尝试重新运行")
+			time.Sleep(2 * time.Second)
+			id = getID(uid)
+		}
+	}()
+
 	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId="
 	userAgent := "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 
@@ -132,6 +144,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in getStreamURL(), the error is:", err)
 			timePrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
+			time.Sleep(2 * time.Second)
 			hlsURL, flvURL = s.getStreamURL()
 		}
 	}()

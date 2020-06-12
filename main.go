@@ -77,6 +77,7 @@ func (s streamer) longID() string {
 	return s.ID + "（" + s.uidStr() + "）"
 }
 
+// 获取sync.Map的长度
 func length(sm *sync.Map) int {
 	count := 0
 	sm.Range(func(key, value interface{}) bool {
@@ -86,6 +87,7 @@ func length(sm *sync.Map) int {
 	return count
 }
 
+// 打印sync.Map的内容
 func mapPrintln(sm *sync.Map) {
 	sm.Range(func(key, value interface{}) bool {
 		logger.Println(key, value)
