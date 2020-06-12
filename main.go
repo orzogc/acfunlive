@@ -201,6 +201,7 @@ func main() {
 					// 结束cycleConfig()
 					cancel()
 					// 结束cycle()
+					timePrintln("正在退出各主播的循环")
 					chMap.Range(func(key, value interface{}) bool {
 						value.(chan controlMsg) <- msg
 						return true
@@ -212,8 +213,14 @@ func main() {
 						io.WriteString(rec.stdin, "q")
 						return true
 					})
-					// 等待10秒，等待其他goroutine结束
-					time.Sleep(10 * time.Second)
+					danglingRec.mu.Lock()
+					for _, rec := range danglingRec.records {
+						rec.ch <- stopRecord
+						io.WriteString(rec.stdin, "q")
+					}
+					danglingRec.mu.Unlock()
+					// 等待20秒，等待其他goroutine结束
+					time.Sleep(20 * time.Second)
 					timePrintln("本程序结束运行")
 					return
 				default:

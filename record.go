@@ -24,6 +24,12 @@ type record struct {
 // 下载信息的map，map[uint]record
 var recordMap = sync.Map{}
 
+// 存放某些没在recordMap的下载
+var danglingRec struct {
+	mu      sync.Mutex
+	records []record
+}
+
 // 设置自动下载指定主播的直播
 func addRecord(uid uint) {
 	isExist := false
@@ -108,6 +114,7 @@ func stopRec(uid uint) {
 		logger.Println("开始结束该主播的下载")
 		rec.ch <- stopRecord
 		io.WriteString(rec.stdin, "q")
+		// 等待20秒强关下载
 		time.Sleep(20 * time.Second)
 		rec.cancel()
 		// 需要删除recordMap里相应的key

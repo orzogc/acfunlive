@@ -18,7 +18,7 @@ func (s streamer) handleMsg(msg controlMsg) {
 		timePrintln("删除" + s.longID())
 		chMap.Delete(s.UID)
 	case quit:
-		timePrintln("正在退出" + s.longID() + "的循环")
+		//timePrintln("正在退出" + s.longID() + "的循环")
 	default:
 		timePrintln("未知的controlMsg：", msg)
 	}
@@ -76,6 +76,9 @@ func (s streamer) cycle() {
 							if !modified.(bool) {
 								go s.recordLive()
 								rec.(record).ch <- stopRecord
+								danglingRec.mu.Lock()
+								danglingRec.records = append(danglingRec.records, rec.(record))
+								danglingRec.mu.Unlock()
 								/*
 									io.WriteString(rec.stdin, "q")
 									time.Sleep(20 * time.Second)
