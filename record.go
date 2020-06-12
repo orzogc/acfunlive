@@ -159,10 +159,16 @@ func (s streamer) recordLive() {
 	recordTime := getTime()
 	filename := recordTime + " " + s.ID + " " + title
 	// 转换文件名不允许的特殊字符
-	re := regexp.MustCompile(`[<>:"/\\|?*]`)
-	filename = re.ReplaceAllString(filename, " ")
-	// linux下限制文件名长度
+	var re *regexp.Regexp
 	if runtime.GOOS == "linux" {
+		re = regexp.MustCompile(`[/]`)
+	}
+	if runtime.GOOS == "windows" {
+		re = regexp.MustCompile(`[<>:"/\\|?*]`)
+	}
+	filename = re.ReplaceAllString(filename, "-")
+	// linux和macOS下限制文件名长度
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 		if len(filename) > 250 {
 			filename = filename[:250]
 		}
