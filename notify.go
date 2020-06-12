@@ -12,19 +12,19 @@ var logoFileLocation string
 // 添加订阅指定uid的直播提醒
 func addNotify(uid uint) {
 	isExist := false
-	sMutex.Lock()
-	for i, s := range streamers {
+	streamers.mu.Lock()
+	for i, s := range streamers.current {
 		if s.UID == uid {
 			isExist = true
 			if s.Notify {
 				logger.Println("已经订阅过" + s.ID + "的开播提醒")
 			} else {
-				streamers[i].Notify = true
+				streamers.current[i].Notify = true
 				logger.Println("成功订阅" + s.ID + "的开播提醒")
 			}
 		}
 	}
-	sMutex.Unlock()
+	streamers.mu.Unlock()
 
 	if !isExist {
 		id := getID(uid)
@@ -34,9 +34,9 @@ func addNotify(uid uint) {
 		}
 
 		newStreamer := streamer{UID: uid, ID: id, Notify: true, Record: false}
-		sMutex.Lock()
-		streamers = append(streamers, newStreamer)
-		sMutex.Unlock()
+		streamers.mu.Lock()
+		streamers.current = append(streamers.current, newStreamer)
+		streamers.mu.Unlock()
 		logger.Println("成功订阅" + id + "的开播提醒")
 	}
 
@@ -45,18 +45,18 @@ func addNotify(uid uint) {
 
 // 取消订阅指定uid的直播提醒
 func delNotify(uid uint) {
-	sMutex.Lock()
-	for i, s := range streamers {
+	streamers.mu.Lock()
+	for i, s := range streamers.current {
 		if s.UID == uid {
 			if s.Record {
-				streamers[i].Notify = false
+				streamers.current[i].Notify = false
 			} else {
 				deleteStreamer(uid)
 			}
 			logger.Println("成功取消订阅" + s.ID + "的开播提醒")
 		}
 	}
-	sMutex.Unlock()
+	streamers.mu.Unlock()
 
 	saveConfig()
 }

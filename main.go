@@ -166,7 +166,7 @@ func initialize() {
 		timePrintln("创建设置文件" + configFile)
 	}
 	loadConfig()
-	oldStreamers = append([]streamer(nil), streamers...)
+	streamers.old = append([]streamer(nil), streamers.current...)
 }
 
 func main() {
@@ -175,7 +175,7 @@ func main() {
 	argsHandle()
 
 	if *isListen {
-		if len(streamers) == 0 {
+		if len(streamers.current) == 0 {
 			logger.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
 		}
@@ -186,7 +186,7 @@ func main() {
 		chMap.Store(0, mainCh)
 
 		fetchAllRooms()
-		for _, s := range streamers {
+		for _, s := range streamers.current {
 			go s.initCycle()
 		}
 

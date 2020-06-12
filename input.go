@@ -29,11 +29,13 @@ func printErr() {
 // 列出正在直播的主播
 func listLive() {
 	logger.Println("正在直播的主播：")
-	for _, s := range streamers {
+	streamers.mu.Lock()
+	for _, s := range streamers.current {
 		if s.isLiveOn() {
 			logger.Println(s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr())
 		}
 	}
+	streamers.mu.Unlock()
 }
 
 // 处理输入

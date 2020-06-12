@@ -33,19 +33,19 @@ var danglingRec struct {
 // 设置自动下载指定主播的直播
 func addRecord(uid uint) {
 	isExist := false
-	sMutex.Lock()
-	for i, s := range streamers {
+	streamers.mu.Lock()
+	for i, s := range streamers.current {
 		if s.UID == uid {
 			isExist = true
 			if s.Record {
 				logger.Println("已经设置过自动下载" + s.ID + "的直播")
 			} else {
-				streamers[i].Record = true
+				streamers.current[i].Record = true
 				logger.Println("成功设置自动下载" + s.ID + "的直播")
 			}
 		}
 	}
-	sMutex.Unlock()
+	streamers.mu.Unlock()
 
 	if !isExist {
 		id := getID(uid)
@@ -55,9 +55,9 @@ func addRecord(uid uint) {
 		}
 
 		newStreamer := streamer{UID: uid, ID: id, Notify: false, Record: true}
-		sMutex.Lock()
-		streamers = append(streamers, newStreamer)
-		sMutex.Unlock()
+		streamers.mu.Lock()
+		streamers.current = append(streamers.current, newStreamer)
+		streamers.mu.Unlock()
 		logger.Println("成功设置自动下载" + id + "的直播")
 	}
 
@@ -66,18 +66,18 @@ func addRecord(uid uint) {
 
 // 取消自动下载指定主播的直播
 func delRecord(uid uint) {
-	sMutex.Lock()
-	for i, s := range streamers {
+	streamers.mu.Lock()
+	for i, s := range streamers.current {
 		if s.UID == uid {
 			if s.Notify {
-				streamers[i].Record = false
+				streamers.current[i].Record = false
 			} else {
 				deleteStreamer(uid)
 			}
 			logger.Println("成功取消自动下载" + s.ID + "的直播")
 		}
 	}
-	sMutex.Unlock()
+	streamers.mu.Unlock()
 
 	saveConfig()
 }

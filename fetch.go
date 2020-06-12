@@ -16,8 +16,9 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-const acLive = "https://live.acfun.cn/api/channel/list?pcursor=%s"
+const livePage = "https://live.acfun.cn/live/"
 
+// 直播间的数据结构
 type liveRoom struct {
 	// 主播名字
 	id string
@@ -53,6 +54,8 @@ func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 			r, nextPage = fetchLiveRoom(page)
 		}
 	}()
+
+	const acLive = "https://live.acfun.cn/api/channel/list?pcursor=%s"
 
 	resp, err := http.Get(fmt.Sprintf(acLive, page))
 	checkErr(err)
@@ -109,11 +112,11 @@ func getID(uid uint) (id string) {
 		}
 	}()
 
-	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId="
+	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 	userAgent := "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", acUser+strconv.Itoa(int(uid)), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf(acUser, uid), nil)
 	checkErr(err)
 	// 需要浏览器user-agent
 	req.Header.Set("User-Agent", userAgent)
@@ -160,11 +163,10 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 		}
 	}()
 
-	const acLivePage = "https://live.acfun.cn/live/"
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
-	resp, err := http.Get(acLivePage + strconv.Itoa(int(s.UID)))
+	resp, err := http.Get(livePage + s.uidStr())
 	checkErr(err)
 	defer resp.Body.Close()
 

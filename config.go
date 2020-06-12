@@ -19,16 +19,24 @@ var modify = sync.Map{}
 
 // 主播的设置数据
 type streamer struct {
-	UID    uint
-	ID     string
+	// uid
+	UID uint
+	// 主播名字
+	ID string
+	// 是否开播提醒
 	Notify bool
+	// 是否自动下载直播
 	Record bool
 }
 
-// streamers的锁
-var sMutex sync.Mutex
-var streamers []streamer
-var oldStreamers []streamer
+// 存放主播的设置数据
+var streamers struct {
+	mu sync.Mutex
+	// 现在的主播的设置数据
+	current []streamer
+	// 旧的主播的设置数据
+	old []streamer
+}
 
 // 查看设置文件是否存在
 func isConfigFileExist() bool {
@@ -50,7 +58,7 @@ func loadConfig() {
 		checkErr(err)
 
 		if json.Valid(data) {
-			err = json.Unmarshal(data, &streamers)
+			err = json.Unmarshal(data, &streamers.current)
 			checkErr(err)
 		} else {
 			timePrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
@@ -60,20 +68,20 @@ func loadConfig() {
 
 // 保存设置文件
 func saveConfig() {
-	sMutex.Lock()
-	data, err := json.MarshalIndent(streamers, "", "    ")
+	streamers.mu.Lock()
+	data, err := json.MarshalIndent(streamers.current, "", "    ")
 	checkErr(err)
 
 	err = ioutil.WriteFile(configFileLocation, data, 0644)
 	checkErr(err)
-	sMutex.Unlock()
+	streamers.mu.Unlock()
 }
 
 // 设置里删除指定uid的主播
 func deleteStreamer(uid uint) {
-	for i, s := range streamers {
+	for i, s := range streamers.current {
 		if s.UID == uid {
-			streamers = append(streamers[:i], streamers[i+1:]...)
+			streamers.current = append(streamers.current[:i], streamers.current[i+1:]...)
 			logger.Println("删除" + s.ID + "的设置数据")
 		}
 	}
@@ -85,6 +93,7 @@ func cycleConfig(ctx context.Context) {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in cycleConfig(), the error is:", err)
 			timePrintln("循环读取设置文件" + configFile + "时出错，尝试重启循环读取设置文件")
+			time.Sleep(2 * time.Second)
 			go cycleConfig(ctx)
 		}
 	}()
@@ -99,14 +108,14 @@ func cycleConfig(ctx context.Context) {
 			info, err := os.Stat(configFileLocation)
 			checkErr(err)
 
-			sMutex.Lock()
+			streamers.mu.Lock()
 			if info.ModTime().After(modTime) {
 				timePrintln("设置文件" + configFile + "被修改，重新读取设置")
 				modTime = info.ModTime()
 				loadConfig()
 
-				for _, s := range streamers {
-					for i, olds := range oldStreamers {
+				for _, s := range streamers.current {
+					for i, olds := range streamers.old {
 						if s.UID == olds.UID {
 							if s != olds {
 								// olds的设置被修改
@@ -118,7 +127,7 @@ func cycleConfig(ctx context.Context) {
 							}
 							break
 						} else {
-							if i == len(oldStreamers)-1 {
+							if i == len(streamers.old)-1 {
 								// s为新增的主播
 								timePrintln("新增" + s.longID() + "的设置")
 								start := controlMsg{s: s, c: startCycle}
@@ -130,12 +139,12 @@ func cycleConfig(ctx context.Context) {
 					}
 				}
 
-				for _, olds := range oldStreamers {
-					for i, s := range streamers {
+				for _, olds := range streamers.old {
+					for i, s := range streamers.current {
 						if s.UID == olds.UID {
 							break
 						} else {
-							if i == len(streamers)-1 {
+							if i == len(streamers.current)-1 {
 								// olds为被删除的主播
 								timePrintln(olds.longID() + "的设置被删除")
 								stop := controlMsg{s: olds, c: stopCycle}
@@ -146,8 +155,8 @@ func cycleConfig(ctx context.Context) {
 					}
 				}
 			}
-			oldStreamers = append([]streamer(nil), streamers...)
-			sMutex.Unlock()
+			streamers.old = append([]streamer(nil), streamers.current...)
+			streamers.mu.Unlock()
 
 			// 每分钟循环一次
 			time.Sleep(time.Minute)
