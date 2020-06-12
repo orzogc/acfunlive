@@ -26,6 +26,7 @@ func printErr() {
 	logger.Println("请输入正确的命令，输入help查看全部命令的解释")
 }
 
+// 列出正在直播的主播
 func listLive() {
 	logger.Println("正在直播的主播：")
 	for _, s := range streamers {
