@@ -17,7 +17,7 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-const acLive = "https://live.acfun.cn/api/channel/list"
+const acLive = "https://live.acfun.cn/api/channel/list?pcursor=%s"
 
 type liveRoom struct {
 	// 主播名字
@@ -29,19 +29,34 @@ type liveRoom struct {
 // map[uint]liveRoom
 var liveRooms = &sync.Map{}
 
+func fetchAllRooms() {
+	page := "0"
+	var allRooms = sync.Map{}
+	for page != "no_more" {
+		rooms, nextPage := fetchLiveRoom(page)
+		page = nextPage
+		rooms.Range(func(key, value interface{}) bool {
+			allRooms.Store(key, value)
+			return true
+		})
+	}
+
+	liveRooms = &allRooms
+}
+
 // 获取AcFun直播间API的json
-func fetchLiveRoom() {
+func fetchLiveRoom(page string) (r *sync.Map, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
 			timePrintln("获取AcFun直播间API的json时发生错误，尝试重新运行")
 			// 延迟两秒，防止意外情况下刷屏
 			time.Sleep(2 * time.Second)
-			fetchLiveRoom()
+			r, nextPage = fetchLiveRoom(page)
 		}
 	}()
 
-	resp, err := http.Get(acLive)
+	resp, err := http.Get(fmt.Sprintf(acLive, page))
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -51,7 +66,7 @@ func fetchLiveRoom() {
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("channelListData", "result") != 0 {
-		return
+		return nil, ""
 	}
 
 	var rooms = sync.Map{}
@@ -65,12 +80,9 @@ func fetchLiveRoom() {
 		rooms.Store(uid, room)
 	}
 
-	if length(&rooms) == v.GetInt("totalCount") {
-		liveRooms = &rooms
-	} else {
-		return
-	}
-	//mapPrintln(liveRooms)
+	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
+
+	return &rooms, nextPage
 }
 
 // 查看主播是否在直播

@@ -179,7 +179,7 @@ func main() {
 		mainCh := make(chan controlMsg, 20)
 		chMap.Store(0, mainCh)
 
-		fetchLiveRoom()
+		fetchAllRooms()
 		for _, s := range streamers {
 			go s.initCycle()
 		}
@@ -222,7 +222,7 @@ func main() {
 			default:
 			}
 
-			fetchLiveRoom()
+			fetchAllRooms()
 
 			// 每20秒循环一次
 			time.Sleep(20 * time.Second)
