@@ -13,15 +13,11 @@ func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
 		timePrintln("重启监听" + s.longID() + "的直播状态")
-		chMutex.Lock()
-		ch := chMap[0]
-		chMutex.Unlock()
-		ch <- msg
+		ch, _ := chMap.Load(0)
+		ch.(chan controlMsg) <- msg
 	case stopCycle:
 		timePrintln("删除" + s.longID())
-		chMutex.Lock()
-		delete(chMap, s.UID)
-		chMutex.Unlock()
+		chMap.Delete(s.UID)
 	case quit:
 		timePrintln("正在退出" + s.longID() + "的循环")
 	default:
@@ -37,21 +33,17 @@ func (s streamer) cycle() {
 			timePrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
-			chMutex.Lock()
-			ch := chMap[0]
-			chMutex.Unlock()
-			ch <- restart
+			ch, _ := chMap.Load(0)
+			ch.(chan controlMsg) <- restart
 		}
 	}()
 
-	chMutex.Lock()
-	ch := chMap[s.UID]
-	chMutex.Unlock()
+	ch, _ := chMap.Load(s.UID)
 
 	// 设置文件里有该主播，但是不通知不下载
 	if !(s.Notify || s.Record) {
 		for {
-			msg := <-ch
+			msg := <-ch.(chan controlMsg)
 			s.handleMsg(msg)
 			return
 		}
@@ -62,7 +54,7 @@ func (s streamer) cycle() {
 	isLive := false
 	for {
 		select {
-		case msg := <-ch:
+		case msg := <-ch.(chan controlMsg):
 			s.handleMsg(msg)
 			return
 		default:
@@ -78,15 +70,12 @@ func (s streamer) cycle() {
 					}
 					if s.Record {
 						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
-						recMutex.Lock()
-						rec, ok := recordMap[s.UID]
-						recMutex.Unlock()
+						r, ok := recordMap.Load(s.UID)
+						rec := r.(record)
 						if ok {
 							// 如果设置被修改，不重启已有的下载
-							moMutex.Lock()
-							modified := modify[s.UID]
-							moMutex.Unlock()
-							if !modified {
+							modified, _ := modify.Load(s.UID)
+							if !modified.(bool) {
 								go s.recordLive()
 								rec.ch <- stopRecord
 								io.WriteString(rec.stdin, "q")
@@ -108,11 +97,9 @@ func (s streamer) cycle() {
 						desktopNotify(s.ID + "已经下播")
 					}
 					if s.Record {
-						recMutex.Lock()
-						rec, ok := recordMap[s.UID]
-						recMutex.Unlock()
+						rec, ok := recordMap.Load(s.UID)
 						if ok {
-							rec.ch <- liveOff
+							rec.(record).ch <- liveOff
 						}
 					}
 
@@ -120,11 +107,10 @@ func (s streamer) cycle() {
 				isLive = false
 			}
 
-			moMutex.Lock()
-			if modify[s.UID] {
-				modify[s.UID] = false
+			modified, _ := modify.Load(s.UID)
+			if modified.(bool) {
+				modify.Store(s.UID, false)
 			}
-			moMutex.Unlock()
 		}
 	}
 }
@@ -132,8 +118,8 @@ func (s streamer) cycle() {
 // 完成对cycle()的初始化
 func (s streamer) initCycle() {
 	controlCh := make(chan controlMsg, 20)
-	chMutex.Lock()
-	chMap[s.UID] = controlCh
-	chMutex.Unlock()
+	chMap.Store(s.UID, controlCh)
+	// 初始化modify，因为sync.Map不会自动初始化
+	modify.Store(s.UID, false)
 	s.cycle()
 }

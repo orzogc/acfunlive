@@ -17,11 +17,8 @@ import (
 // 运行程序所在文件夹
 var exeDir string
 
-// chMap的锁
-var chMutex sync.Mutex
-
-// 每个streamer的控制管道
-var chMap = make(map[uint]chan controlMsg)
+// 每个streamer的控制管道的map，map[uint]chan controlMsg
+var chMap = sync.Map{}
 
 type control int
 
@@ -180,7 +177,7 @@ func main() {
 		timePrintln("本程序开始监听主播的直播状态")
 
 		mainCh := make(chan controlMsg, 20)
-		chMap[0] = mainCh
+		chMap.Store(0, mainCh)
 
 		fetchLiveRoom()
 		for _, s := range streamers {
@@ -204,18 +201,17 @@ func main() {
 					// 结束cycleConfig()
 					cancel()
 					// 结束cycle()
-					chMutex.Lock()
-					for _, ch := range chMap {
-						ch <- msg
-					}
-					chMutex.Unlock()
+					chMap.Range(func(key, value interface{}) bool {
+						value.(chan controlMsg) <- msg
+						return true
+					})
 					// 结束下载直播
-					recMutex.Lock()
-					for _, rec := range recordMap {
+					recordMap.Range(func(key, value interface{}) bool {
+						rec := value.(record)
 						rec.ch <- stopRecord
 						io.WriteString(rec.stdin, "q")
-					}
-					recMutex.Unlock()
+						return true
+					})
 					// 等待10秒，等待其他goroutine结束
 					time.Sleep(10 * time.Second)
 					timePrintln("本程序结束运行")

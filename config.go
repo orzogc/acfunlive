@@ -14,11 +14,8 @@ const configFile = "config.json"
 
 var configFileLocation string
 
-// modify的锁
-var moMutex sync.Mutex
-
-// 设置修改标记
-var modify = make(map[uint]bool)
+// 设置修改标记，map[uint]bool
+var modify = sync.Map{}
 
 // 主播的设置数据
 type streamer struct {
@@ -115,13 +112,9 @@ func cycleConfig(ctx context.Context) {
 								// olds的设置被修改
 								timePrintln(s.longID() + "的设置被修改，重新设置")
 								restart := controlMsg{s: s, c: startCycle}
-								chMutex.Lock()
-								ch := chMap[s.UID]
-								chMutex.Unlock()
-								moMutex.Lock()
-								modify[s.UID] = true
-								moMutex.Unlock()
-								ch <- restart
+								ch, _ := chMap.Load(s.UID)
+								modify.Store(s.UID, true)
+								ch.(chan controlMsg) <- restart
 							}
 							break
 						} else {
@@ -129,13 +122,9 @@ func cycleConfig(ctx context.Context) {
 								// s为新增的主播
 								timePrintln("新增" + s.longID() + "的设置")
 								start := controlMsg{s: s, c: startCycle}
-								chMutex.Lock()
-								ch := chMap[0]
-								chMutex.Unlock()
-								moMutex.Lock()
-								modify[s.UID] = true
-								moMutex.Unlock()
-								ch <- start
+								ch, _ := chMap.Load(0)
+								modify.Store(s.UID, true)
+								ch.(chan controlMsg) <- start
 							}
 						}
 					}
@@ -150,10 +139,8 @@ func cycleConfig(ctx context.Context) {
 								// olds为被删除的主播
 								timePrintln(olds.longID() + "的设置被删除")
 								stop := controlMsg{s: olds, c: stopCycle}
-								chMutex.Lock()
-								ch := chMap[olds.UID]
-								chMutex.Unlock()
-								ch <- stop
+								ch, _ := chMap.Load(olds.UID)
+								ch.(chan controlMsg) <- stop
 							}
 						}
 					}

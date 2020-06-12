@@ -21,9 +21,8 @@ type record struct {
 	ch     chan control
 }
 
-// recordMap的锁
-var recMutex sync.Mutex
-var recordMap = make(map[uint]record)
+// 下载信息的map，map[uint]record
+var recordMap = sync.Map{}
 
 // 设置自动下载指定主播的直播
 func addRecord(uid uint) {
@@ -81,9 +80,7 @@ func delRecord(uid uint) {
 func startRec(uid uint) {
 	s := streamer{UID: uid, ID: getID(uid)}
 
-	recMutex.Lock()
-	_, ok := recordMap[s.UID]
-	recMutex.Unlock()
+	_, ok := recordMap.Load(s.UID)
 	if ok {
 		logger.Println("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
 		return
@@ -105,9 +102,8 @@ func startRec(uid uint) {
 
 // 停止下载指定主播的直播
 func stopRec(uid uint) {
-	recMutex.Lock()
-	rec, ok := recordMap[uid]
-	recMutex.Unlock()
+	r, ok := recordMap.Load(uid)
+	rec := r.(record)
 	if ok {
 		logger.Println("开始结束该主播的下载")
 		rec.ch <- stopRecord
@@ -115,9 +111,7 @@ func stopRec(uid uint) {
 		time.Sleep(20 * time.Second)
 		rec.cancel()
 		// 需要删除recordMap里相应的key
-		recMutex.Lock()
-		delete(recordMap, uid)
-		recMutex.Unlock()
+		recordMap.Delete(uid)
 	} else {
 		logger.Println("没有在下载该主播的直播")
 	}
@@ -130,9 +124,7 @@ func (s streamer) recordLive() {
 			timePrintln("Recovering from panic in recordLive(), the error is:", err)
 			timePrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			desktopNotify("下载" + s.ID + "的直播发生错误")
-			recMutex.Lock()
-			delete(recordMap, s.UID)
-			recMutex.Unlock()
+			recordMap.Delete(s.UID)
 		}
 	}()
 
@@ -192,9 +184,7 @@ func (s streamer) recordLive() {
 	defer stdin.Close()
 	ch := make(chan control, 20)
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
-	recMutex.Lock()
-	recordMap[s.UID] = rec
-	recMutex.Unlock()
+	recordMap.Store(s.UID, rec)
 
 	if !*isListen {
 		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
@@ -211,7 +201,7 @@ func (s streamer) recordLive() {
 		select {
 		case msg := <-ch:
 			switch msg {
-			// 受到下播的信号
+			// 收到下播的信号
 			case liveOff:
 			// 收到停止下载的信号
 			case stopRecord:
@@ -229,9 +219,7 @@ func (s streamer) recordLive() {
 			}
 		}
 	} else {
-		recMutex.Lock()
-		delete(recordMap, s.UID)
-		recMutex.Unlock()
+		recordMap.Delete(s.UID)
 	}
 
 	timePrintln(s.longID() + "的直播下载已经结束")

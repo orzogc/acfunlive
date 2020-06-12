@@ -17,16 +17,19 @@ import (
 	"github.com/valyala/fastjson"
 )
 
+const acLive = "https://live.acfun.cn/api/channel/list"
+
 type liveRoom struct {
-	id    string
+	// 主播名字
+	id string
+	// 直播间标题
 	title string
 }
 
-//var liveRooms *[]liveRoom
-
+// map[uint]liveRoom
 var liveRooms = &sync.Map{}
 
-// 获取AcFun直播间的json
+// 获取AcFun直播间API的json
 func fetchLiveRoom() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -37,8 +40,6 @@ func fetchLiveRoom() {
 			fetchLiveRoom()
 		}
 	}()
-
-	const acLive = "https://live.acfun.cn/api/channel/list"
 
 	resp, err := http.Get(acLive)
 	checkErr(err)
@@ -80,9 +81,9 @@ func (s streamer) isLiveOn() bool {
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	title, ok := liveRooms.Load(s.UID)
+	room, ok := liveRooms.Load(s.UID)
 	if ok {
-		return title.(liveRoom).title
+		return room.(liveRoom).title
 	}
 	return ""
 }
