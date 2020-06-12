@@ -150,19 +150,19 @@ func (s streamer) recordLive() {
 		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 	}
 
-	timePrintln("开始下载" + s.longID() + "的直播")
 	title := s.getTitle()
-	// 转换文件名不允许的特殊字符
-	re := regexp.MustCompile(`[<>:"/\\|?*]`)
-	title = re.ReplaceAllString(title, "_")
 	recordTime := getTime()
 	filename := recordTime + " " + s.ID + " " + title
+	// 转换文件名不允许的特殊字符
+	re := regexp.MustCompile(`[<>:"/\\|?*]`)
+	filename = re.ReplaceAllString(filename, " ")
 	// linux下限制文件名长度
 	if runtime.GOOS == "linux" {
 		if len(filename) > 250 {
 			filename = filename[:250]
 		}
 	}
+	// 想要输出其他视频格式可以修改这里的mp4
 	outFile := filepath.Join(exeDir, filename+".mp4")
 	// windows下全路径文件名不能过长
 	if runtime.GOOS == "windows" {
@@ -171,6 +171,8 @@ func (s streamer) recordLive() {
 			return
 		}
 	}
+
+	timePrintln("开始下载" + s.longID() + "的直播")
 	logger.Println("本次下载的文件保存在" + outFile)
 	if *isListen {
 		logger.Println("如果想提前结束下载，运行stoprecord " + s.uidStr())
