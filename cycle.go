@@ -71,8 +71,8 @@ func (s streamer) cycle() {
 					if s.Record {
 						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
 						r, ok := recordMap.Load(s.UID)
-						rec := r.(record)
 						if ok {
+							rec := r.(record)
 							// 如果设置被修改，不重启已有的下载
 							modified, _ := modify.Load(s.UID)
 							if !modified.(bool) {

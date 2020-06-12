@@ -11,7 +11,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/valyala/fastjson"
@@ -27,25 +26,24 @@ type liveRoom struct {
 }
 
 // map[uint]liveRoom
-var liveRooms = &sync.Map{}
+var liveRooms *map[uint]liveRoom
 
 func fetchAllRooms() {
 	page := "0"
-	var allRooms = sync.Map{}
+	var allRooms = make(map[uint]liveRoom)
 	for page != "no_more" {
 		rooms, nextPage := fetchLiveRoom(page)
 		page = nextPage
-		rooms.Range(func(key, value interface{}) bool {
-			allRooms.Store(key, value)
-			return true
-		})
+		for uid, room := range *rooms {
+			allRooms[uid] = room
+		}
 	}
 
 	liveRooms = &allRooms
 }
 
 // 获取AcFun直播间API的json
-func fetchLiveRoom(page string) (r *sync.Map, nextPage string) {
+func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
@@ -69,7 +67,7 @@ func fetchLiveRoom(page string) (r *sync.Map, nextPage string) {
 		return nil, ""
 	}
 
-	var rooms = sync.Map{}
+	var rooms = make(map[uint]liveRoom)
 	liveList := v.GetArray("channelListData", "liveList")
 	for _, live := range liveList {
 		uid := live.GetUint("authorId")
@@ -77,7 +75,7 @@ func fetchLiveRoom(page string) (r *sync.Map, nextPage string) {
 			id:    string(live.GetStringBytes("user", "name")),
 			title: string(live.GetStringBytes("title")),
 		}
-		rooms.Store(uid, room)
+		rooms[uid] = room
 	}
 
 	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
@@ -87,15 +85,15 @@ func fetchLiveRoom(page string) (r *sync.Map, nextPage string) {
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	_, ok := liveRooms.Load(s.UID)
+	_, ok := (*liveRooms)[s.UID]
 	return ok
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	room, ok := liveRooms.Load(s.UID)
+	room, ok := (*liveRooms)[s.UID]
 	if ok {
-		return room.(liveRoom).title
+		return room.title
 	}
 	return ""
 }

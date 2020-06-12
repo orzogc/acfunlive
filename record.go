@@ -103,8 +103,8 @@ func startRec(uid uint) {
 // 停止下载指定主播的直播
 func stopRec(uid uint) {
 	r, ok := recordMap.Load(uid)
-	rec := r.(record)
 	if ok {
+		rec := r.(record)
 		logger.Println("开始结束该主播的下载")
 		rec.ch <- stopRecord
 		io.WriteString(rec.stdin, "q")
