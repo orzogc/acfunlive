@@ -245,6 +245,10 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 // 查看指定主播是否在直播和输出其直播源
 func printStreamURL(uid uint) {
 	id := getID(uid)
+	if id == "" {
+		logger.Println("不存在这个用户")
+		return
+	}
 	s := streamer{UID: uid, ID: id}
 
 	if s.isLiveOn() {

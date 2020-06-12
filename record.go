@@ -84,7 +84,12 @@ func delRecord(uid uint) {
 
 // 临时下载指定主播的直播
 func startRec(uid uint) {
-	s := streamer{UID: uid, ID: getID(uid)}
+	id := getID(uid)
+	if id == "" {
+		logger.Println("不存在这个用户")
+		return
+	}
+	s := streamer{UID: uid, ID: id}
 
 	_, ok := recordMap.Load(s.UID)
 	if ok {

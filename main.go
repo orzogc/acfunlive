@@ -118,8 +118,6 @@ func argsHandle() {
 			flag.PrintDefaults()
 		}
 		if *isListLive {
-			loadConfig()
-			fetchAllRooms()
 			listLive()
 		}
 		if *addNotifyUID != 0 {
@@ -167,6 +165,8 @@ func initialize() {
 	}
 	loadConfig()
 	streamers.old = append([]streamer(nil), streamers.current...)
+
+	fetchAllRooms()
 }
 
 func main() {
@@ -185,7 +185,6 @@ func main() {
 		mainCh := make(chan controlMsg, 20)
 		chMap.Store(0, mainCh)
 
-		fetchAllRooms()
 		for _, s := range streamers.current {
 			go s.initCycle()
 		}
