@@ -26,6 +26,15 @@ func printErr() {
 	logger.Println("请输入正确的命令，输入help查看全部命令的解释")
 }
 
+func listLive() {
+	logger.Println("正在直播的主播：")
+	for _, s := range streamers {
+		if s.isLiveOn() {
+			logger.Println(s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr())
+		}
+	}
+}
+
 // 处理输入
 func handleInput() {
 	defer func() {
@@ -42,13 +51,7 @@ func handleInput() {
 		if len(cmd) == 1 {
 			switch cmd[0] {
 			case "listlive":
-				logger.Println("正在直播的主播：")
-				for _, s := range streamers {
-					if s.isLiveOn() {
-						logger.Println(s.longID() + "：" + livePage + s.uidStr())
-					}
-				}
-				//logger.Println("正在直播的主播列出完毕")
+				listLive()
 			case "listrecord":
 				logger.Println("正在下载的直播：")
 				recordMap.Range(func(key, value interface{}) bool {
@@ -57,7 +60,6 @@ func handleInput() {
 					logger.Println(s.longID() + "：" + s.getTitle())
 					return true
 				})
-				//logger.Println("正在下载的直播列出完毕")
 			case "quit":
 				logger.Println("正在准备退出，请等待...")
 				ch, _ := chMap.Load(0)
