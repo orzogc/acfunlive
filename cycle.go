@@ -3,7 +3,6 @@ package main
 
 import (
 	"io"
-	"math/rand"
 	"time"
 )
 
@@ -126,13 +125,6 @@ func (s streamer) cycle() {
 				modify[s.UID] = false
 			}
 			moMutex.Unlock()
-
-			// 大约每二十几秒获取一次主播的直播状态
-			rand.Seed(time.Now().UnixNano())
-			min := 20
-			max := 30
-			duration := rand.Intn(max-min) + min
-			time.Sleep(time.Duration(duration) * time.Second)
 		}
 	}
 }

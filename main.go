@@ -77,6 +77,22 @@ func (s streamer) longID() string {
 	return s.ID + "（" + s.uidStr() + "）"
 }
 
+func length(sm *sync.Map) int {
+	count := 0
+	sm.Range(func(key, value interface{}) bool {
+		count++
+		return true
+	})
+	return count
+}
+
+func mapPrintln(sm *sync.Map) {
+	sm.Range(func(key, value interface{}) bool {
+		logger.Println(key, value)
+		return true
+	})
+}
+
 // 命令行参数处理
 func argsHandle() {
 	const usageStr = "本程序用于AcFun主播的开播提醒和自动下载直播"
@@ -164,6 +180,7 @@ func main() {
 		mainCh := make(chan controlMsg, 20)
 		chMap[0] = mainCh
 
+		fetchLiveRoom()
 		for _, s := range streamers {
 			go s.initCycle()
 		}
@@ -176,33 +193,41 @@ func main() {
 		go handleInput()
 
 		for {
-			msg := <-mainCh
-			switch msg.c {
-			case startCycle:
-				go msg.s.initCycle()
-			case quit:
-				// 结束cycleConfig()
-				cancel()
-				// 结束cycle()
-				chMutex.Lock()
-				for _, ch := range chMap {
-					ch <- msg
+			select {
+			case msg := <-mainCh:
+				switch msg.c {
+				case startCycle:
+					go msg.s.initCycle()
+				case quit:
+					// 结束cycleConfig()
+					cancel()
+					// 结束cycle()
+					chMutex.Lock()
+					for _, ch := range chMap {
+						ch <- msg
+					}
+					chMutex.Unlock()
+					// 结束下载直播
+					recMutex.Lock()
+					for _, rec := range recordMap {
+						rec.ch <- stopRecord
+						io.WriteString(rec.stdin, "q")
+					}
+					recMutex.Unlock()
+					// 等待10秒，等待其他goroutine结束
+					time.Sleep(10 * time.Second)
+					timePrintln("本程序结束运行")
+					return
+				default:
+					timePrintln("未知controlMsg：", msg)
 				}
-				chMutex.Unlock()
-				// 结束下载直播
-				recMutex.Lock()
-				for _, rec := range recordMap {
-					rec.ch <- stopRecord
-					io.WriteString(rec.stdin, "q")
-				}
-				recMutex.Unlock()
-				// 等待30秒，等待其他goroutine结束
-				time.Sleep(30 * time.Second)
-				timePrintln("本程序结束运行")
-				return
 			default:
-				timePrintln("未知controlMsg：", msg)
 			}
+
+			fetchLiveRoom()
+
+			// 每20秒循环一次
+			time.Sleep(20 * time.Second)
 		}
 	}
 }

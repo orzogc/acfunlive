@@ -11,70 +11,103 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/valyala/fastjson"
 )
 
-// 爬取主播wap版直播页面
-func fetchLivePage(uid uint) (doc *goquery.Document) {
+type liveRoom struct {
+	id    string
+	title string
+}
+
+//var liveRooms *[]liveRoom
+
+var liveRooms = &sync.Map{}
+
+// 获取AcFun直播间的json
+func fetchLiveRoom() {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in fetchLivePage(), the error is:", err)
-			timePrintln("获取uid为" + strconv.Itoa(int(uid)) + "的直播页面时出错，尝试重新运行")
-			doc = fetchLivePage(uid)
+			timePrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
+			timePrintln("获取AcFun直播间的json时发生错误，尝试重新运行")
+			fetchLiveRoom()
 		}
 	}()
 
-	const acLivePage = "https://m.acfun.cn/live/detail/"
-	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
+	const acLive = "https://live.acfun.cn/api/channel/list"
 
-	upLivePage := acLivePage + strconv.Itoa(int(uid))
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", upLivePage, nil)
-	checkErr(err)
-
-	// 需要设置手机版user-agent
-	req.Header.Set("User-Agent", userAgent)
-	resp, err := client.Do(req)
+	resp, err := http.Get(acLive)
 	checkErr(err)
 	defer resp.Body.Close()
-
-	doc, err = goquery.NewDocumentFromReader(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	checkErr(err)
 
-	return doc
+	var p fastjson.Parser
+	v, err := p.ParseBytes(body)
+	checkErr(err)
+	if v.GetInt("channelListData", "result") != 0 {
+		return
+	}
+
+	var rooms = sync.Map{}
+	liveList := v.GetArray("channelListData", "liveList")
+	for _, live := range liveList {
+		uid := live.GetUint("authorId")
+		room := liveRoom{
+			id:    string(live.GetStringBytes("user", "name")),
+			title: string(live.GetStringBytes("title")),
+		}
+		rooms.Store(uid, room)
+	}
+
+	if length(&rooms) == v.GetInt("totalCount") {
+		liveRooms = &rooms
+	} else {
+		return
+	}
+	//mapPrintln(liveRooms)
 }
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	doc := fetchLivePage(s.UID)
-
-	if doc.Find("p.closed-tip").Text() == "直播已结束" {
-		return false
-	}
-	return true
-}
-
-// 根据uid获取主播的id
-func getID(uid uint) string {
-	doc := fetchLivePage(uid)
-
-	// 主播没在开播
-	id := doc.Find("a.up-link").Text()
-	if id != "" {
-		return id
-	}
-
-	// 主播正在开播
-	return doc.Find("div.user-nickname").Text()
+	_, ok := liveRooms.Load(s.UID)
+	return ok
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	doc := fetchLivePage(s.UID)
+	title, ok := liveRooms.Load(s.UID)
+	if ok {
+		return title.(liveRoom).title
+	}
+	return ""
+}
 
-	return doc.Find("h1.live-content-title-text").Text()
+// 根据uid获取主播的id
+func getID(uid uint) string {
+	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId="
+	userAgent := "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", acUser+strconv.Itoa(int(uid)), nil)
+	checkErr(err)
+	// 需要浏览器user-agent
+	req.Header.Set("User-Agent", userAgent)
+	resp, err := client.Do(req)
+	checkErr(err)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	checkErr(err)
+
+	var p fastjson.Parser
+	v, err := p.ParseBytes(body)
+	checkErr(err)
+	if v.GetInt("result") != 0 {
+		return ""
+	}
+
+	return string(v.GetStringBytes("profile", "name"))
 }
 
 // 获取AcFun的logo
