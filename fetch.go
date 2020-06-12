@@ -25,7 +25,7 @@ type liveRoom struct {
 	title string
 }
 
-// map[uint]liveRoom
+// liveRoom的map
 var liveRooms *map[uint]liveRoom
 
 func fetchAllRooms() {

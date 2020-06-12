@@ -92,6 +92,7 @@ func (s streamer) cycle() {
 				}
 			} else {
 				if isLive {
+					isLive = false
 					timePrintln(s.longID() + "已经下播")
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
@@ -104,7 +105,6 @@ func (s streamer) cycle() {
 					}
 
 				}
-				isLive = false
 			}
 
 			modified, _ := modify.Load(s.UID)

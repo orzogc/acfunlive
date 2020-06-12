@@ -124,6 +124,7 @@ func (s streamer) recordLive() {
 			timePrintln("Recovering from panic in recordLive(), the error is:", err)
 			timePrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
 			desktopNotify("下载" + s.ID + "的直播发生错误")
+			time.Sleep(2 * time.Second)
 			recordMap.Delete(s.UID)
 		}
 	}()
