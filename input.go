@@ -25,36 +25,43 @@ stoprecord 数字：正在下载指定主播的直播时取消下载，数字为
 quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
+type streaming struct {
+	UID   uint
+	ID    string
+	Title string
+	URL   string
+}
+
 // 打印错误命令信息
 func printErr() {
 	lPrintln("请输入正确的命令，输入help查看全部命令的解释")
 }
 
 // 列出正在直播的主播
-func listLive() (streaming []string) {
+func listLive() (streamings []streaming) {
 	lPrintln("正在直播的主播：")
 	streamers.mu.Lock()
 	for _, s := range streamers.current {
 		if s.isLiveOn() {
-			msg := s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr()
-			lPrintln(msg)
-			streaming = append(streaming, msg)
+			live := streaming{UID: s.UID, ID: s.ID, Title: s.getTitle(), URL: livePage + s.uidStr()}
+			lPrintln(s.longID() + "：" + live.Title + " " + live.URL)
+			streamings = append(streamings, live)
 		}
 	}
 	streamers.mu.Unlock()
 
-	return streaming
+	return streamings
 }
 
 // 列出正在下载的直播
-func listRecord() (recording []string) {
+func listRecord() (recording []streaming) {
 	lPrintln("正在下载的直播：")
 	recordMap.Range(func(key, value interface{}) bool {
 		uid := key.(uint)
 		s := streamer{UID: uid, ID: getID(uid)}
-		msg := s.longID() + "：" + s.getTitle()
-		lPrintln(msg)
-		recording = append(recording, msg)
+		live := streaming{UID: uid, ID: s.ID, Title: s.getTitle(), URL: livePage + uidStr(uid)}
+		lPrintln(s.longID() + "：" + live.Title + " " + live.URL)
+		recording = append(recording, live)
 		return true
 	})
 

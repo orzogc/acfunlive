@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -54,15 +55,21 @@ func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	uid, err := strconv.Atoi(vars["uid"])
 	checkErr(err)
 	hlsURL, flvURL := printStreamURL(uint(uid))
-	fmt.Fprint(w, hlsURL+"\n"+flvURL)
+	urls, err := json.MarshalIndent([]string{hlsURL, flvURL}, "", "    ")
+	checkErr(err)
+	fmt.Fprint(w, string(urls))
 }
 
 func handleListLive(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, listLive())
+	s, err := json.MarshalIndent(listLive(), "", "    ")
+	checkErr(err)
+	fmt.Fprint(w, string(s))
 }
 
 func handleListRecord(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, listRecord())
+	s, err := json.MarshalIndent(listRecord(), "", "    ")
+	checkErr(err)
+	fmt.Fprint(w, string(s))
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {
