@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -106,14 +105,14 @@ func getID(uid uint) (id string) {
 	defer func() {
 		if err := recover(); err != nil {
 			timePrintln("Recovering from panic in getID(), the error is:", err)
-			timePrintln("获取uid为" + strconv.Itoa(int(uid)) + "的主播的ID时出现错误，尝试重新运行")
+			timePrintln("获取uid为" + uidStr(uid) + "的主播的ID时出现错误，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			id = getID(uid)
 		}
 	}()
 
 	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
-	userAgent := "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf(acUser, uid), nil)
@@ -243,24 +242,26 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 }
 
 // 查看指定主播是否在直播和输出其直播源
-func printStreamURL(uid uint) {
+func printStreamURL(uid uint) (string, string) {
 	id := getID(uid)
 	if id == "" {
-		logger.Println("不存在这个用户")
-		return
+		timePrintln("不存在uid为" + uidStr(uid) + "的用户")
+		return "", ""
 	}
 	s := streamer{UID: uid, ID: id}
 
 	if s.isLiveOn() {
 		title := s.getTitle()
 		hlsURL, flvURL := s.getStreamURL()
-		logger.Println(s.longID() + "正在直播：" + title)
+		timePrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
-			logger.Println("无法获取" + s.longID() + "的直播源，请重新运行命令")
+			timePrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {
-			logger.Println(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
+			timePrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
 		}
-	} else {
-		logger.Println(s.longID() + "不在直播")
+		return hlsURL, flvURL
 	}
+
+	timePrintln(s.longID() + "不在直播")
+	return "", ""
 }

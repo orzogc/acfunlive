@@ -158,8 +158,8 @@ func cycleConfig(ctx context.Context) {
 			streamers.old = append([]streamer(nil), streamers.current...)
 			streamers.mu.Unlock()
 
-			// 每分钟循环一次
-			time.Sleep(time.Minute)
+			// 每半分钟循环一次
+			time.Sleep(30 * time.Second)
 		}
 	}
 }

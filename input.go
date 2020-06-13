@@ -27,15 +27,40 @@ func printErr() {
 }
 
 // 列出正在直播的主播
-func listLive() {
-	logger.Println("正在直播的主播：")
+func listLive() (streaming []string) {
+	timePrintln("正在直播的主播：")
 	streamers.mu.Lock()
 	for _, s := range streamers.current {
 		if s.isLiveOn() {
-			logger.Println(s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr())
+			msg := s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr()
+			timePrintln(msg)
+			streaming = append(streaming, msg)
 		}
 	}
 	streamers.mu.Unlock()
+
+	return streaming
+}
+
+func listRecord() (recording []string) {
+	timePrintln("正在下载的直播：")
+	recordMap.Range(func(key, value interface{}) bool {
+		uid := key.(uint)
+		s := streamer{UID: uid, ID: getID(uid)}
+		msg := s.longID() + "：" + s.getTitle()
+		timePrintln(msg)
+		recording = append(recording, msg)
+		return true
+	})
+
+	return recording
+}
+
+func quitRun() {
+	timePrintln("正在准备退出，请等待...")
+	ch, _ := chMap.Load(0)
+	q := controlMsg{c: quit}
+	ch.(chan controlMsg) <- q
 }
 
 // 处理输入
@@ -56,18 +81,9 @@ func handleInput() {
 			case "listlive":
 				listLive()
 			case "listrecord":
-				logger.Println("正在下载的直播：")
-				recordMap.Range(func(key, value interface{}) bool {
-					uid := key.(uint)
-					s := streamer{UID: uid, ID: getID(uid)}
-					logger.Println(s.longID() + "：" + s.getTitle())
-					return true
-				})
+				listRecord()
 			case "quit":
-				logger.Println("正在准备退出，请等待...")
-				ch, _ := chMap.Load(0)
-				q := controlMsg{c: quit}
-				ch.(chan controlMsg) <- q
+				quitRun()
 				return
 			case "help":
 				logger.Println(helpMsg)

@@ -31,17 +31,17 @@ var danglingRec struct {
 }
 
 // 设置自动下载指定主播的直播
-func addRecord(uid uint) {
+func addRecord(uid uint) bool {
 	isExist := false
 	streamers.mu.Lock()
 	for i, s := range streamers.current {
 		if s.UID == uid {
 			isExist = true
 			if s.Record {
-				logger.Println("已经设置过自动下载" + s.ID + "的直播")
+				timePrintln("已经设置过自动下载" + s.ID + "的直播")
 			} else {
 				streamers.current[i].Record = true
-				logger.Println("成功设置自动下载" + s.ID + "的直播")
+				timePrintln("成功设置自动下载" + s.ID + "的直播")
 			}
 		}
 	}
@@ -50,22 +50,23 @@ func addRecord(uid uint) {
 	if !isExist {
 		id := getID(uid)
 		if id == "" {
-			logger.Println("不存在这个用户")
-			return
+			timePrintln("不存在uid为" + uidStr(uid) + "的用户")
+			return false
 		}
 
 		newStreamer := streamer{UID: uid, ID: id, Notify: false, Record: true}
 		streamers.mu.Lock()
 		streamers.current = append(streamers.current, newStreamer)
 		streamers.mu.Unlock()
-		logger.Println("成功设置自动下载" + id + "的直播")
+		timePrintln("成功设置自动下载" + id + "的直播")
 	}
 
 	saveConfig()
+	return true
 }
 
 // 取消自动下载指定主播的直播
-func delRecord(uid uint) {
+func delRecord(uid uint) bool {
 	streamers.mu.Lock()
 	for i, s := range streamers.current {
 		if s.UID == uid {
@@ -74,32 +75,33 @@ func delRecord(uid uint) {
 			} else {
 				deleteStreamer(uid)
 			}
-			logger.Println("成功取消自动下载" + s.ID + "的直播")
+			timePrintln("成功取消自动下载" + s.ID + "的直播")
 		}
 	}
 	streamers.mu.Unlock()
 
 	saveConfig()
+	return true
 }
 
 // 临时下载指定主播的直播
-func startRec(uid uint) {
+func startRec(uid uint) bool {
 	id := getID(uid)
 	if id == "" {
-		logger.Println("不存在这个用户")
-		return
+		timePrintln("不存在uid为" + uidStr(uid) + "的用户")
+		return false
 	}
 	s := streamer{UID: uid, ID: id}
 
 	_, ok := recordMap.Load(s.UID)
 	if ok {
-		logger.Println("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
-		return
+		timePrintln("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
+		return false
 	}
 
 	if !s.isLiveOn() {
-		logger.Println(s.longID() + "不在直播，取消下载")
-		return
+		timePrintln(s.longID() + "不在直播，取消下载")
+		return false
 	}
 
 	// 查看程序是否处于监听状态
@@ -109,14 +111,15 @@ func startRec(uid uint) {
 		// 程序只在单独下载一个直播，不用goroutine，防止程序提前结束运行
 		s.recordLive()
 	}
+	return true
 }
 
 // 停止下载指定主播的直播
-func stopRec(uid uint) {
+func stopRec(uid uint) bool {
 	r, ok := recordMap.Load(uid)
 	if ok {
 		rec := r.(record)
-		logger.Println("开始结束该主播的下载")
+		timePrintln("开始结束uid为" + uidStr(uid) + "的主播的下载")
 		rec.ch <- stopRecord
 		io.WriteString(rec.stdin, "q")
 		// 等待20秒强关下载
@@ -125,8 +128,10 @@ func stopRec(uid uint) {
 		// 需要删除recordMap里相应的key
 		recordMap.Delete(uid)
 	} else {
-		logger.Println("没有在下载该主播的直播")
+		timePrintln("没有在下载uid为" + uidStr(uid) + "的主播的直播")
 	}
+
+	return true
 }
 
 // 下载主播的直播
@@ -205,7 +210,7 @@ func (s streamer) recordLive() {
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
 	recordMap.Store(s.UID, rec)
 
-	if !*isListen {
+	if !(*isListen) {
 		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
 		cmd.Stdin = os.Stdin
 		logger.Println("按q键退出下载")

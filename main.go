@@ -40,6 +40,9 @@ type controlMsg struct {
 // 程序是否处于监听状态
 var isListen *bool
 
+// 程序是否启动web服务器
+var isWebServer *bool
+
 // 可以同步输出的logger
 var logger = log.New(os.Stdout, "", 0)
 
@@ -67,6 +70,10 @@ func timePrintln(logs ...interface{}) {
 // 将UID转换成字符串
 func (s streamer) uidStr() string {
 	return strconv.Itoa(int(s.UID))
+}
+
+func uidStr(uid uint) string {
+	return strconv.Itoa(int(uid))
 }
 
 // 返回ID（UID）形式的字符串
@@ -99,6 +106,7 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
+	isWebServer = flag.Bool("weblisten", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，可以通过http://localhost"+port+"来发送命令")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -116,6 +124,9 @@ func argsHandle() {
 		if *shortHelp || *longHelp {
 			logger.Println(usageStr)
 			flag.PrintDefaults()
+		}
+		if *isWebServer {
+			*isListen = true
 		}
 		if *isListLive {
 			listLive()
@@ -195,6 +206,11 @@ func main() {
 
 		logger.Println("现在可以输入命令修改设置，输入help查看全部命令的解释")
 		go handleInput()
+
+		if *isWebServer {
+			logger.Println("现在可以通过http://localhost" + port + "来发送命令")
+			go server()
+		}
 
 		for {
 			select {
