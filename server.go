@@ -66,7 +66,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleQuit(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "quit")
+	fmt.Fprint(w, true)
 	quitRun()
 }
 

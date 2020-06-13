@@ -3,6 +3,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 const helpMsg = `listlive：列出正在直播的主播
 listrecord：列出正在下载的直播
 startweb：启动web服务
+stopweb：停止web服务
 addnotify 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 delnotify 数字：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 addrecord 数字：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -91,6 +93,14 @@ func handleInput() {
 					go httpServer()
 				} else {
 					lPrintln("已经启动过web服务")
+				}
+			case "stopweb":
+				if *isWebServer {
+					*isWebServer = false
+					lPrintln("正在停止web服务")
+					srv.Shutdown(context.TODO())
+				} else {
+					lPrintln("没有启动web服务")
 				}
 			case "quit":
 				quitRun()

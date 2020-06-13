@@ -248,9 +248,9 @@ func main() {
 						io.WriteString(rec.stdin, "q")
 					}
 					danglingRec.mu.Unlock()
-					// 关闭web服务
+					// 停止web服务
 					if *isWebServer {
-						lPrintln("正在关闭web服务")
+						lPrintln("正在停止web服务")
 						srv.Shutdown(context.TODO())
 					}
 					// 等待20秒，等待其他goroutine结束
