@@ -49,7 +49,8 @@ var logger = log.New(os.Stdout, "", log.LstdFlags)
 // 检查错误
 func checkErr(err error) {
 	if err != nil {
-		logger.Panicln(err)
+		lPrintln(err)
+		panic(err)
 	}
 }
 
@@ -71,6 +72,7 @@ func timePrintln(logs ...interface{}) {
 
 func lPrintln(msg ...interface{}) {
 	logger.Println(msg...)
+	fmt.Fprintln(&webLog, msg...)
 }
 
 // 将UID转换成字符串
@@ -168,7 +170,7 @@ func initialize() {
 
 	_, err = os.Stat(logoFileLocation)
 	if os.IsNotExist(err) {
-		fmt.Println("下载AcFun的logo")
+		lPrintln("下载AcFun的logo")
 		fetchAcLogo()
 	}
 
@@ -178,7 +180,7 @@ func initialize() {
 		defer newConfigFile.Close()
 		_, err = newConfigFile.WriteString("[]")
 		checkErr(err)
-		fmt.Println("创建设置文件" + configFile)
+		lPrintln("创建设置文件" + configFile)
 	}
 	loadConfig()
 	streamers.old = append([]streamer(nil), streamers.current...)
