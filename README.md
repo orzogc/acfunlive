@@ -30,11 +30,11 @@ AcFun直播桌面通知和下载助手（命令行版本）
 ### web服务使用方法
 web服务默认本地端口为51880
 
-`http://localhost:51880/help` 显示帮助信息
-
 `http://localhost:51880/listlive` 列出正在直播的主播
 
 `http://localhost:51880/listrecord` 列出正在下载的直播
+
+`http://localhost:51880/liststreamer` 列出设置了开播提醒或自动下载直播的主播
 
 `http://localhost:51880/addnotify/23682490` 通知uid为23682490的用户的直播
 
@@ -53,3 +53,5 @@ web服务默认本地端口为51880
 `http://localhost:51880/log` 查看log
 
 `http://localhost:51880/quit` 退出本程序
+
+`http://localhost:51880/help` 显示帮助信息

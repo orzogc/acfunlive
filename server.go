@@ -15,6 +15,7 @@ import (
 // web服务帮助信息
 const webHelp = `/listlive ：列出正在直播的主播
 /listrecord ：列出正在下载的直播
+/liststreamer：列出设置了开播提醒或自动下载直播的主播
 /addnotify/数字 ：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 /delnotify/数字 ：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 /addrecord/数字 ：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -72,6 +73,14 @@ func handleListRecord(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(s))
 }
 
+func handleListStreamer(w http.ResponseWriter, r *http.Request) {
+	streamers.mu.Lock()
+	s, err := json.MarshalIndent(streamers.current, "", "    ")
+	streamers.mu.Unlock()
+	checkErr(err)
+	fmt.Fprint(w, string(s))
+}
+
 func handleLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webLog.String())
 }
@@ -104,6 +113,7 @@ func httpServer() {
 	s.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
 	s.HandleFunc("/listlive", handleListLive)
 	s.HandleFunc("/listrecord", handleListRecord)
+	s.HandleFunc("/liststreamer", handleListStreamer)
 	s.HandleFunc("/log", handleLog)
 	s.HandleFunc("/quit", handleQuit)
 	s.HandleFunc("/help", handleHelp)
