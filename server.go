@@ -1,3 +1,4 @@
+// web服务相关
 package main
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// web服务帮助信息
 const webHelp = `/listlive ：列出正在直播的主播
 /listrecord ：列出正在下载的直播
 /addnotify/数字 ：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
@@ -23,6 +25,7 @@ const webHelp = `/listlive ：列出正在直播的主播
 /quit ：退出本程序，退出需要等待半分钟左右
 /help ：本帮助信息`
 
+// web服务本地默认端口
 const port = ":51880"
 
 var dispatch = map[string]func(uint) bool{
@@ -38,6 +41,7 @@ var webLog strings.Builder
 
 var srv *http.Server
 
+// 处理dispatch
 func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uid, err := strconv.Atoi(vars["uid"])
@@ -74,6 +78,7 @@ func handleHelp(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
 
+// web服务
 func httpServer() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -98,7 +103,7 @@ func httpServer() {
 	s.HandleFunc("/", handleHelp)
 
 	srv = &http.Server{
-		Addr:         "0.0.0.0" + port,
+		Addr:         port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  60 * time.Second,

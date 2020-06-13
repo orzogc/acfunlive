@@ -46,6 +46,7 @@ func listLive() (streaming []string) {
 	return streaming
 }
 
+// 列出正在下载的直播
 func listRecord() (recording []string) {
 	lPrintln("正在下载的直播：")
 	recordMap.Range(func(key, value interface{}) bool {
@@ -60,6 +61,7 @@ func listRecord() (recording []string) {
 	return recording
 }
 
+// 通知main()退出程序
 func quitRun() {
 	lPrintln("正在准备退出，请等待...")
 	ch, _ := chMap.Load(0)
