@@ -62,14 +62,6 @@ func getTime() string {
 }
 
 // 打印带时间戳的log信息
-/*
-func timePrintln(logs ...interface{}) {
-	//logger.Print(getTime() + " ")
-	logs = append([]interface{}{getTime()}, logs...)
-	logger.Println(logs...)
-}
-*/
-
 func lPrintln(msg ...interface{}) {
 	logger.Println(msg...)
 	fmt.Fprintln(&webLog, msg...)
@@ -80,6 +72,7 @@ func (s streamer) uidStr() string {
 	return strconv.Itoa(int(s.UID))
 }
 
+// 将uint转换为字符串
 func uidStr(uid uint) string {
 	return strconv.Itoa(int(uid))
 }

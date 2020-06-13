@@ -213,7 +213,7 @@ func (s streamer) recordLive() {
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
 	recordMap.Store(s.UID, rec)
 
-	if !(*isListen) {
+	if !*isListen {
 		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
 		cmd.Stdin = os.Stdin
 		lPrintln("按q键退出下载")

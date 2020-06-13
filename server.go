@@ -50,7 +50,6 @@ func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	uid, err := strconv.Atoi(vars["uid"])
 	checkErr(err)
 	w.Header().Set("Content-Type", "application/json")
-	//fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uint(uid)))
 	err = json.NewEncoder(w).Encode(dispatch[mux.CurrentRoute(r).GetName()](uint(uid)))
 	checkErr(err)
 }
