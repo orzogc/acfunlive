@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 // web服务帮助信息
@@ -109,25 +110,27 @@ func httpServer() {
 	}()
 
 	r := mux.NewRouter()
-	s := r.Methods("GET").Subrouter()
 	for str := range dispatch {
-		s.HandleFunc(fmt.Sprintf("/%s/{uid:[1-9][0-9]*}", str), handleDispatch).Name(str)
+		r.HandleFunc(fmt.Sprintf("/%s/{uid:[1-9][0-9]*}", str), handleDispatch).Name(str)
 	}
-	s.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
-	s.HandleFunc("/listlive", handleListLive)
-	s.HandleFunc("/listrecord", handleListRecord)
-	s.HandleFunc("/liststreamer", handleListStreamer)
-	s.HandleFunc("/log", handleLog)
-	s.HandleFunc("/quit", handleQuit)
-	s.HandleFunc("/help", handleHelp)
-	s.HandleFunc("/", handleHelp)
+	r.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
+	r.HandleFunc("/listlive", handleListLive)
+	r.HandleFunc("/listrecord", handleListRecord)
+	r.HandleFunc("/liststreamer", handleListStreamer)
+	r.HandleFunc("/log", handleLog)
+	r.HandleFunc("/quit", handleQuit)
+	r.HandleFunc("/help", handleHelp)
+	r.HandleFunc("/", handleHelp)
+
+	// 跨域
+	handler := cors.Default().Handler(r)
 
 	srv = &http.Server{
 		Addr:         port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  60 * time.Second,
-		Handler:      s,
+		Handler:      handler,
 	}
 
 	err := srv.ListenAndServe()
