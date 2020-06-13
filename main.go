@@ -44,7 +44,7 @@ var isListen *bool
 var isWebServer *bool
 
 // 可以同步输出的logger
-var logger = log.New(os.Stdout, "", 0)
+var logger = log.New(os.Stdout, "", log.LstdFlags)
 
 // 检查错误
 func checkErr(err error) {
@@ -61,10 +61,16 @@ func getTime() string {
 }
 
 // 打印带时间戳的log信息
+/*
 func timePrintln(logs ...interface{}) {
 	//logger.Print(getTime() + " ")
 	logs = append([]interface{}{getTime()}, logs...)
 	logger.Println(logs...)
+}
+*/
+
+func lPrintln(msg ...interface{}) {
+	logger.Println(msg...)
 }
 
 // 将UID转换成字符串
@@ -94,7 +100,7 @@ func length(sm *sync.Map) int {
 // 打印sync.Map的内容
 func mapPrintln(sm *sync.Map) {
 	sm.Range(func(key, value interface{}) bool {
-		logger.Println(key, value)
+		fmt.Println(key, value)
 		return true
 	})
 }
@@ -117,12 +123,12 @@ func argsHandle() {
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
-		logger.Println("请输入正确的参数")
-		logger.Println(usageStr)
+		fmt.Println("请输入正确的参数")
+		fmt.Println(usageStr)
 		flag.PrintDefaults()
 	} else {
 		if *shortHelp || *longHelp {
-			logger.Println(usageStr)
+			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
 		if *isWebServer {
@@ -162,7 +168,7 @@ func initialize() {
 
 	_, err = os.Stat(logoFileLocation)
 	if os.IsNotExist(err) {
-		timePrintln("下载AcFun的logo")
+		fmt.Println("下载AcFun的logo")
 		fetchAcLogo()
 	}
 
@@ -172,7 +178,7 @@ func initialize() {
 		defer newConfigFile.Close()
 		_, err = newConfigFile.WriteString("[]")
 		checkErr(err)
-		timePrintln("创建设置文件" + configFile)
+		fmt.Println("创建设置文件" + configFile)
 	}
 	loadConfig()
 	streamers.old = append([]streamer(nil), streamers.current...)
@@ -187,11 +193,11 @@ func main() {
 
 	if *isListen {
 		if len(streamers.current) == 0 {
-			logger.Println("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
+			lPrintln("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
 		}
 
-		timePrintln("本程序开始监听主播的直播状态")
+		lPrintln("本程序开始监听主播的直播状态")
 
 		mainCh := make(chan controlMsg, 20)
 		chMap.Store(0, mainCh)
@@ -204,11 +210,11 @@ func main() {
 		defer cancel()
 		go cycleConfig(ctx)
 
-		logger.Println("现在可以输入命令修改设置，输入help查看全部命令的解释")
+		lPrintln("现在可以输入命令修改设置，输入help查看全部命令的解释")
 		go handleInput()
 
 		if *isWebServer {
-			logger.Println("现在可以通过http://localhost" + port + "来发送命令")
+			lPrintln("现在可以通过http://localhost" + port + "来发送命令")
 			go server()
 		}
 
@@ -222,7 +228,7 @@ func main() {
 					// 结束cycleConfig()
 					cancel()
 					// 结束cycle()
-					timePrintln("正在退出各主播的循环")
+					lPrintln("正在退出各主播的循环")
 					chMap.Range(func(key, value interface{}) bool {
 						value.(chan controlMsg) <- msg
 						return true
@@ -242,10 +248,10 @@ func main() {
 					danglingRec.mu.Unlock()
 					// 等待20秒，等待其他goroutine结束
 					time.Sleep(20 * time.Second)
-					timePrintln("本程序结束运行")
+					lPrintln("本程序结束运行")
 					return
 				default:
-					timePrintln("未知controlMsg：", msg)
+					lPrintln("未知controlMsg：", msg)
 				}
 			default:
 			}

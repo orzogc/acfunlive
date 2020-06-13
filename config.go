@@ -45,7 +45,7 @@ func isConfigFileExist() bool {
 		return false
 	}
 	if info.IsDir() {
-		timePrintln(configFile + "不能是目录")
+		lPrintln(configFile + "不能是目录")
 		os.Exit(1)
 	}
 	return true
@@ -61,7 +61,7 @@ func loadConfig() {
 			err = json.Unmarshal(data, &streamers.current)
 			checkErr(err)
 		} else {
-			timePrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
+			lPrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
 		}
 	}
 }
@@ -82,7 +82,7 @@ func deleteStreamer(uid uint) {
 	for i, s := range streamers.current {
 		if s.UID == uid {
 			streamers.current = append(streamers.current[:i], streamers.current[i+1:]...)
-			logger.Println("删除" + s.ID + "的设置数据")
+			lPrintln("删除" + s.ID + "的设置数据")
 		}
 	}
 }
@@ -91,8 +91,8 @@ func deleteStreamer(uid uint) {
 func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in cycleConfig(), the error is:", err)
-			timePrintln("循环读取设置文件" + configFile + "时出错，尝试重启循环读取设置文件")
+			lPrintln("Recovering from panic in cycleConfig(), the error is:", err)
+			lPrintln("循环读取设置文件" + configFile + "时出错，尝试重启循环读取设置文件")
 			time.Sleep(2 * time.Second)
 			go cycleConfig(ctx)
 		}
@@ -110,7 +110,7 @@ func cycleConfig(ctx context.Context) {
 
 			streamers.mu.Lock()
 			if info.ModTime().After(modTime) {
-				timePrintln("设置文件" + configFile + "被修改，重新读取设置")
+				lPrintln("设置文件" + configFile + "被修改，重新读取设置")
 				modTime = info.ModTime()
 				loadConfig()
 
@@ -119,7 +119,7 @@ func cycleConfig(ctx context.Context) {
 						if s.UID == olds.UID {
 							if s != olds {
 								// olds的设置被修改
-								timePrintln(s.longID() + "的设置被修改，重新设置")
+								lPrintln(s.longID() + "的设置被修改，重新设置")
 								restart := controlMsg{s: s, c: startCycle}
 								ch, _ := chMap.Load(s.UID)
 								modify.Store(s.UID, true)
@@ -129,7 +129,7 @@ func cycleConfig(ctx context.Context) {
 						} else {
 							if i == len(streamers.old)-1 {
 								// s为新增的主播
-								timePrintln("新增" + s.longID() + "的设置")
+								lPrintln("新增" + s.longID() + "的设置")
 								start := controlMsg{s: s, c: startCycle}
 								ch, _ := chMap.Load(0)
 								modify.Store(s.UID, true)
@@ -146,7 +146,7 @@ func cycleConfig(ctx context.Context) {
 						} else {
 							if i == len(streamers.current)-1 {
 								// olds为被删除的主播
-								timePrintln(olds.longID() + "的设置被删除")
+								lPrintln(olds.longID() + "的设置被删除")
 								stop := controlMsg{s: olds, c: stopCycle}
 								ch, _ := chMap.Load(olds.UID)
 								ch.(chan controlMsg) <- stop

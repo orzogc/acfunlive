@@ -52,8 +52,8 @@ func handleQuit(w http.ResponseWriter, r *http.Request) {
 func server() {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in server(), the error is:", err)
-			timePrintln("web服务器发生错误，尝试重启web服务器")
+			lPrintln("Recovering from panic in server(), the error is:", err)
+			lPrintln("web服务器发生错误，尝试重启web服务器")
 			time.Sleep(2 * time.Second)
 			go server()
 		}

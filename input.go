@@ -3,6 +3,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 // 帮助信息
 const helpMsg = `listlive：列出正在直播的主播
 listrecord：列出正在下载的直播
+startweb：启动web服务器
 addnotify 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 delnotify 数字：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 addrecord 数字：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -23,17 +25,17 @@ help：本帮助信息`
 
 // 打印错误命令信息
 func printErr() {
-	logger.Println("请输入正确的命令，输入help查看全部命令的解释")
+	fmt.Println("请输入正确的命令，输入help查看全部命令的解释")
 }
 
 // 列出正在直播的主播
 func listLive() (streaming []string) {
-	timePrintln("正在直播的主播：")
+	lPrintln("正在直播的主播：")
 	streamers.mu.Lock()
 	for _, s := range streamers.current {
 		if s.isLiveOn() {
 			msg := s.longID() + "：" + s.getTitle() + " " + livePage + s.uidStr()
-			timePrintln(msg)
+			lPrintln(msg)
 			streaming = append(streaming, msg)
 		}
 	}
@@ -43,12 +45,12 @@ func listLive() (streaming []string) {
 }
 
 func listRecord() (recording []string) {
-	timePrintln("正在下载的直播：")
+	lPrintln("正在下载的直播：")
 	recordMap.Range(func(key, value interface{}) bool {
 		uid := key.(uint)
 		s := streamer{UID: uid, ID: getID(uid)}
 		msg := s.longID() + "：" + s.getTitle()
-		timePrintln(msg)
+		lPrintln(msg)
 		recording = append(recording, msg)
 		return true
 	})
@@ -57,7 +59,7 @@ func listRecord() (recording []string) {
 }
 
 func quitRun() {
-	timePrintln("正在准备退出，请等待...")
+	lPrintln("正在准备退出，请等待...")
 	ch, _ := chMap.Load(0)
 	q := controlMsg{c: quit}
 	ch.(chan controlMsg) <- q
@@ -67,8 +69,8 @@ func quitRun() {
 func handleInput() {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in handleInput(), the error is:", err)
-			timePrintln("输入处理发生错误，尝试重启输入处理")
+			lPrintln("Recovering from panic in handleInput(), the error is:", err)
+			lPrintln("输入处理发生错误，尝试重启输入处理")
 			go handleInput()
 		}
 	}()
@@ -82,11 +84,14 @@ func handleInput() {
 				listLive()
 			case "listrecord":
 				listRecord()
+			case "startweb":
+				*isWebServer = true
+				go server()
 			case "quit":
 				quitRun()
 				return
 			case "help":
-				logger.Println(helpMsg)
+				fmt.Println(helpMsg)
 			default:
 				printErr()
 			}
@@ -149,6 +154,6 @@ func handleInput() {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		timePrintln("Reading standard input err:", err)
+		lPrintln("Reading standard input err:", err)
 	}
 }

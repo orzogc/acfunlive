@@ -9,16 +9,16 @@ import (
 func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
-		timePrintln("重启监听" + s.longID() + "的直播状态")
+		lPrintln("重启监听" + s.longID() + "的直播状态")
 		ch, _ := chMap.Load(0)
 		ch.(chan controlMsg) <- msg
 	case stopCycle:
-		timePrintln("删除" + s.longID())
+		lPrintln("删除" + s.longID())
 		chMap.Delete(s.UID)
 	case quit:
 		//timePrintln("正在退出" + s.longID() + "的循环")
 	default:
-		timePrintln("未知的controlMsg：", msg)
+		lPrintln("未知的controlMsg：", msg)
 	}
 }
 
@@ -26,8 +26,8 @@ func (s streamer) handleMsg(msg controlMsg) {
 func (s streamer) cycle() {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in cycle(), the error is:", err)
-			timePrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
+			lPrintln("Recovering from panic in cycle(), the error is:", err)
+			lPrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
 			ch, _ := chMap.Load(0)
@@ -46,7 +46,7 @@ func (s streamer) cycle() {
 		}
 	}
 
-	timePrintln("开始监听" + s.longID() + "的直播状态")
+	lPrintln("开始监听" + s.longID() + "的直播状态")
 
 	isLive := false
 	for {
@@ -59,8 +59,8 @@ func (s streamer) cycle() {
 				if !isLive {
 					isLive = true
 					title := s.getTitle()
-					timePrintln(s.longID() + "正在直播：" + title)
-					logger.Println(s.ID + "的直播观看地址：" + livePage + s.uidStr())
+					lPrintln(s.longID() + "正在直播：" + title)
+					lPrintln(s.ID + "的直播观看地址：" + livePage + s.uidStr())
 
 					if s.Notify {
 						desktopNotify(s.ID + "正在直播：" + title)
@@ -88,13 +88,13 @@ func (s streamer) cycle() {
 							go s.recordLive()
 						}
 					} else {
-						logger.Println("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
+						lPrintln("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
 					}
 				}
 			} else {
 				if isLive {
 					isLive = false
-					timePrintln(s.longID() + "已经下播")
+					lPrintln(s.longID() + "已经下播")
 					if s.Notify {
 						desktopNotify(s.ID + "已经下播")
 					}

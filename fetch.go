@@ -46,8 +46,8 @@ func fetchAllRooms() {
 func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
-			timePrintln("获取AcFun直播间API的json时发生错误，尝试重新运行")
+			lPrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
+			lPrintln("获取AcFun直播间API的json时发生错误，尝试重新运行")
 			// 延迟两秒，防止意外情况下刷屏
 			time.Sleep(2 * time.Second)
 			r, nextPage = fetchLiveRoom(page)
@@ -104,8 +104,8 @@ func (s streamer) getTitle() string {
 func getID(uid uint) (id string) {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in getID(), the error is:", err)
-			timePrintln("获取uid为" + uidStr(uid) + "的主播的ID时出现错误，尝试重新运行")
+			lPrintln("Recovering from panic in getID(), the error is:", err)
+			lPrintln("获取uid为" + uidStr(uid) + "的主播的ID时出现错误，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			id = getID(uid)
 		}
@@ -155,8 +155,8 @@ func fetchAcLogo() {
 func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	defer func() {
 		if err := recover(); err != nil {
-			timePrintln("Recovering from panic in getStreamURL(), the error is:", err)
-			timePrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
+			lPrintln("Recovering from panic in getStreamURL(), the error is:", err)
+			lPrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			hlsURL, flvURL = s.getStreamURL()
 		}
@@ -245,7 +245,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 func printStreamURL(uid uint) (string, string) {
 	id := getID(uid)
 	if id == "" {
-		timePrintln("不存在uid为" + uidStr(uid) + "的用户")
+		lPrintln("不存在uid为" + uidStr(uid) + "的用户")
 		return "", ""
 	}
 	s := streamer{UID: uid, ID: id}
@@ -253,15 +253,15 @@ func printStreamURL(uid uint) (string, string) {
 	if s.isLiveOn() {
 		title := s.getTitle()
 		hlsURL, flvURL := s.getStreamURL()
-		timePrintln(s.longID() + "正在直播：" + title)
+		lPrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
-			timePrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")
+			lPrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {
-			timePrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
+			lPrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
 		}
 		return hlsURL, flvURL
 	}
 
-	timePrintln(s.longID() + "不在直播")
+	lPrintln(s.longID() + "不在直播")
 	return "", ""
 }
