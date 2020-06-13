@@ -40,7 +40,7 @@ type controlMsg struct {
 // 程序是否处于监听状态
 var isListen *bool
 
-// 程序是否启动web服务器
+// 程序是否启动web服务
 var isWebServer *bool
 
 // 可以同步输出的logger
@@ -216,8 +216,8 @@ func main() {
 		go handleInput()
 
 		if *isWebServer {
-			lPrintln("现在可以通过http://localhost" + port + "来发送命令")
-			go server()
+			lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来发送命令")
+			go httpServer()
 		}
 
 		for {
@@ -248,6 +248,11 @@ func main() {
 						io.WriteString(rec.stdin, "q")
 					}
 					danglingRec.mu.Unlock()
+					// 关闭web服务
+					if *isWebServer {
+						lPrintln("正在关闭web服务")
+						srv.Shutdown(context.TODO())
+					}
 					// 等待20秒，等待其他goroutine结束
 					time.Sleep(20 * time.Second)
 					lPrintln("本程序结束运行")

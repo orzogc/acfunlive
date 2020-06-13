@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,6 +35,8 @@ var dispatch = map[string]func(uint) bool{
 }
 
 var webLog strings.Builder
+
+var srv *http.Server
 
 func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -73,13 +74,13 @@ func handleHelp(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
 
-func server() {
+func httpServer() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in server(), the error is:", err)
-			lPrintln("web服务器发生错误，尝试重启web服务器")
+			lPrintln("Recovering from panic in httpServer(), the error is:", err)
+			lPrintln("web服务发生错误，尝试重启web服务")
 			time.Sleep(2 * time.Second)
-			go server()
+			go httpServer()
 		}
 	}()
 
@@ -96,5 +97,17 @@ func server() {
 	s.HandleFunc("/help", handleHelp)
 	s.HandleFunc("/", handleHelp)
 
-	log.Fatal(http.ListenAndServe(port, s))
+	srv = &http.Server{
+		Addr:         "0.0.0.0" + port,
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+		Handler:      s,
+	}
+
+	err := srv.ListenAndServe()
+	if err != http.ErrServerClosed {
+		lPrintln(err)
+		panic(err)
+	}
 }

@@ -116,7 +116,7 @@ func startRec(uid uint) bool {
 
 // 停止下载指定主播的直播
 func stopRec(uid uint) bool {
-	// 需要快速返回
+	// web服务需要快速返回
 	go func() {
 		r, ok := recordMap.Load(uid)
 		if ok {

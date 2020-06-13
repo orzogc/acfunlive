@@ -12,7 +12,7 @@ import (
 // 帮助信息
 const helpMsg = `listlive：列出正在直播的主播
 listrecord：列出正在下载的直播
-startweb：启动web服务器
+startweb：启动web服务
 addnotify 数字：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 delnotify 数字：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 addrecord 数字：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
@@ -87,11 +87,10 @@ func handleInput() {
 			case "startweb":
 				if !*isWebServer {
 					*isWebServer = true
-					lPrintln("启动web服务器")
-					lPrintln("现在可以通过http://localhost" + port + "来发送命令")
-					go server()
+					lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来发送命令")
+					go httpServer()
 				} else {
-					lPrintln("web服务器已经启动")
+					lPrintln("已经启动过web服务")
 				}
 			case "quit":
 				quitRun()
