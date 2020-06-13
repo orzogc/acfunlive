@@ -85,8 +85,14 @@ func handleInput() {
 			case "listrecord":
 				listRecord()
 			case "startweb":
-				*isWebServer = true
-				go server()
+				if !*isWebServer {
+					*isWebServer = true
+					lPrintln("启动web服务器")
+					lPrintln("现在可以通过http://localhost" + port + "来发送命令")
+					go server()
+				} else {
+					lPrintln("web服务器已经启动")
+				}
 			case "quit":
 				quitRun()
 				return

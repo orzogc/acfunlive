@@ -116,20 +116,23 @@ func startRec(uid uint) bool {
 
 // 停止下载指定主播的直播
 func stopRec(uid uint) bool {
-	r, ok := recordMap.Load(uid)
-	if ok {
-		rec := r.(record)
-		lPrintln("开始结束uid为" + uidStr(uid) + "的主播的下载")
-		rec.ch <- stopRecord
-		io.WriteString(rec.stdin, "q")
-		// 等待20秒强关下载
-		time.Sleep(20 * time.Second)
-		rec.cancel()
-		// 需要删除recordMap里相应的key
-		recordMap.Delete(uid)
-	} else {
-		lPrintln("没有在下载uid为" + uidStr(uid) + "的主播的直播")
-	}
+	// 需要快速返回
+	go func() {
+		r, ok := recordMap.Load(uid)
+		if ok {
+			rec := r.(record)
+			lPrintln("开始结束uid为" + uidStr(uid) + "的主播的下载")
+			rec.ch <- stopRecord
+			io.WriteString(rec.stdin, "q")
+			// 等待20秒强关下载
+			time.Sleep(20 * time.Second)
+			rec.cancel()
+			// 需要删除recordMap里相应的key
+			recordMap.Delete(uid)
+		} else {
+			lPrintln("没有在下载uid为" + uidStr(uid) + "的主播的直播")
+		}
+	}()
 
 	return true
 }
