@@ -9,9 +9,11 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/valyala/fastjson"
 )
 
@@ -25,25 +27,29 @@ type liveRoom struct {
 	title string
 }
 
-// liveRoom的map
-var liveRooms *map[uint]liveRoom
+// liveRoom的map，map[uint]liveRoom
+var liveRooms *cmap.ConcurrentMap
 
+// 将uint转换为字符串
+func utos(u uint) string {
+	return strconv.Itoa(int(u))
+}
+
+// 获取全部AcFun直播间
 func fetchAllRooms() {
 	page := "0"
-	var allRooms = make(map[uint]liveRoom)
+	var allRooms = cmap.New()
 	for page != "no_more" {
 		rooms, nextPage := fetchLiveRoom(page)
 		page = nextPage
-		for uid, room := range *rooms {
-			allRooms[uid] = room
-		}
+		allRooms.MSet(rooms.Items())
 	}
 
 	liveRooms = &allRooms
 }
 
-// 获取AcFun直播间API的json
-func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
+// 获取指定页数的AcFun直播间
+func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
@@ -69,7 +75,7 @@ func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 		return nil, ""
 	}
 
-	var rooms = make(map[uint]liveRoom)
+	var rooms = cmap.New()
 	liveList := v.GetArray("channelListData", "liveList")
 	for _, live := range liveList {
 		uid := live.GetUint("authorId")
@@ -77,7 +83,7 @@ func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 			id:    string(live.GetStringBytes("user", "name")),
 			title: string(live.GetStringBytes("title")),
 		}
-		rooms[uid] = room
+		rooms.Set(utos(uid), room)
 	}
 
 	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
@@ -87,15 +93,14 @@ func fetchLiveRoom(page string) (r *map[uint]liveRoom, nextPage string) {
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	_, ok := (*liveRooms)[s.UID]
-	return ok
+	return liveRooms.Has(utos(s.UID))
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	room, ok := (*liveRooms)[s.UID]
+	room, ok := liveRooms.Get(utos(s.UID))
 	if ok {
-		return room.title
+		return room.(liveRoom).title
 	}
 	return ""
 }
