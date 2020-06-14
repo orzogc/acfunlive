@@ -59,18 +59,18 @@ func listLive() (streamings []streaming) {
 }
 
 // 列出正在下载的直播
-func listRecord() (recording []streaming) {
+func listRecord() (recordings []streaming) {
 	lPrintln("正在下载的直播：")
 	recordMap.Range(func(key, value interface{}) bool {
 		uid := key.(uint)
 		s := streamer{UID: uid, ID: getID(uid)}
 		live := streaming{UID: uid, ID: s.ID, Title: s.getTitle(), URL: livePage + uidStr(uid)}
 		lPrintln(s.longID() + "：" + live.Title + " " + live.URL)
-		recording = append(recording, live)
+		recordings = append(recordings, live)
 		return true
 	})
 
-	return recording
+	return recordings
 }
 
 // 通知main()退出程序

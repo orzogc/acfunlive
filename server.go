@@ -50,8 +50,7 @@ func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	uid, err := strconv.Atoi(vars["uid"])
 	checkErr(err)
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(dispatch[mux.CurrentRoute(r).GetName()](uint(uid)))
-	checkErr(err)
+	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uint(uid)))
 }
 
 func handleStreamURL(w http.ResponseWriter, r *http.Request) {
@@ -60,26 +59,34 @@ func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 	hlsURL, flvURL := printStreamURL(uint(uid))
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode([]string{hlsURL, flvURL})
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
+	err = j.Encode([]string{hlsURL, flvURL})
 	checkErr(err)
 }
 
 func handleListLive(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(listLive())
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
+	err := j.Encode(listLive())
 	checkErr(err)
 }
 
 func handleListRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(listRecord())
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
+	err := j.Encode(listRecord())
 	checkErr(err)
 }
 
 func handleListStreamer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
 	streamers.mu.Lock()
-	err := json.NewEncoder(w).Encode(streamers.current)
+	err := j.Encode(streamers.current)
 	streamers.mu.Unlock()
 	checkErr(err)
 }
@@ -89,6 +96,7 @@ func handleLog(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleQuit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, true)
 	quitRun()
 }
