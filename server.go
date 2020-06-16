@@ -4,7 +4,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -40,6 +39,7 @@ var dispatch = map[string]func(int) bool{
 	"stoprecord":  stopRec,
 }
 
+// 储存日志
 var webLog strings.Builder
 
 var srv *http.Server
@@ -53,6 +53,7 @@ func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uid))
 }
 
+// 列出直播的下载源
 func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	uid, err := atoi(vars["uid"])
@@ -65,6 +66,7 @@ func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 }
 
+// 列出正在直播的主播
 func handleListLive(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	j := json.NewEncoder(w)
@@ -73,6 +75,7 @@ func handleListLive(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 }
 
+// 列出正在下载的直播
 func handleListRecord(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	j := json.NewEncoder(w)
@@ -81,27 +84,28 @@ func handleListRecord(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 }
 
+// 列出设置里的主播
 func handleListStreamer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	if isConfigFileExist() {
-		data, err := ioutil.ReadFile(configFileLocation)
-		checkErr(err)
-		fmt.Fprint(w, string(data))
-	} else {
-		fmt.Fprint(w, "null")
-	}
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
+	err := j.Encode(getStreamers())
+	checkErr(err)
 }
 
+// 打印日志
 func handleLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webLog.String())
 }
 
+// 退出程序
 func handleQuit(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprint(w, true)
 	quitRun()
 }
 
+// 打印帮助
 func handleHelp(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
@@ -130,7 +134,7 @@ func httpServer() {
 	r.HandleFunc("/help", handleHelp)
 	r.HandleFunc("/", handleHelp)
 
-	// 跨域
+	// 跨域处理
 	handler := cors.Default().Handler(r)
 
 	srv = &http.Server{

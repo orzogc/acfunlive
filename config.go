@@ -14,9 +14,6 @@ const configFile = "config.json"
 
 var configFileLocation string
 
-// 设置修改标记，map[int]bool
-//var modify = sync.Map{}
-
 // 主播的设置数据
 type streamer struct {
 	// 主播uid
@@ -39,23 +36,18 @@ var streamers struct {
 	old map[int]streamer
 }
 
-// 获取对应uid的streamer
-/*
-func gets(uid int) streamer {
-	return streamers.crt[uid]
-}
-*/
-
 // 将s放进streamers里
 func sets(s streamer) {
 	streamers.crt[s.UID] = s
 }
 
-/*
-func (s streamer) sets() {
-	streamers.crt[s.UID] = s
+func getStreamers() []streamer {
+	var ss []streamer
+	for _, s := range streamers.crt {
+		ss = append(ss, s)
+	}
+	return ss
 }
-*/
 
 // 查看设置文件是否存在
 func isConfigFileExist() bool {
@@ -72,13 +64,6 @@ func isConfigFileExist() bool {
 
 // 读取设置文件
 func loadConfig() {
-	defer func() {
-		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in loadConfig(), the error is:", err)
-			lPrintln("读取设置文件" + configFile + "时出错，请重启本程序")
-		}
-	}()
-
 	if isConfigFileExist() {
 		data, err := ioutil.ReadFile(configFileLocation)
 		checkErr(err)
@@ -101,11 +86,7 @@ func saveConfig() {
 	streamers.mu.Lock()
 	defer streamers.mu.Unlock()
 
-	var ss []streamer
-	for _, s := range streamers.crt {
-		ss = append(ss, s)
-	}
-	data, err := json.MarshalIndent(ss, "", "    ")
+	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
 
 	err = ioutil.WriteFile(configFileLocation, data, 0644)
@@ -125,9 +106,7 @@ func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in cycleConfig(), the error is:", err)
-			lPrintln("循环读取设置文件" + configFile + "时出错，尝试重启循环读取设置文件")
-			time.Sleep(2 * time.Second)
-			go cycleConfig(ctx)
+			lPrintln("循环读取设置文件" + configFile + "时出错，请重启本程序")
 		}
 	}()
 

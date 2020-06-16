@@ -21,9 +21,6 @@ type record struct {
 	ch     chan control
 }
 
-// 下载信息的map，map[int]record
-//var recordMap = sync.Map{}
-
 // 存放某些没在recordMap的下载
 var danglingRec struct {
 	mu      sync.Mutex

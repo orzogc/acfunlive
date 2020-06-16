@@ -25,21 +25,6 @@ stoprecord 数字：正在下载指定主播的直播时取消下载，数字为
 quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
-// 正在直播的主播的数据
-
-/*
-type streaming struct {
-	// 主播uid
-	UID uint
-	// 主播名字
-	ID string
-	// 直播间标题
-	Title string
-	// 直播间链接
-	URL string
-}
-*/
-
 // 正在直播的主播
 type streaming streamer
 

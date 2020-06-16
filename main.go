@@ -84,6 +84,7 @@ func getTime() string {
 // 打印带时间戳的log信息
 func lPrintln(msg ...interface{}) {
 	logger.Println(msg...)
+	// 同时输出日志到web服务
 	fmt.Fprintln(&webLog, msg...)
 }
 

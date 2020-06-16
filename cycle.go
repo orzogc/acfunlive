@@ -21,7 +21,6 @@ func (s streamer) handleMsg(msg controlMsg) {
 			msgMap.mu.Unlock()
 		*/
 	case quit:
-		//timePrintln("正在退出" + s.longID() + "的循环")
 	default:
 		lPrintln("未知的controlMsg：", msg)
 	}
@@ -129,14 +128,3 @@ func (s streamer) cycle() {
 		time.Sleep(time.Second)
 	}
 }
-
-// 完成对cycle()的初始化
-/*
-func (s streamer) initCycle() {
-	controlCh := make(chan controlMsg, 20)
-	chMap.Store(s.UID, controlCh)
-	// 初始化modify，因为sync.Map不会自动初始化
-	modify.LoadOrStore(s.UID, false)
-	s.cycle()
-}
-*/
