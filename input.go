@@ -4,9 +4,9 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -26,6 +26,8 @@ quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
 // 正在直播的主播的数据
+
+/*
 type streaming struct {
 	// 主播uid
 	UID uint
@@ -36,10 +38,19 @@ type streaming struct {
 	// 直播间链接
 	URL string
 }
+*/
 
-// 打印错误命令信息
-func printErr() {
-	lPrintln("请输入正确的命令，输入help查看全部命令的解释")
+// 正在直播的主播
+type streaming streamer
+
+// 实现json.Marshaler接口
+func (s streaming) MarshalJSON() ([]byte, error) {
+	type sJSON struct {
+		UID              int
+		Name, Title, URL string
+	}
+	sj := sJSON{UID: s.UID, Name: s.Name, Title: streamer(s).getTitle(), URL: streamer(s).getURL()}
+	return json.Marshal(sj)
 }
 
 // 列出正在直播的主播
@@ -48,9 +59,8 @@ func listLive() (streamings []streaming) {
 	streamers.mu.Lock()
 	for _, s := range streamers.current {
 		if s.isLiveOn() {
-			live := streaming{UID: s.UID, ID: s.ID, Title: s.getTitle(), URL: livePage + s.uidStr()}
-			lPrintln(s.longID() + "：" + live.Title + " " + live.URL)
-			streamings = append(streamings, live)
+			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			streamings = append(streamings, streaming(s))
 		}
 	}
 	streamers.mu.Unlock()
@@ -62,11 +72,10 @@ func listLive() (streamings []streaming) {
 func listRecord() (recordings []streaming) {
 	lPrintln("正在下载的直播：")
 	recordMap.Range(func(key, value interface{}) bool {
-		uid := key.(uint)
-		s := streamer{UID: uid, ID: getID(uid)}
-		live := streaming{UID: uid, ID: s.ID, Title: s.getTitle(), URL: livePage + uidStr(uid)}
-		lPrintln(s.longID() + "：" + live.Title + " " + live.URL)
-		recordings = append(recordings, live)
+		uid := key.(int)
+		s := streamer{UID: uid, Name: getName(uid)}
+		lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+		recordings = append(recordings, streaming(s))
 		return true
 	})
 
@@ -79,6 +88,11 @@ func quitRun() {
 	ch, _ := chMap.Load(0)
 	q := controlMsg{c: quit}
 	ch.(chan controlMsg) <- q
+}
+
+// 打印错误命令信息
+func printErr() {
+	lPrintln("请输入正确的命令，输入help查看全部命令的解释")
 }
 
 // 处理输入
@@ -127,54 +141,54 @@ func handleInput() {
 		} else if len(cmd) == 2 {
 			switch cmd[0] {
 			case "addnotify":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				addNotify(uint(uid))
+				addNotify(uid)
 			case "delnotify":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				delNotify(uint(uid))
+				delNotify(uid)
 			case "addrecord":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				addRecord(uint(uid))
+				addRecord(uid)
 			case "delrecord":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				delRecord(uint(uid))
+				delRecord(uid)
 			case "getdlurl":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				printStreamURL(uint(uid))
+				printStreamURL(uid)
 			case "startrecord":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				startRec(uint(uid))
+				startRec(uid)
 			case "stoprecord":
-				uid, err := strconv.ParseUint(cmd[1], 10, 64)
+				uid, err := atoi(cmd[1])
 				if err != nil {
 					printErr()
 					break
 				}
-				stopRec(uint(uid))
+				stopRec(uid)
 			default:
 				printErr()
 			}

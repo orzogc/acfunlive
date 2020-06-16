@@ -21,7 +21,7 @@ type record struct {
 	ch     chan control
 }
 
-// 下载信息的map，map[uint]record
+// 下载信息的map，map[int]record
 var recordMap = sync.Map{}
 
 // 存放某些没在recordMap的下载
@@ -31,34 +31,34 @@ var danglingRec struct {
 }
 
 // 设置自动下载指定主播的直播
-func addRecord(uid uint) bool {
+func addRecord(uid int) bool {
 	isExist := false
 	streamers.mu.Lock()
 	for i, s := range streamers.current {
 		if s.UID == uid {
 			isExist = true
 			if s.Record {
-				lPrintln("已经设置过自动下载" + s.ID + "的直播")
+				lPrintln("已经设置过自动下载" + s.Name + "的直播")
 			} else {
 				streamers.current[i].Record = true
-				lPrintln("成功设置自动下载" + s.ID + "的直播")
+				lPrintln("成功设置自动下载" + s.Name + "的直播")
 			}
 		}
 	}
 	streamers.mu.Unlock()
 
 	if !isExist {
-		id := getID(uid)
-		if id == "" {
-			lPrintln("不存在uid为" + uidStr(uid) + "的用户")
+		name := getName(uid)
+		if name == "" {
+			lPrintln("不存在uid为" + itoa(uid) + "的用户")
 			return false
 		}
 
-		newStreamer := streamer{UID: uid, ID: id, Notify: false, Record: true}
+		newStreamer := streamer{UID: uid, Name: name, Notify: false, Record: true}
 		streamers.mu.Lock()
 		streamers.current = append(streamers.current, newStreamer)
 		streamers.mu.Unlock()
-		lPrintln("成功设置自动下载" + id + "的直播")
+		lPrintln("成功设置自动下载" + name + "的直播")
 	}
 
 	saveConfig()
@@ -66,7 +66,7 @@ func addRecord(uid uint) bool {
 }
 
 // 取消自动下载指定主播的直播
-func delRecord(uid uint) bool {
+func delRecord(uid int) bool {
 	streamers.mu.Lock()
 	for i, s := range streamers.current {
 		if s.UID == uid {
@@ -75,7 +75,7 @@ func delRecord(uid uint) bool {
 			} else {
 				deleteStreamer(uid)
 			}
-			lPrintln("成功取消自动下载" + s.ID + "的直播")
+			lPrintln("成功取消自动下载" + s.Name + "的直播")
 		}
 	}
 	streamers.mu.Unlock()
@@ -85,17 +85,17 @@ func delRecord(uid uint) bool {
 }
 
 // 临时下载指定主播的直播
-func startRec(uid uint) bool {
-	id := getID(uid)
-	if id == "" {
-		lPrintln("不存在uid为" + uidStr(uid) + "的用户")
+func startRec(uid int) bool {
+	name := getName(uid)
+	if name == "" {
+		lPrintln("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
-	s := streamer{UID: uid, ID: id}
+	s := streamer{UID: uid, Name: name}
 
 	_, ok := recordMap.Load(s.UID)
 	if ok {
-		lPrintln("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.uidStr())
+		lPrintln("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.itoa())
 		return false
 	}
 
@@ -115,13 +115,13 @@ func startRec(uid uint) bool {
 }
 
 // 停止下载指定主播的直播
-func stopRec(uid uint) bool {
+func stopRec(uid int) bool {
 	// web服务需要快速返回
 	go func() {
 		r, ok := recordMap.Load(uid)
 		if ok {
 			rec := r.(record)
-			lPrintln("开始结束uid为" + uidStr(uid) + "的主播的下载")
+			lPrintln("开始结束uid为" + itoa(uid) + "的主播的下载")
 			rec.ch <- stopRecord
 			io.WriteString(rec.stdin, "q")
 			// 等待20秒强关下载
@@ -130,7 +130,7 @@ func stopRec(uid uint) bool {
 			// 需要删除recordMap里相应的key
 			recordMap.Delete(uid)
 		} else {
-			lPrintln("没有在下载uid为" + uidStr(uid) + "的主播的直播")
+			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播")
 		}
 	}()
 
@@ -142,8 +142,8 @@ func (s streamer) recordLive() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.uidStr())
-			desktopNotify("下载" + s.ID + "的直播发生错误")
+			lPrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.itoa())
+			desktopNotify("下载" + s.Name + "的直播发生错误")
 			time.Sleep(2 * time.Second)
 			recordMap.Delete(s.UID)
 		}
@@ -152,8 +152,8 @@ func (s streamer) recordLive() {
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _ := s.getStreamURL()
 	if liveURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.uidStr())
-		desktopNotify("无法获取" + s.ID + "的直播源，退出下载")
+		lPrintln("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.itoa())
+		desktopNotify("无法获取" + s.Name + "的直播源，退出下载")
 		return
 	}
 
@@ -165,7 +165,7 @@ func (s streamer) recordLive() {
 
 	title := s.getTitle()
 	recordTime := getTime()
-	filename := recordTime + " " + s.ID + " " + title
+	filename := recordTime + " " + s.Name + " " + title
 	// 转换文件名不允许的特殊字符
 	var re *regexp.Regexp
 	if runtime.GOOS == "linux" {
@@ -194,9 +194,9 @@ func (s streamer) recordLive() {
 	lPrintln("开始下载" + s.longID() + "的直播")
 	lPrintln("本次下载的文件保存在" + outFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载，运行stoprecord " + s.uidStr())
+		lPrintln("如果想提前结束下载，运行stoprecord " + s.itoa())
 	}
-	desktopNotify("开始下载" + s.ID + "的直播")
+	desktopNotify("开始下载" + s.Name + "的直播")
 
 	// 运行ffmpeg下载直播
 	ctx, cancel := context.WithCancel(context.Background())
@@ -250,5 +250,5 @@ func (s streamer) recordLive() {
 	}
 
 	lPrintln(s.longID() + "的直播下载已经结束")
-	desktopNotify(s.ID + "的直播下载已经结束")
+	desktopNotify(s.Name + "的直播下载已经结束")
 }

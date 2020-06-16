@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -27,12 +26,17 @@ type liveRoom struct {
 	title string
 }
 
-// liveRoom的map，map[uint]liveRoom
+// liveRoom的map，map[int]liveRoom
 var liveRooms *cmap.ConcurrentMap
 
-// 将uint转换为字符串
-func utos(u uint) string {
-	return strconv.Itoa(int(u))
+// 获取主播的直播链接
+func getURL(uid int) string {
+	return livePage + itoa(uid)
+}
+
+// 获取主播的直播链接
+func (s streamer) getURL() string {
+	return livePage + s.itoa()
 }
 
 // 获取全部AcFun直播间
@@ -78,12 +82,12 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 	var rooms = cmap.New()
 	liveList := v.GetArray("channelListData", "liveList")
 	for _, live := range liveList {
-		uid := live.GetUint("authorId")
+		uid := live.GetInt("authorId")
 		room := liveRoom{
 			id:    string(live.GetStringBytes("user", "name")),
 			title: string(live.GetStringBytes("title")),
 		}
-		rooms.Set(utos(uid), room)
+		rooms.Set(itoa(uid), room)
 	}
 
 	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
@@ -93,26 +97,25 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	return liveRooms.Has(utos(s.UID))
+	return liveRooms.Has(itoa(s.UID))
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	room, ok := liveRooms.Get(utos(s.UID))
-	if ok {
+	if room, ok := liveRooms.Get(itoa(s.UID)); ok {
 		return room.(liveRoom).title
 	}
 	return ""
 }
 
-// 根据uid获取主播的id
-func getID(uid uint) (id string) {
+// 根据uid获取主播的名字
+func getName(uid int) (name string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in getID(), the error is:", err)
-			lPrintln("获取uid为" + uidStr(uid) + "的主播的ID时出现错误，尝试重新运行")
+			lPrintln("Recovering from panic in getName(), the error is:", err)
+			lPrintln("获取uid为" + itoa(uid) + "的主播的ID时出现错误，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			id = getID(uid)
+			name = getName(uid)
 		}
 	}()
 
@@ -170,7 +173,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
-	resp, err := http.Get(livePage + s.uidStr())
+	resp, err := http.Get(s.getURL())
 	checkErr(err)
 	defer resp.Body.Close()
 
@@ -214,7 +217,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 
 	form = url.Values{}
 	// authorId就是主播的uid
-	form.Set("authorId", s.uidStr())
+	form.Set("authorId", s.itoa())
 	resp, err = http.PostForm(streamURL, form)
 	checkErr(err)
 	defer resp.Body.Close()
@@ -247,13 +250,13 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 }
 
 // 查看指定主播是否在直播和输出其直播源
-func printStreamURL(uid uint) (string, string) {
-	id := getID(uid)
-	if id == "" {
-		lPrintln("不存在uid为" + uidStr(uid) + "的用户")
+func printStreamURL(uid int) (string, string) {
+	name := getName(uid)
+	if name == "" {
+		lPrintln("不存在uid为" + itoa(uid) + "的用户")
 		return "", ""
 	}
-	s := streamer{UID: uid, ID: id}
+	s := streamer{UID: uid, Name: name}
 
 	if s.isLiveOn() {
 		title := s.getTitle()

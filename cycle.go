@@ -60,10 +60,10 @@ func (s streamer) cycle() {
 					isLive = true
 					title := s.getTitle()
 					lPrintln(s.longID() + "正在直播：" + title)
-					lPrintln(s.ID + "的直播观看地址：" + livePage + s.uidStr())
+					lPrintln(s.Name + "的直播观看地址：" + s.getURL())
 
 					if s.Notify {
-						desktopNotify(s.ID + "正在直播：" + title)
+						desktopNotify(s.Name + "正在直播：" + title)
 					}
 					if s.Record {
 						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
@@ -72,11 +72,11 @@ func (s streamer) cycle() {
 							// 如果设置被修改，不重启已有的下载
 							modified, _ := modify.Load(s.UID)
 							if !modified.(bool) {
-								go s.recordLive()
 								rec.(record).ch <- stopRecord
 								danglingRec.mu.Lock()
 								danglingRec.records = append(danglingRec.records, rec.(record))
 								danglingRec.mu.Unlock()
+								go s.recordLive()
 								/*
 									io.WriteString(rec.stdin, "q")
 									time.Sleep(20 * time.Second)
@@ -88,7 +88,7 @@ func (s streamer) cycle() {
 							go s.recordLive()
 						}
 					} else {
-						lPrintln("如果要临时下载" + s.ID + "的直播，可以运行startrecord " + s.uidStr())
+						lPrintln("如果要临时下载" + s.Name + "的直播，可以运行startrecord " + s.itoa())
 					}
 				}
 			} else {
@@ -96,7 +96,7 @@ func (s streamer) cycle() {
 					isLive = false
 					lPrintln(s.longID() + "已经下播")
 					if s.Notify {
-						desktopNotify(s.ID + "已经下播")
+						desktopNotify(s.Name + "已经下播")
 					}
 					if s.Record {
 						rec, ok := recordMap.Load(s.UID)
@@ -123,6 +123,6 @@ func (s streamer) initCycle() {
 	controlCh := make(chan controlMsg, 20)
 	chMap.Store(s.UID, controlCh)
 	// 初始化modify，因为sync.Map不会自动初始化
-	modify.Store(s.UID, false)
+	modify.LoadOrStore(s.UID, false)
 	s.cycle()
 }

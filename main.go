@@ -17,7 +17,7 @@ import (
 // 运行程序所在文件夹
 var exeDir string
 
-// 每个streamer的控制管道的map，map[uint]chan controlMsg
+// 每个streamer的控制管道的map，map[int]chan controlMsg
 var chMap = sync.Map{}
 
 type control int
@@ -36,6 +36,21 @@ type controlMsg struct {
 	s streamer
 	c control
 }
+
+// 主播的信息结构
+type streamerMsg struct {
+	// 控制信息
+	c controlMsg
+	// 下载信息
+	r record
+	// 是否正在下载
+	recording bool
+	// 是否被修改设置
+	modify bool
+}
+
+// map[int]streamerMsg
+var sMsg = sync.Map{}
 
 // 程序是否处于监听状态
 var isListen *bool
@@ -67,19 +82,20 @@ func lPrintln(msg ...interface{}) {
 	fmt.Fprintln(&webLog, msg...)
 }
 
-// 将UID转换成字符串
-func (s streamer) uidStr() string {
-	return strconv.Itoa(int(s.UID))
-}
+// 将int转换为字符串
+var itoa = strconv.Itoa
 
-// 将uint转换为字符串
-func uidStr(uid uint) string {
-	return strconv.Itoa(int(uid))
+// 将字符串转换为int
+var atoi = strconv.Atoi
+
+// 将UID转换成字符串
+func (s streamer) itoa() string {
+	return itoa(s.UID)
 }
 
 // 返回ID（UID）形式的字符串
 func (s streamer) longID() string {
-	return s.ID + "（" + s.uidStr() + "）"
+	return s.Name + "（" + s.itoa() + "）"
 }
 
 // 获取sync.Map的长度
@@ -133,22 +149,22 @@ func argsHandle() {
 			listLive()
 		}
 		if *addNotifyUID != 0 {
-			addNotify(*addNotifyUID)
+			addNotify(int(*addNotifyUID))
 		}
 		if *delNotifyUID != 0 {
-			delNotify(*delNotifyUID)
+			delNotify(int(*delNotifyUID))
 		}
 		if *addRecordUID != 0 {
-			addRecord(*addRecordUID)
+			addRecord(int(*addRecordUID))
 		}
 		if *delRecordUID != 0 {
-			delRecord(*delRecordUID)
+			delRecord(int(*delRecordUID))
 		}
 		if *getStreamURL != 0 {
-			printStreamURL(*getStreamURL)
+			printStreamURL(int(*getStreamURL))
 		}
 		if *startRecord != 0 {
-			startRec(*startRecord)
+			startRec(int(*startRecord))
 		}
 	}
 }

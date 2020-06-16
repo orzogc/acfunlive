@@ -14,15 +14,15 @@ const configFile = "config.json"
 
 var configFileLocation string
 
-// 设置修改标记，map[uint]bool
+// 设置修改标记，map[int]bool
 var modify = sync.Map{}
 
 // 主播的设置数据
 type streamer struct {
 	// uid
-	UID uint
+	UID int
 	// 主播名字
-	ID string
+	Name string
 	// 是否开播提醒
 	Notify bool
 	// 是否自动下载直播
@@ -31,6 +31,7 @@ type streamer struct {
 
 // 存放主播的设置数据
 var streamers struct {
+	// current的锁
 	mu sync.Mutex
 	// 现在的主播的设置数据
 	current []streamer
@@ -78,11 +79,11 @@ func saveConfig() {
 }
 
 // 设置里删除指定uid的主播
-func deleteStreamer(uid uint) {
+func deleteStreamer(uid int) {
 	for i, s := range streamers.current {
 		if s.UID == uid {
 			streamers.current = append(streamers.current[:i], streamers.current[i+1:]...)
-			lPrintln("删除" + s.ID + "的设置数据")
+			lPrintln("删除" + s.Name + "的设置数据")
 		}
 	}
 }

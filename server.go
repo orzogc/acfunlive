@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +30,7 @@ const webHelp = `/listlive ：列出正在直播的主播
 // web服务本地默认端口
 const port = ":51880"
 
-var dispatch = map[string]func(uint) bool{
+var dispatch = map[string]func(int) bool{
 	"addnotify":   addNotify,
 	"delnotify":   delNotify,
 	"addrecord":   addRecord,
@@ -47,17 +46,17 @@ var srv *http.Server
 // 处理dispatch
 func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	uid, err := strconv.Atoi(vars["uid"])
+	uid, err := atoi(vars["uid"])
 	checkErr(err)
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uint(uid)))
+	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uid))
 }
 
 func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	uid, err := strconv.Atoi(vars["uid"])
+	uid, err := atoi(vars["uid"])
 	checkErr(err)
-	hlsURL, flvURL := printStreamURL(uint(uid))
+	hlsURL, flvURL := printStreamURL(uid)
 	w.Header().Set("Content-Type", "application/json")
 	j := json.NewEncoder(w)
 	j.SetIndent("", "    ")
