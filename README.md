@@ -9,7 +9,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
 
-`acfunlive -weblisten` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来发送命令
+`acfunlive -weblisten` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来查看状态和发送命令
 
 `acfunlive -listlive` 列出正在直播的主播
 

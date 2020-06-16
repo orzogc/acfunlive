@@ -19,7 +19,7 @@ var modify = sync.Map{}
 
 // 主播的设置数据
 type streamer struct {
-	// uid
+	// 主播uid
 	UID int
 	// 主播名字
 	Name string
@@ -31,13 +31,31 @@ type streamer struct {
 
 // 存放主播的设置数据
 var streamers struct {
-	// current的锁
+	// crt的锁
 	mu sync.Mutex
 	// 现在的主播的设置数据
-	current []streamer
+	crt map[int]streamer
 	// 旧的主播的设置数据
-	old []streamer
+	old map[int]streamer
 }
+
+// 获取对应uid的streamer
+/*
+func gets(uid int) streamer {
+	return streamers.crt[uid]
+}
+*/
+
+// 将s放进streamers里
+func sets(s streamer) {
+	streamers.crt[s.UID] = s
+}
+
+/*
+func (s streamer) sets() {
+	streamers.crt[s.UID] = s
+}
+*/
 
 // 查看设置文件是否存在
 func isConfigFileExist() bool {
@@ -54,13 +72,24 @@ func isConfigFileExist() bool {
 
 // 读取设置文件
 func loadConfig() {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintln("Recovering from panic in loadConfig(), the error is:", err)
+			lPrintln("读取设置文件" + configFile + "时出错，请重启本程序")
+		}
+	}()
+
 	if isConfigFileExist() {
 		data, err := ioutil.ReadFile(configFileLocation)
 		checkErr(err)
 
 		if json.Valid(data) {
-			err = json.Unmarshal(data, &streamers.current)
+			var ss []streamer
+			err = json.Unmarshal(data, &ss)
 			checkErr(err)
+			for _, s := range ss {
+				sets(s)
+			}
 		} else {
 			lPrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
 		}
@@ -70,21 +99,24 @@ func loadConfig() {
 // 保存设置文件
 func saveConfig() {
 	streamers.mu.Lock()
-	data, err := json.MarshalIndent(streamers.current, "", "    ")
+	defer streamers.mu.Unlock()
+
+	var ss []streamer
+	for _, s := range streamers.crt {
+		ss = append(ss, s)
+	}
+	data, err := json.MarshalIndent(ss, "", "    ")
 	checkErr(err)
 
 	err = ioutil.WriteFile(configFileLocation, data, 0644)
 	checkErr(err)
-	streamers.mu.Unlock()
 }
 
 // 设置里删除指定uid的主播
 func deleteStreamer(uid int) {
-	for i, s := range streamers.current {
-		if s.UID == uid {
-			streamers.current = append(streamers.current[:i], streamers.current[i+1:]...)
-			lPrintln("删除" + s.Name + "的设置数据")
-		}
+	if s, ok := streamers.crt[uid]; ok {
+		delete(streamers.crt, uid)
+		lPrintln("删除" + s.Name + "的设置数据")
 	}
 }
 
@@ -115,48 +147,39 @@ func cycleConfig(ctx context.Context) {
 				modTime = info.ModTime()
 				loadConfig()
 
-				for _, s := range streamers.current {
-					for i, olds := range streamers.old {
-						if s.UID == olds.UID {
-							if s != olds {
-								// olds的设置被修改
-								lPrintln(s.longID() + "的设置被修改，重新设置")
-								restart := controlMsg{s: s, c: startCycle}
-								ch, _ := chMap.Load(s.UID)
-								modify.Store(s.UID, true)
-								ch.(chan controlMsg) <- restart
-							}
-							break
-						} else {
-							if i == len(streamers.old)-1 {
-								// s为新增的主播
-								lPrintln("新增" + s.longID() + "的设置")
-								start := controlMsg{s: s, c: startCycle}
-								ch, _ := chMap.Load(0)
-								modify.Store(s.UID, true)
-								ch.(chan controlMsg) <- start
-							}
+				for uid, s := range streamers.crt {
+					if olds, ok := streamers.old[uid]; ok {
+						if s != olds {
+							// olds的设置被修改
+							lPrintln(s.longID() + "的设置被修改，重新设置")
+							restart := controlMsg{s: s, c: startCycle}
+							ch, _ := chMap.Load(s.UID)
+							modify.Store(s.UID, true)
+							ch.(chan controlMsg) <- restart
 						}
+					} else {
+						// s为新增的主播
+						lPrintln("新增" + s.longID() + "的设置")
+						start := controlMsg{s: s, c: startCycle}
+						ch, _ := chMap.Load(0)
+						modify.Store(s.UID, true)
+						ch.(chan controlMsg) <- start
 					}
 				}
 
-				for _, olds := range streamers.old {
-					for i, s := range streamers.current {
-						if s.UID == olds.UID {
-							break
-						} else {
-							if i == len(streamers.current)-1 {
-								// olds为被删除的主播
-								lPrintln(olds.longID() + "的设置被删除")
-								stop := controlMsg{s: olds, c: stopCycle}
-								ch, _ := chMap.Load(olds.UID)
-								ch.(chan controlMsg) <- stop
-							}
-						}
+				for uid, olds := range streamers.old {
+					if _, ok := streamers.crt[uid]; !ok {
+						// olds为被删除的主播
+						lPrintln(olds.longID() + "的设置被删除")
+						stop := controlMsg{s: olds, c: stopCycle}
+						ch, _ := chMap.Load(olds.UID)
+						ch.(chan controlMsg) <- stop
 					}
 				}
 			}
-			streamers.old = append([]streamer(nil), streamers.current...)
+			for uid, s := range streamers.crt {
+				streamers.old[uid] = s
+			}
 			streamers.mu.Unlock()
 
 			// 每半分钟循环一次

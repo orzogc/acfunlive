@@ -4,6 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -82,12 +83,13 @@ func handleListRecord(w http.ResponseWriter, r *http.Request) {
 
 func handleListStreamer(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	streamers.mu.Lock()
-	err := j.Encode(streamers.current)
-	streamers.mu.Unlock()
-	checkErr(err)
+	if isConfigFileExist() {
+		data, err := ioutil.ReadFile(configFileLocation)
+		checkErr(err)
+		fmt.Fprint(w, string(data))
+	} else {
+		fmt.Fprint(w, "null")
+	}
 }
 
 func handleLog(w http.ResponseWriter, r *http.Request) {

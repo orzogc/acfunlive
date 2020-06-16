@@ -123,7 +123,7 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
-	isWebServer = flag.Bool("weblisten", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，可以通过http://localhost"+port+"来发送命令")
+	isWebServer = flag.Bool("weblisten", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，可以通过 http://localhost"+port+" 来查看状态和发送命令")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -191,8 +191,13 @@ func initialize() {
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
+	streamers.crt = make(map[int]streamer)
+	streamers.old = make(map[int]streamer)
 	loadConfig()
-	streamers.old = append([]streamer(nil), streamers.current...)
+
+	for uid, s := range streamers.crt {
+		streamers.old[uid] = s
+	}
 
 	fetchAllRooms()
 }
@@ -203,7 +208,7 @@ func main() {
 	argsHandle()
 
 	if *isListen {
-		if len(streamers.current) == 0 {
+		if len(streamers.crt) == 0 {
 			lPrintln("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
 			return
 		}
@@ -213,7 +218,7 @@ func main() {
 		mainCh := make(chan controlMsg, 20)
 		chMap.Store(0, mainCh)
 
-		for _, s := range streamers.current {
+		for _, s := range streamers.crt {
 			go s.initCycle()
 		}
 
@@ -225,7 +230,7 @@ func main() {
 		go handleInput()
 
 		if *isWebServer {
-			lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来发送命令")
+			lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来查看状态和发送命令")
 			go httpServer()
 		}
 

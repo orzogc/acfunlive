@@ -34,15 +34,14 @@ var danglingRec struct {
 func addRecord(uid int) bool {
 	isExist := false
 	streamers.mu.Lock()
-	for i, s := range streamers.current {
-		if s.UID == uid {
-			isExist = true
-			if s.Record {
-				lPrintln("已经设置过自动下载" + s.Name + "的直播")
-			} else {
-				streamers.current[i].Record = true
-				lPrintln("成功设置自动下载" + s.Name + "的直播")
-			}
+	if s, ok := streamers.crt[uid]; ok {
+		isExist = true
+		if s.Record {
+			lPrintln("已经设置过自动下载" + s.Name + "的直播")
+		} else {
+			s.Record = true
+			sets(s)
+			lPrintln("成功设置自动下载" + s.Name + "的直播")
 		}
 	}
 	streamers.mu.Unlock()
@@ -56,7 +55,7 @@ func addRecord(uid int) bool {
 
 		newStreamer := streamer{UID: uid, Name: name, Notify: false, Record: true}
 		streamers.mu.Lock()
-		streamers.current = append(streamers.current, newStreamer)
+		sets(newStreamer)
 		streamers.mu.Unlock()
 		lPrintln("成功设置自动下载" + name + "的直播")
 	}
@@ -68,15 +67,16 @@ func addRecord(uid int) bool {
 // 取消自动下载指定主播的直播
 func delRecord(uid int) bool {
 	streamers.mu.Lock()
-	for i, s := range streamers.current {
-		if s.UID == uid {
-			if s.Notify {
-				streamers.current[i].Record = false
-			} else {
-				deleteStreamer(uid)
-			}
-			lPrintln("成功取消自动下载" + s.Name + "的直播")
+	if s, ok := streamers.crt[uid]; ok {
+		if s.Notify {
+			s.Record = false
+			sets(s)
+		} else {
+			deleteStreamer(uid)
 		}
+		lPrintln("成功取消自动下载" + s.Name + "的直播")
+	} else {
+		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播")
 	}
 	streamers.mu.Unlock()
 

@@ -57,7 +57,7 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 func listLive() (streamings []streaming) {
 	lPrintln("正在直播的主播：")
 	streamers.mu.Lock()
-	for _, s := range streamers.current {
+	for _, s := range streamers.crt {
 		if s.isLiveOn() {
 			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			streamings = append(streamings, streaming(s))
