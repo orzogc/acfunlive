@@ -71,13 +71,15 @@ func listLive() (streamings []streaming) {
 // 列出正在下载的直播
 func listRecord() (recordings []streaming) {
 	lPrintln("正在下载的直播：")
-	recordMap.Range(func(key, value interface{}) bool {
-		uid := key.(int)
-		s := streamer{UID: uid, Name: getName(uid)}
-		lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
-		recordings = append(recordings, streaming(s))
-		return true
-	})
+	msgMap.mu.Lock()
+	for uid, m := range msgMap.msg {
+		if m.recording {
+			s := streamer{UID: uid, Name: getName(uid)}
+			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			recordings = append(recordings, streaming(s))
+		}
+	}
+	msgMap.mu.Unlock()
 
 	return recordings
 }
@@ -85,9 +87,10 @@ func listRecord() (recordings []streaming) {
 // 通知main()退出程序
 func quitRun() {
 	lPrintln("正在准备退出，请等待...")
-	ch, _ := chMap.Load(0)
 	q := controlMsg{c: quit}
-	ch.(chan controlMsg) <- q
+	msgMap.mu.Lock()
+	msgMap.msg[0].ch <- q
+	msgMap.mu.Unlock()
 }
 
 // 打印错误命令信息

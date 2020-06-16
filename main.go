@@ -18,7 +18,7 @@ import (
 var exeDir string
 
 // 每个streamer的控制管道的map，map[int]chan controlMsg
-var chMap = sync.Map{}
+//var chMap = sync.Map{}
 
 type control int
 
@@ -38,19 +38,24 @@ type controlMsg struct {
 }
 
 // 主播的信息结构
-type streamerMsg struct {
+type sMsg struct {
 	// 控制信息
-	c controlMsg
+	ch chan controlMsg
 	// 下载信息
-	r record
+	rec record
 	// 是否正在下载
 	recording bool
 	// 是否被修改设置
 	modify bool
 }
 
-// map[int]streamerMsg
-var sMsg = sync.Map{}
+// streamerMsg的map，map[int]sMsg
+//var msgMap = sync.Map{}
+
+var msgMap struct {
+	mu  sync.Mutex
+	msg map[int]sMsg
+}
 
 // 程序是否处于监听状态
 var isListen *bool
@@ -115,6 +120,14 @@ func mapPrintln(sm *sync.Map) {
 		return true
 	})
 }
+
+// 获取相应uid的管道
+/*
+func getCh(uid int) chan controlMsg {
+	msg, _ := msgMap.Load(uid)
+	return msg.(sMsg).ch
+}
+*/
 
 // 命令行参数处理
 func argsHandle() {
@@ -191,6 +204,7 @@ func initialize() {
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
+	msgMap.msg = make(map[int]sMsg)
 	streamers.crt = make(map[int]streamer)
 	streamers.old = make(map[int]streamer)
 	loadConfig()
@@ -216,10 +230,10 @@ func main() {
 		lPrintln("本程序开始监听主播的直播状态")
 
 		mainCh := make(chan controlMsg, 20)
-		chMap.Store(0, mainCh)
+		msgMap.msg[0] = sMsg{ch: mainCh}
 
 		for _, s := range streamers.crt {
-			go s.initCycle()
+			go s.cycle()
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -239,23 +253,22 @@ func main() {
 			case msg := <-mainCh:
 				switch msg.c {
 				case startCycle:
-					go msg.s.initCycle()
+					go msg.s.cycle()
 				case quit:
 					// 结束cycleConfig()
 					cancel()
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
-					chMap.Range(func(key, value interface{}) bool {
-						value.(chan controlMsg) <- msg
-						return true
-					})
-					// 结束下载直播
-					recordMap.Range(func(key, value interface{}) bool {
-						rec := value.(record)
-						rec.ch <- stopRecord
-						io.WriteString(rec.stdin, "q")
-						return true
-					})
+					msgMap.mu.Lock()
+					for _, m := range msgMap.msg {
+						m.ch <- msg
+						// 结束下载直播
+						if m.recording {
+							m.rec.ch <- stopRecord
+							io.WriteString(m.rec.stdin, "q")
+						}
+					}
+					msgMap.mu.Unlock()
 					danglingRec.mu.Lock()
 					for _, rec := range danglingRec.records {
 						rec.ch <- stopRecord

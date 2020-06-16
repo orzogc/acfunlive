@@ -21,7 +21,7 @@ const livePage = "https://live.acfun.cn/live/"
 // 直播间的数据结构
 type liveRoom struct {
 	// 主播名字
-	id string
+	name string
 	// 直播间标题
 	title string
 }
@@ -84,7 +84,7 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
 		room := liveRoom{
-			id:    string(live.GetStringBytes("user", "name")),
+			name:  string(live.GetStringBytes("user", "name")),
 			title: string(live.GetStringBytes("title")),
 		}
 		rooms.Set(itoa(uid), room)

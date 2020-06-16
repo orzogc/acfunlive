@@ -22,7 +22,7 @@ type record struct {
 }
 
 // 下载信息的map，map[int]record
-var recordMap = sync.Map{}
+//var recordMap = sync.Map{}
 
 // 存放某些没在recordMap的下载
 var danglingRec struct {
@@ -93,11 +93,13 @@ func startRec(uid int) bool {
 	}
 	s := streamer{UID: uid, Name: name}
 
-	_, ok := recordMap.Load(s.UID)
-	if ok {
+	msgMap.mu.Lock()
+	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
 		lPrintln("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.itoa())
+		msgMap.mu.Unlock()
 		return false
 	}
+	msgMap.mu.Unlock()
 
 	if !s.isLiveOn() {
 		lPrintln(s.longID() + "不在直播，取消下载")
@@ -118,20 +120,23 @@ func startRec(uid int) bool {
 func stopRec(uid int) bool {
 	// web服务需要快速返回
 	go func() {
-		r, ok := recordMap.Load(uid)
-		if ok {
-			rec := r.(record)
+		msgMap.mu.Lock()
+		if m, ok := msgMap.msg[uid]; ok && m.recording {
 			lPrintln("开始结束uid为" + itoa(uid) + "的主播的下载")
-			rec.ch <- stopRecord
-			io.WriteString(rec.stdin, "q")
-			// 等待20秒强关下载
-			time.Sleep(20 * time.Second)
-			rec.cancel()
-			// 需要删除recordMap里相应的key
-			recordMap.Delete(uid)
+			m.rec.ch <- stopRecord
+			io.WriteString(m.rec.stdin, "q")
+			// 等待20秒强关下载，goroutine是为了防止锁住时间过长
+			go func() {
+				time.Sleep(20 * time.Second)
+				m.rec.cancel()
+			}()
+			// 需要设置recording为false
+			m.recording = false
+			msgMap.msg[uid] = m
 		} else {
 			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播")
 		}
+		msgMap.mu.Unlock()
 	}()
 
 	return true
@@ -144,8 +149,11 @@ func (s streamer) recordLive() {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
 			lPrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播发生错误")
-			time.Sleep(2 * time.Second)
-			recordMap.Delete(s.UID)
+			msgMap.mu.Lock()
+			m := msgMap.msg[s.UID]
+			m.recording = false
+			msgMap.msg[s.UID] = m
+			msgMap.mu.Unlock()
 		}
 	}()
 
@@ -211,7 +219,15 @@ func (s streamer) recordLive() {
 	defer stdin.Close()
 	ch := make(chan control, 20)
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
-	recordMap.Store(s.UID, rec)
+	msgMap.mu.Lock()
+	if m, ok := msgMap.msg[s.UID]; ok {
+		m.recording = true
+		m.rec = rec
+		msgMap.msg[s.UID] = m
+	} else {
+		msgMap.msg[s.UID] = sMsg{recording: true, rec: rec}
+	}
+	msgMap.mu.Unlock()
 
 	if !*isListen {
 		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
@@ -246,7 +262,11 @@ func (s streamer) recordLive() {
 			}
 		}
 	} else {
-		recordMap.Delete(s.UID)
+		msgMap.mu.Lock()
+		m := msgMap.msg[s.UID]
+		m.recording = false
+		msgMap.msg[s.UID] = m
+		msgMap.mu.Unlock()
 	}
 
 	lPrintln(s.longID() + "的直播下载已经结束")
