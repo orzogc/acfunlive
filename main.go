@@ -17,9 +17,6 @@ import (
 // 运行程序所在文件夹
 var exeDir string
 
-// 每个streamer的控制管道的map，map[int]chan controlMsg
-//var chMap = sync.Map{}
-
 type control int
 
 // 控制信息
@@ -49,9 +46,7 @@ type sMsg struct {
 	modify bool
 }
 
-// streamerMsg的map，map[int]sMsg
-//var msgMap = sync.Map{}
-
+// sMsg的map
 var msgMap struct {
 	mu  sync.Mutex
 	msg map[int]sMsg
@@ -104,31 +99,18 @@ func (s streamer) longID() string {
 	return s.Name + "（" + s.itoa() + "）"
 }
 
-// 获取sync.Map的长度
-func length(sm *sync.Map) int {
-	count := 0
-	sm.Range(func(key, value interface{}) bool {
-		count++
-		return true
-	})
-	return count
+// 尝试删除msgMap.msg里的键
+func deleteMsg(uid int) {
+	streamers.mu.Lock()
+	defer streamers.mu.Unlock()
+	msgMap.mu.Lock()
+	defer msgMap.mu.Unlock()
+	_, oks := streamers.crt[uid]
+	m, okm := msgMap.msg[uid]
+	if !oks && okm && !m.recording {
+		delete(msgMap.msg, uid)
+	}
 }
-
-// 打印sync.Map的内容
-func mapPrintln(sm *sync.Map) {
-	sm.Range(func(key, value interface{}) bool {
-		fmt.Println(key, value)
-		return true
-	})
-}
-
-// 获取相应uid的管道
-/*
-func getCh(uid int) chan controlMsg {
-	msg, _ := msgMap.Load(uid)
-	return msg.(sMsg).ch
-}
-*/
 
 // 命令行参数处理
 func argsHandle() {

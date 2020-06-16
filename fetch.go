@@ -10,9 +10,9 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	cmap "github.com/orcaman/concurrent-map"
 	"github.com/valyala/fastjson"
 )
 
@@ -26,8 +26,11 @@ type liveRoom struct {
 	title string
 }
 
-// liveRoom的map，map[int]liveRoom
-var liveRooms *cmap.ConcurrentMap
+// liveRoom的map
+var liveRooms struct {
+	mu    sync.Mutex
+	rooms *map[int]liveRoom
+}
 
 // 获取主播的直播链接
 func getURL(uid int) string {
@@ -42,18 +45,22 @@ func (s streamer) getURL() string {
 // 获取全部AcFun直播间
 func fetchAllRooms() {
 	page := "0"
-	var allRooms = cmap.New()
+	allRooms := make(map[int]liveRoom)
 	for page != "no_more" {
 		rooms, nextPage := fetchLiveRoom(page)
 		page = nextPage
-		allRooms.MSet(rooms.Items())
+		for uid, r := range *rooms {
+			allRooms[uid] = r
+		}
 	}
 
-	liveRooms = &allRooms
+	liveRooms.mu.Lock()
+	defer liveRooms.mu.Unlock()
+	liveRooms.rooms = &allRooms
 }
 
 // 获取指定页数的AcFun直播间
-func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
+func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
@@ -79,7 +86,7 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 		return nil, ""
 	}
 
-	var rooms = cmap.New()
+	var rooms = make(map[int]liveRoom)
 	liveList := v.GetArray("channelListData", "liveList")
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
@@ -87,7 +94,7 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 			name:  string(live.GetStringBytes("user", "name")),
 			title: string(live.GetStringBytes("title")),
 		}
-		rooms.Set(itoa(uid), room)
+		rooms[uid] = room
 	}
 
 	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
@@ -97,13 +104,18 @@ func fetchLiveRoom(page string) (r *cmap.ConcurrentMap, nextPage string) {
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	return liveRooms.Has(itoa(s.UID))
+	liveRooms.mu.Lock()
+	defer liveRooms.mu.Unlock()
+	_, ok := (*liveRooms.rooms)[s.UID]
+	return ok
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	if room, ok := liveRooms.Get(itoa(s.UID)); ok {
-		return room.(liveRoom).title
+	liveRooms.mu.Lock()
+	defer liveRooms.mu.Unlock()
+	if room, ok := (*liveRooms.rooms)[s.UID]; ok {
+		return room.title
 	}
 	return ""
 }

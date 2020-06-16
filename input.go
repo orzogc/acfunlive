@@ -42,13 +42,13 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 func listLive() (streamings []streaming) {
 	lPrintln("正在直播的主播：")
 	streamers.mu.Lock()
+	defer streamers.mu.Unlock()
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
 			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			streamings = append(streamings, streaming(s))
 		}
 	}
-	streamers.mu.Unlock()
 
 	return streamings
 }
@@ -57,6 +57,7 @@ func listLive() (streamings []streaming) {
 func listRecord() (recordings []streaming) {
 	lPrintln("正在下载的直播：")
 	msgMap.mu.Lock()
+	defer msgMap.mu.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.recording {
 			s := streamer{UID: uid, Name: getName(uid)}
@@ -64,7 +65,6 @@ func listRecord() (recordings []streaming) {
 			recordings = append(recordings, streaming(s))
 		}
 	}
-	msgMap.mu.Unlock()
 
 	return recordings
 }
@@ -74,8 +74,8 @@ func quitRun() {
 	lPrintln("正在准备退出，请等待...")
 	q := controlMsg{c: quit}
 	msgMap.mu.Lock()
+	defer msgMap.mu.Unlock()
 	msgMap.msg[0].ch <- q
-	msgMap.mu.Unlock()
 }
 
 // 打印错误命令信息

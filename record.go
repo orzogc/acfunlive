@@ -266,6 +266,8 @@ func (s streamer) recordLive() {
 		msgMap.mu.Unlock()
 	}
 
+	deleteMsg(s.UID)
+
 	lPrintln(s.longID() + "的直播下载已经结束")
 	desktopNotify(s.Name + "的直播下载已经结束")
 }

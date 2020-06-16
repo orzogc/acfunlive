@@ -165,9 +165,12 @@ func cycleConfig(ctx context.Context) {
 						msgMap.mu.Unlock()
 					}
 				}
-			}
-			for uid, s := range streamers.crt {
-				streamers.old[uid] = s
+
+				oldstreamers := make(map[int]streamer)
+				for uid, s := range streamers.crt {
+					oldstreamers[uid] = s
+				}
+				streamers.old = oldstreamers
 			}
 			streamers.mu.Unlock()
 

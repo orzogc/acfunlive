@@ -11,15 +11,11 @@ func (s streamer) handleMsg(msg controlMsg) {
 	case startCycle:
 		lPrintln("重启监听" + s.longID() + "的直播状态")
 		msgMap.mu.Lock()
+		defer msgMap.mu.Unlock()
 		msgMap.msg[0].ch <- msg
-		msgMap.mu.Unlock()
 	case stopCycle:
 		lPrintln("退出" + s.longID() + "的循环")
-		/*
-			msgMap.mu.Lock()
-			delete(msgMap.msg, s.UID)
-			msgMap.mu.Unlock()
-		*/
+		deleteMsg(s.UID)
 	case quit:
 	default:
 		lPrintln("未知的controlMsg：", msg)
