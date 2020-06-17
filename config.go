@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"sort"
 	"sync"
 	"time"
 )
@@ -46,6 +47,10 @@ func getStreamers() []streamer {
 	for _, s := range streamers.crt {
 		ss = append(ss, s)
 	}
+	// 按uid大小排序
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].UID < ss[j].UID
+	})
 	return ss
 }
 

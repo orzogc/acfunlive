@@ -119,7 +119,8 @@ func stopRec(uid int) bool {
 	go func() {
 		msgMap.mu.Lock()
 		if m, ok := msgMap.msg[uid]; ok && m.recording {
-			lPrintln("开始结束uid为" + itoa(uid) + "的主播的下载")
+			s := streamer{UID: uid, Name: getName(uid)}
+			lPrintln("开始停止下载" + s.longID() + "的直播")
 			m.rec.ch <- stopRecord
 			io.WriteString(m.rec.stdin, "q")
 			// 等待20秒强关下载，goroutine是为了防止锁住时间过长

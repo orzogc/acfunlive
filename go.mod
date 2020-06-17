@@ -8,5 +8,5 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/rs/cors v1.7.0
 	github.com/valyala/fastjson v1.5.1
-	golang.org/x/sys v0.0.0-20200610111108-226ff32320da // indirect
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 )

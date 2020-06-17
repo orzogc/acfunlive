@@ -125,7 +125,7 @@ func getName(uid int) (name string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in getName(), the error is:", err)
-			lPrintln("获取uid为" + itoa(uid) + "的主播的ID时出现错误，尝试重新运行")
+			lPrintln("获取uid为" + itoa(uid) + "的主播的名字时出现错误，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			name = getName(uid)
 		}
