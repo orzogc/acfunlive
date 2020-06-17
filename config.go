@@ -44,9 +44,11 @@ func sets(s streamer) {
 
 func getStreamers() []streamer {
 	var ss []streamer
+	streamers.mu.Lock()
 	for _, s := range streamers.crt {
 		ss = append(ss, s)
 	}
+	streamers.mu.Unlock()
 	// 按uid大小排序
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].UID < ss[j].UID
@@ -88,9 +90,6 @@ func loadConfig() {
 
 // 保存设置文件
 func saveConfig() {
-	streamers.mu.Lock()
-	defer streamers.mu.Unlock()
-
 	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
 
