@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -284,4 +285,19 @@ func printStreamURL(uid int) (string, string) {
 
 	lPrintln(s.longID() + "不在直播")
 	return "", ""
+}
+
+// 循环获取AcFun直播间数据
+func cycleFetch(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			fetchAllRooms()
+			fmt.Println("aaa")
+			// 每20秒循环一次
+			time.Sleep(20 * time.Second)
+		}
+	}
 }

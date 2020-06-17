@@ -1,9 +1,7 @@
 // 循环相关
 package main
 
-import (
-	"time"
-)
+import "time"
 
 // 处理管道信号
 func (s streamer) handleMsg(msg controlMsg) {

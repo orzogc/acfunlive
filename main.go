@@ -219,8 +219,8 @@ func main() {
 			go s.cycle()
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		ctx, configCancel := context.WithCancel(context.Background())
+		defer configCancel()
 		go cycleConfig(ctx)
 
 		lPrintln("现在可以输入命令修改设置，输入help查看全部命令的解释")
@@ -231,6 +231,10 @@ func main() {
 			go httpServer()
 		}
 
+		ctx, fetchCancel := context.WithCancel(context.Background())
+		defer fetchCancel()
+		go cycleFetch(ctx)
+
 		for {
 			select {
 			case msg := <-mainCh:
@@ -239,7 +243,9 @@ func main() {
 					go msg.s.cycle()
 				case quit:
 					// 结束cycleConfig()
-					cancel()
+					configCancel()
+					// 结束cycleFetch()
+					fetchCancel()
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
 					msgMap.mu.Lock()
@@ -272,11 +278,6 @@ func main() {
 				}
 			default:
 			}
-
-			fetchAllRooms()
-
-			// 每20秒循环一次
-			time.Sleep(20 * time.Second)
 		}
 	}
 }
