@@ -28,7 +28,7 @@ const (
 	quit
 )
 
-// 管道信息
+// 主播的管道信息
 type controlMsg struct {
 	s streamer
 	c control
@@ -36,14 +36,10 @@ type controlMsg struct {
 
 // 主播的信息结构
 type sMsg struct {
-	// 控制信息
-	ch chan controlMsg
-	// 下载信息
-	rec record
-	// 是否正在下载
-	recording bool
-	// 是否被修改设置
-	modify bool
+	ch        chan controlMsg // 控制信息
+	rec       record          // 下载信息
+	recording bool            // 是否正在下载
+	modify    bool            // 是否被修改设置
 }
 
 // sMsg的map

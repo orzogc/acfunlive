@@ -5,8 +5,10 @@ import (
 	"github.com/gen2brain/beeep"
 )
 
+// logo文件名字
 const logoFile = "acfunlogo.ico"
 
+// logo文件位置
 var logoFileLocation string
 
 // 添加订阅指定uid的直播提醒

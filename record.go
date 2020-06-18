@@ -16,14 +16,14 @@ import (
 
 // record用来传递下载信息
 type record struct {
-	stdin  io.WriteCloser
-	cancel context.CancelFunc
-	ch     chan control
+	stdin  io.WriteCloser     // ffmpeg的stdin
+	cancel context.CancelFunc // 用来强行停止ffmpeg运行
+	ch     chan control       // 下载goroutine的管道
 }
 
 // 存放某些没在recordMap的下载
 var danglingRec struct {
-	mu      sync.Mutex
+	mu      sync.Mutex // records的锁
 	records []record
 }
 

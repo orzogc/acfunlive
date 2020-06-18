@@ -11,30 +11,25 @@ import (
 	"time"
 )
 
+// 设置文件名字
 const configFile = "config.json"
 
+// 设置文件位置
 var configFileLocation string
 
 // 主播的设置数据
 type streamer struct {
-	// 主播uid
-	UID int
-	// 主播名字
-	Name string
-	// 是否开播提醒
-	Notify bool
-	// 是否自动下载直播
-	Record bool
+	UID    int    // 主播uid
+	Name   string // 主播名字
+	Notify bool   // 是否开播提醒
+	Record bool   // 是否自动下载直播
 }
 
 // 存放主播的设置数据
 var streamers struct {
-	// crt的锁
-	mu sync.Mutex
-	// 现在的主播的设置数据
-	crt map[int]streamer
-	// 旧的主播的设置数据
-	old map[int]streamer
+	mu  sync.Mutex       // crt的锁
+	crt map[int]streamer // 现在的主播的设置数据
+	old map[int]streamer // 旧的主播的设置数据
 }
 
 // 将s放进streamers里
@@ -42,6 +37,7 @@ func sets(s streamer) {
 	streamers.crt[s.UID] = s
 }
 
+// 将map[int]streamer转换为[]streamer，按照uid大小排序
 func getStreamers() []streamer {
 	var ss []streamer
 	streamers.mu.Lock()
