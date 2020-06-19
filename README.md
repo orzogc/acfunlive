@@ -9,7 +9,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
 
-`acfunlive -weblisten` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来查看状态和发送命令
+`acfunlive -listen -web` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来查看状态和发送命令
 
 `acfunlive -listlive` 列出正在直播的主播
 
@@ -20,6 +20,10 @@ AcFun直播桌面通知和下载助手（命令行版本）
 `acfunlive -addrecord 23682490` uid为23682490的用户直播时自动下载其直播
 
 `acfunlive -delrecord 23682490` 取消自动下载uid为23682490的用户的直播
+
+`acfunlive -adddanmu 23682490` uid为23682490的用户直播时自动下载其直播弹幕
+
+`acfunlive -deldanmu 23682490` 取消自动下载uid为23682490的用户的直播弹幕
 
 `acfunlive -getdlurl 23682490` 查看uid为23682490的用户是否在直播，输出其直播源
 
@@ -43,6 +47,10 @@ web服务默认本地端口为51880
 `http://localhost:51880/addrecord/23682490` uid为23682490的用户直播时自动下载其直播
 
 `http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的用户的直播
+
+`http://localhost:51880/adddanmu/23682490` uid为23682490的用户直播时自动下载其直播弹幕
+
+`http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的用户的直播弹幕
 
 `http://localhost:51880/getdlurl/23682490` 查看uid为23682490的用户是否在直播，输出其直播源
 

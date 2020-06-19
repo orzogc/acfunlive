@@ -40,6 +40,7 @@ type sMsg struct {
 	rec       record          // 下载信息
 	recording bool            // 是否正在下载
 	modify    bool            // 是否被修改设置
+	//startTime bool            // 下载直播或弹幕的开始时间
 }
 
 // sMsg的map
@@ -115,12 +116,14 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
-	isWebServer = flag.Bool("weblisten", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，可以通过 http://localhost"+port+" 来查看状态和发送命令")
+	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 http://localhost"+port+" 来查看状态和发送命令，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	addRecordUID := flag.Uint("addrecord", 0, "自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
 	delRecordUID := flag.Uint("delrecord", 0, "取消自动下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
+	addDanmuUID := flag.Uint("adddanmu", 0, "自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
+	delDanmuUID := flag.Uint("deldanmu", 0, "取消自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的uid（在主播的网页版个人主页查看）")
 	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
@@ -135,7 +138,10 @@ func argsHandle() {
 			flag.PrintDefaults()
 		}
 		if *isWebServer {
-			*isListen = true
+			if *isListen != true {
+				fmt.Println("web参数需要和listen参数一起运行")
+				os.Exit(1)
+			}
 		}
 		if *isListLive {
 			listLive()
@@ -151,6 +157,12 @@ func argsHandle() {
 		}
 		if *delRecordUID != 0 {
 			delRecord(int(*delRecordUID))
+		}
+		if *addDanmuUID != 0 {
+			addDanmu(int(*addDanmuUID))
+		}
+		if *delDanmuUID != 0 {
+			delDanmu(int(*delDanmuUID))
 		}
 		if *getStreamURL != 0 {
 			printStreamURL(int(*getStreamURL))

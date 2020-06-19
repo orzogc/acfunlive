@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/orzogc/acfundanmu"
 	"github.com/valyala/fastjson"
 )
 
@@ -173,13 +174,13 @@ func fetchAcLogo() {
 }
 
 // 获取AcFun的直播源，分为hls和flv两种
-func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
+func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.SubConfig) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in getStreamURL(), the error is:", err)
 			lPrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			hlsURL, flvURL = s.getStreamURL()
+			hlsURL, flvURL, cfg = s.getStreamURL()
 		}
 	}()
 
@@ -219,7 +220,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 0 {
-		return "", ""
+		return "", "", cfg
 	}
 	// 获取userId和对应的令牌
 	userID := v.GetInt("userId")
@@ -240,7 +241,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	v, err = p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 1 {
-		return "", ""
+		return "", "", cfg
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
 	v, err = p.ParseBytes(videoPlayRes)
@@ -255,11 +256,21 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string) {
 	})
 	flvURL = string(representation[0].GetStringBytes("url"))
 
+	bitrate := representation[0].GetInt("bitrate")
+	switch {
+	case bitrate >= 4000:
+		cfg = subConfigs[1080]
+	case bitrate >= 3000:
+		cfg = subConfigs[720]
+	default:
+		cfg = subConfigs[540]
+	}
+
 	i := strings.Index(flvURL, streamName)
 	// 这是码率最高的hls视频源
 	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull", "hlspull") + streamName + ".m3u8"
 
-	return hlsURL, flvURL
+	return hlsURL, flvURL, cfg
 }
 
 // 查看指定主播是否在直播和输出其直播源
@@ -273,7 +284,7 @@ func printStreamURL(uid int) (string, string) {
 
 	if s.isLiveOn() {
 		title := s.getTitle()
-		hlsURL, flvURL := s.getStreamURL()
+		hlsURL, flvURL, _ := s.getStreamURL()
 		lPrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
 			lPrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")

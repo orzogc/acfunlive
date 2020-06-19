@@ -23,6 +23,7 @@ type streamer struct {
 	Name   string // 主播名字
 	Notify bool   // 是否开播提醒
 	Record bool   // 是否自动下载直播
+	Danmu  bool   // 直播时是否自动下载直播弹幕
 }
 
 // 存放主播的设置数据

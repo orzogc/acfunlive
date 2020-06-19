@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/orzogc/acfundanmu"
 )
 
 // record用来传递下载信息
@@ -25,6 +27,34 @@ type record struct {
 var danglingRec struct {
 	mu      sync.Mutex // records的锁
 	records []record
+}
+
+// 转换文件名和限制文件名长度
+func transFilename(filename string) (string, bool) {
+	// 转换文件名不允许的特殊字符
+	var re *regexp.Regexp
+	if runtime.GOOS == "linux" {
+		re = regexp.MustCompile(`[/]`)
+	}
+	if runtime.GOOS == "windows" {
+		re = regexp.MustCompile(`[<>:"/\\|?*]`)
+	}
+	filename = re.ReplaceAllString(filename, "-")
+	// linux和macOS下限制文件名长度
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		if len(filename) > 250 {
+			filename = filename[(len(filename) - 250):]
+		}
+	}
+	outFilename := filepath.Join(exeDir, filename)
+	// windows下全路径文件名不能过长
+	if runtime.GOOS == "windows" {
+		if utf8.RuneCountInString(outFilename) > 255 {
+			lPrintln("全路径文件名太长，取消下载")
+			return "", false
+		}
+	}
+	return outFilename, true
 }
 
 // 设置自动下载指定主播的直播
@@ -65,7 +95,7 @@ func addRecord(uid int) bool {
 func delRecord(uid int) bool {
 	streamers.mu.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify {
+		if s.Notify || s.Danmu {
 			s.Record = false
 			sets(s)
 		} else {
@@ -152,11 +182,12 @@ func (s streamer) recordLive() {
 			m.recording = false
 			msgMap.msg[s.UID] = m
 			msgMap.mu.Unlock()
+			deleteMsg(s.UID)
 		}
 	}()
 
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
-	liveURL, _ := s.getStreamURL()
+	liveURL, _, cfg := s.getStreamURL()
 	if liveURL == "" {
 		lPrintln("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载")
@@ -172,33 +203,15 @@ func (s streamer) recordLive() {
 	title := s.getTitle()
 	recordTime := getTime()
 	filename := recordTime + " " + s.Name + " " + title
-	// 转换文件名不允许的特殊字符
-	var re *regexp.Regexp
-	if runtime.GOOS == "linux" {
-		re = regexp.MustCompile(`[/]`)
-	}
-	if runtime.GOOS == "windows" {
-		re = regexp.MustCompile(`[<>:"/\\|?*]`)
-	}
-	filename = re.ReplaceAllString(filename, "-")
-	// linux和macOS下限制文件名长度
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		if len(filename) > 250 {
-			filename = filename[:250]
-		}
-	}
+	outFilename, ok := transFilename(filename)
 	// 想要输出其他视频格式可以修改这里的mp4
-	outFile := filepath.Join(exeDir, filename+".mp4")
-	// windows下全路径文件名不能过长
-	if runtime.GOOS == "windows" {
-		if utf8.RuneCountInString(outFile) > 259 {
-			lPrintln("全路径文件名太长，取消下载")
-			return
-		}
+	recordFile := outFilename + ".mp4"
+	if !ok {
+		return
 	}
 
 	lPrintln("开始下载" + s.longID() + "的直播")
-	lPrintln("本次下载的文件保存在" + outFile)
+	lPrintln("本次下载的文件保存在" + recordFile)
 	if *isListen {
 		lPrintln("如果想提前结束下载，运行stoprecord " + s.itoa())
 	}
@@ -210,7 +223,7 @@ func (s streamer) recordLive() {
 	cmd := exec.CommandContext(ctx, ffmpegFile,
 		"-timeout", "10000000",
 		"-i", liveURL,
-		"-c", "copy", outFile)
+		"-c", "copy", recordFile)
 
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)
@@ -231,6 +244,15 @@ func (s streamer) recordLive() {
 		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
 		cmd.Stdin = os.Stdin
 		lPrintln("按q键退出下载")
+	}
+
+	if s.Danmu {
+		assFile := outFilename + ".ass"
+		cfg.Title = filename
+		cfg.StartTime = time.Now().UnixNano()
+		lPrintln("开始下载弹幕，ass文件保存在" + assFile)
+		q := acfundanmu.Start(ctx, s.UID)
+		go q.WriteASS(ctx, cfg, assFile)
 	}
 
 	err = cmd.Run()

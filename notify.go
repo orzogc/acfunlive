@@ -49,7 +49,7 @@ func addNotify(uid int) bool {
 func delNotify(uid int) bool {
 	streamers.mu.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Record {
+		if s.Record || s.Danmu {
 			s.Notify = false
 			sets(s)
 		} else {
