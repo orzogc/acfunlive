@@ -286,6 +286,8 @@ func main() {
 				}
 			default:
 			}
+
+			time.Sleep(time.Second)
 		}
 	}
 }
