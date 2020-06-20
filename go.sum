@@ -86,6 +86,8 @@ github.com/orzogc/acfundanmu v0.0.0-20200620062257-32a30994a81e h1:cjqwHjcMCr865
 github.com/orzogc/acfundanmu v0.0.0-20200620062257-32a30994a81e/go.mod h1:V15zuQ3cOJOBsmF5SSpPrpjNjq+oxYAjudEFTw2iRb4=
 github.com/orzogc/acfundanmu v0.0.0-20200620064419-ed4e03c1b071 h1:9SnYXtkpDZyEqLWs+EmnbfRTuiXjpGTfh9OACTm6CZ4=
 github.com/orzogc/acfundanmu v0.0.0-20200620064419-ed4e03c1b071/go.mod h1:V15zuQ3cOJOBsmF5SSpPrpjNjq+oxYAjudEFTw2iRb4=
+github.com/orzogc/acfundanmu v0.0.0-20200620083224-fa0d13229001 h1:31LciOV2G96EMdsC4Hfm8/BEQIUZM2BX2WSCe+fmEQo=
+github.com/orzogc/acfundanmu v0.0.0-20200620083224-fa0d13229001/go.mod h1:V15zuQ3cOJOBsmF5SSpPrpjNjq+oxYAjudEFTw2iRb4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
@@ -124,6 +126,8 @@ golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 h1:ogLJMz+qpzav7lGMh10LMvAkM/fAoGlaiiHYiFYdm80=
 golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200620081246-981b61492c35 h1:wb/9mP8eUAmHfkM8RmpeLq6nUA7c2i5+bQOtcDftjaE=
+golang.org/x/sys v0.0.0-20200620081246-981b61492c35/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=
 golang.org/x/time v0.0.0-20191024005414-555d28b269f0/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=

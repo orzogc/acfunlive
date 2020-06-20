@@ -45,7 +45,7 @@ func (s streamer) cycle() {
 	msgMap.mu.Unlock()
 
 	// 设置文件里有该主播，但是不通知不下载
-	if !(s.Notify || s.Record) {
+	if !(s.Notify || s.Record || s.Danmu) {
 		for {
 			msg := <-ch
 			s.handleMsg(msg)
@@ -91,6 +91,9 @@ func (s streamer) cycle() {
 						msgMap.mu.Unlock()
 					} else {
 						lPrintln("如果要临时下载" + s.Name + "的直播，可以运行startrecord " + s.itoa())
+						if s.Danmu {
+							startDanmu(s.UID)
+						}
 					}
 				}
 			} else {

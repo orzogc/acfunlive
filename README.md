@@ -29,6 +29,8 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -startrecord 23682490` 临时下载uid为23682490的用户的直播
 
+`acfunlive -startdanmu 23682490` 临时下载uid为23682490的用户的直播弹幕
+
 运行`acfunlive -h`查看详细设置说明
 
 ### web服务使用方法
@@ -57,6 +59,10 @@ web服务默认本地端口为51880
 `http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的用户的直播
 
 `http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的用户的直播
+
+`http://localhost:51880/startdanmu/23682490` 临时下载uid为23682490的用户的直播弹幕
+
+`http://localhost:51880/stopdanmu/23682490` 取消下载uid为23682490的用户的直播弹幕
 
 `http://localhost:51880/log` 查看log
 

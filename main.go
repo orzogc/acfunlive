@@ -36,11 +36,11 @@ type controlMsg struct {
 
 // 主播的信息结构
 type sMsg struct {
-	ch        chan controlMsg // 控制信息
-	rec       record          // 下载信息
-	recording bool            // 是否正在下载
-	modify    bool            // 是否被修改设置
-	//startTime bool            // 下载直播或弹幕的开始时间
+	ch          chan controlMsg    // 控制信息
+	rec         record             // 下载信息
+	recording   bool               // 是否正在下载
+	modify      bool               // 是否被修改设置
+	danmuCancel context.CancelFunc // 用来停止下载弹幕
 }
 
 // sMsg的map
@@ -126,6 +126,7 @@ func argsHandle() {
 	delDanmuUID := flag.Uint("deldanmu", 0, "取消自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的uid（在主播的网页版个人主页查看）")
 	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播，需要主播的uid（在主播的网页版个人主页查看）")
+	startDlDanmu := flag.Uint("startdanmu", 0, "临时下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
@@ -169,6 +170,9 @@ func argsHandle() {
 		}
 		if *startRecord != 0 {
 			startRec(int(*startRecord))
+		}
+		if *startDlDanmu != 0 {
+			startDanmu(int(*startDlDanmu))
 		}
 	}
 }
@@ -258,11 +262,18 @@ func main() {
 					lPrintln("正在退出各主播的循环")
 					msgMap.mu.Lock()
 					for _, m := range msgMap.msg {
-						m.ch <- msg
+						// 退出各主播的循环
+						if m.ch != nil {
+							m.ch <- msg
+						}
 						// 结束下载直播
 						if m.recording {
 							m.rec.ch <- stopRecord
 							io.WriteString(m.rec.stdin, "q")
+						}
+						// 结束下载弹幕
+						if m.danmuCancel != nil {
+							m.danmuCancel()
 						}
 					}
 					msgMap.mu.Unlock()
@@ -284,10 +295,7 @@ func main() {
 				default:
 					lPrintln("未知controlMsg：", msg)
 				}
-			default:
 			}
-
-			time.Sleep(time.Second)
 		}
 	}
 }

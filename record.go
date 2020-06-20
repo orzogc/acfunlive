@@ -12,8 +12,6 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
-
-	"github.com/orzogc/acfundanmu"
 )
 
 // record用来传递下载信息
@@ -129,12 +127,13 @@ func startRec(uid int) bool {
 	msgMap.mu.Unlock()
 
 	if !s.isLiveOn() {
-		lPrintln(s.longID() + "不在直播，取消下载")
+		lPrintln(s.longID() + "不在直播，取消下载直播")
 		return false
 	}
 
 	// 查看程序是否处于监听状态
 	if *isListen {
+		// goroutine是为了快速返回
 		go s.recordLive()
 	} else {
 		// 程序只在单独下载一个直播，不用goroutine，防止程序提前结束运行
@@ -200,20 +199,18 @@ func (s streamer) recordLive() {
 		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 	}
 
-	title := s.getTitle()
-	recordTime := getTime()
-	filename := recordTime + " " + s.Name + " " + title
-	outFilename, ok := transFilename(filename)
-	// 想要输出其他视频格式可以修改这里的mp4
-	recordFile := outFilename + ".mp4"
+	filename := getTime() + " " + s.Name + " " + s.getTitle()
+	recordFile, ok := transFilename(filename)
 	if !ok {
 		return
 	}
+	// 想要输出其他视频格式可以修改这里的mp4
+	recordFile = recordFile + ".mp4"
 
 	lPrintln("开始下载" + s.longID() + "的直播")
-	lPrintln("本次下载的文件保存在" + recordFile)
+	lPrintln("本次下载的视频文件保存在" + recordFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载，运行stoprecord " + s.itoa())
+		lPrintln("如果想提前结束下载直播，运行stoprecord " + s.itoa())
 	}
 	desktopNotify("开始下载" + s.Name + "的直播")
 
@@ -246,13 +243,9 @@ func (s streamer) recordLive() {
 		lPrintln("按q键退出下载")
 	}
 
+	// 下载弹幕
 	if s.Danmu {
-		assFile := outFilename + ".ass"
-		cfg.Title = filename
-		cfg.StartTime = time.Now().UnixNano()
-		lPrintln("开始下载弹幕，ass文件保存在" + assFile)
-		q := acfundanmu.Start(ctx, s.UID)
-		go q.WriteASS(ctx, cfg, assFile)
+		go s.getDanmu(ctx, cfg, filename)
 	}
 
 	err = cmd.Run()

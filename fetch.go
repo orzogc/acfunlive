@@ -262,6 +262,8 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 		cfg = subConfigs[1080]
 	case bitrate >= 3000:
 		cfg = subConfigs[720]
+	case bitrate == 0:
+		cfg = subConfigs[0]
 	default:
 		cfg = subConfigs[540]
 	}

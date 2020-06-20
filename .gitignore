@@ -3,6 +3,7 @@ acfunlogo.ico
 *.json
 *.mp4
 *.flv
+*.ass
 *.7z
 
 # Binaries for programs and plugins
