@@ -5,7 +5,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 - ffmpeg（下载直播需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 使用方法
-桌面通知和自动下载直播需要运行`acfunlive -listen`
+桌面通知和自动下载直播需要运行`acfunlive -listen`，下载的视频和弹幕默认保存在本程序所在文件夹内
 
 `acfunlive -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
 
