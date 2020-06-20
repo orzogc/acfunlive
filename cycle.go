@@ -74,7 +74,7 @@ func (s streamer) cycle() {
 					}
 					if s.Record {
 						msgMap.mu.Lock()
-						// 直播短时间内重启的情况下，通常上一次的直播下载的退出会比较慢
+						// 直播短时间内重启的情况下，通常上一次的直播视频下载的退出会比较慢
 						if m := msgMap.msg[s.UID]; m.recording {
 							// 如果设置被修改，不重启已有的下载
 							if !m.modify {
@@ -90,7 +90,8 @@ func (s streamer) cycle() {
 						}
 						msgMap.mu.Unlock()
 					} else {
-						lPrintln("如果要临时下载" + s.Name + "的直播，可以运行startrecord " + s.itoa())
+						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行startrecord " + s.itoa())
+						// 不下载直播视频时下载弹幕
 						if s.Danmu {
 							startDanmu(s.UID)
 						}

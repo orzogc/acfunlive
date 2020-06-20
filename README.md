@@ -2,7 +2,7 @@
 AcFun直播桌面通知和下载助手（命令行版本）
 
 ### 运行依赖
-- ffmpeg（下载直播需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
+- ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 使用方法
 桌面通知和自动下载直播需要运行`acfunlive -listen`，下载的视频和弹幕默认保存在本程序所在文件夹内
@@ -17,9 +17,9 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -delnotify 23682490` 取消通知uid为23682490的用户的直播
 
-`acfunlive -addrecord 23682490` uid为23682490的用户直播时自动下载其直播
+`acfunlive -addrecord 23682490` uid为23682490的用户直播时自动下载其直播视频
 
-`acfunlive -delrecord 23682490` 取消自动下载uid为23682490的用户的直播
+`acfunlive -delrecord 23682490` 取消自动下载uid为23682490的用户的直播视频
 
 `acfunlive -adddanmu 23682490` uid为23682490的用户直播时自动下载其直播弹幕
 
@@ -27,7 +27,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -getdlurl 23682490` 查看uid为23682490的用户是否在直播，输出其直播源
 
-`acfunlive -startrecord 23682490` 临时下载uid为23682490的用户的直播
+`acfunlive -startrecord 23682490` 临时下载uid为23682490的用户的直播视频
 
 `acfunlive -startdanmu 23682490` 临时下载uid为23682490的用户的直播弹幕
 
@@ -38,7 +38,9 @@ web服务默认本地端口为51880
 
 `http://localhost:51880/listlive` 列出正在直播的主播
 
-`http://localhost:51880/listrecord` 列出正在下载的直播
+`http://localhost:51880/listrecord` 列出正在下载的直播视频
+
+`http://localhost:51880/listdanmu` 列出正在下载的直播弹幕
 
 `http://localhost:51880/liststreamer` 列出设置了开播提醒或自动下载直播的主播
 
@@ -46,19 +48,19 @@ web服务默认本地端口为51880
 
 `http://localhost:51880/delnotify/23682490` 取消通知uid为23682490的用户的直播
 
-`http://localhost:51880/addrecord/23682490` uid为23682490的用户直播时自动下载其直播
+`http://localhost:51880/addrecord/23682490` uid为23682490的用户直播时自动下载其直播视频
 
-`http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的用户的直播
+`http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的用户的直播视频
 
 `http://localhost:51880/adddanmu/23682490` uid为23682490的用户直播时自动下载其直播弹幕
 
 `http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的用户的直播弹幕
 
-`http://localhost:51880/getdlurl/23682490` 查看uid为23682490的用户是否在直播，输出其直播源
+`http://localhost:51880/getdlurl/23682490` 查看uid为23682490的用户是否在直播，并输出其直播源
 
-`http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的用户的直播
+`http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的用户的直播视频
 
-`http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的用户的直播
+`http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的用户的直播视频
 
 `http://localhost:51880/startdanmu/23682490` 临时下载uid为23682490的用户的直播弹幕
 

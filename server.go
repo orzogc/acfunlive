@@ -14,17 +14,18 @@ import (
 
 // web服务帮助信息
 const webHelp = `/listlive ：列出正在直播的主播
-/listrecord ：列出正在下载的直播
+/listrecord ：列出正在下载的直播视频
+/listdanmu：列出正在下载的直播弹幕
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
 /addnotify/数字 ：订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
 /delnotify/数字 ：取消订阅指定主播的开播提醒，数字为主播的uid（在主播的网页版个人主页查看）
-/addrecord/数字 ：自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
-/delrecord/数字 ：取消自动下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看）
+/addrecord/数字 ：自动下载指定主播的直播视频，数字为主播的uid（在主播的网页版个人主页查看）
+/delrecord/数字 ：取消自动下载指定主播的直播视频，数字为主播的uid（在主播的网页版个人主页查看）
 /adddanmu/数字 ：自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）
 /deldanmu/数字 ：取消自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）
 /getdlurl/数字 ：查看指定主播是否在直播，如在直播输出其直播源地址，数字为主播的uid（在主播的网页版个人主页查看）
-/startrecord/数字 ：临时下载指定主播的直播，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播，这次为一次性的下载
-/stoprecord/数字 ：正在下载指定主播的直播时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
+/startrecord/数字 ：临时下载指定主播的直播视频，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播视频，这次为一次性的下载
+/stoprecord/数字 ：正在下载指定主播的直播视频时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
 /startdanmu/数字：临时下载指定主播的直播弹幕，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播弹幕，这次为一次性的下载
 /stopdanmu/数字：正在下载指定主播的直播弹幕时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
 /log ：查看log
@@ -33,6 +34,12 @@ const webHelp = `/listlive ：列出正在直播的主播
 
 // web服务本地默认端口
 const port = ":51880"
+
+var listDispatch = map[string]func() []streaming{
+	"listlive":   listLive,
+	"listrecord": listRecord,
+	"listdanmu":  listDanmu,
+}
 
 // 储存日志
 var webLog strings.Builder
@@ -48,6 +55,15 @@ func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uid))
 }
 
+// 处理listDispatch
+func handleListDispatch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	j := json.NewEncoder(w)
+	j.SetIndent("", "    ")
+	err := j.Encode(listDispatch[mux.CurrentRoute(r).GetName()]())
+	checkErr(err)
+}
+
 // 列出直播的下载源
 func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -58,24 +74,6 @@ func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	j := json.NewEncoder(w)
 	j.SetIndent("", "    ")
 	err = j.Encode([]string{hlsURL, flvURL})
-	checkErr(err)
-}
-
-// 列出正在直播的主播
-func handleListLive(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	err := j.Encode(listLive())
-	checkErr(err)
-}
-
-// 列出正在下载的直播
-func handleListRecord(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	err := j.Encode(listRecord())
 	checkErr(err)
 }
 
@@ -120,9 +118,10 @@ func httpServer() {
 	for str := range dispatch {
 		r.HandleFunc(fmt.Sprintf("/%s/{uid:[1-9][0-9]*}", str), handleDispatch).Name(str)
 	}
+	for str := range listDispatch {
+		r.HandleFunc(fmt.Sprintf("/%s", str), handleListDispatch).Name(str)
+	}
 	r.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
-	r.HandleFunc("/listlive", handleListLive)
-	r.HandleFunc("/listrecord", handleListRecord)
 	r.HandleFunc("/liststreamer", handleListStreamer)
 	r.HandleFunc("/log", handleLog)
 	r.HandleFunc("/quit", handleQuit)

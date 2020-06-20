@@ -55,18 +55,18 @@ func transFilename(filename string) (string, bool) {
 	return outFilename, true
 }
 
-// 设置自动下载指定主播的直播
+// 设置自动下载指定主播的直播视频
 func addRecord(uid int) bool {
 	isExist := false
 	streamers.mu.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Record {
-			lPrintln("已经设置过自动下载" + s.Name + "的直播")
+			lPrintln("已经设置过自动下载" + s.Name + "的直播视频")
 		} else {
 			s.Record = true
 			sets(s)
-			lPrintln("成功设置自动下载" + s.Name + "的直播")
+			lPrintln("成功设置自动下载" + s.Name + "的直播视频")
 		}
 	}
 	streamers.mu.Unlock()
@@ -82,14 +82,14 @@ func addRecord(uid int) bool {
 		streamers.mu.Lock()
 		sets(newStreamer)
 		streamers.mu.Unlock()
-		lPrintln("成功设置自动下载" + name + "的直播")
+		lPrintln("成功设置自动下载" + name + "的直播视频")
 	}
 
 	saveConfig()
 	return true
 }
 
-// 取消自动下载指定主播的直播
+// 取消自动下载指定主播的直播视频
 func delRecord(uid int) bool {
 	streamers.mu.Lock()
 	if s, ok := streamers.crt[uid]; ok {
@@ -99,9 +99,9 @@ func delRecord(uid int) bool {
 		} else {
 			deleteStreamer(uid)
 		}
-		lPrintln("成功取消自动下载" + s.Name + "的直播")
+		lPrintln("成功取消自动下载" + s.Name + "的直播视频")
 	} else {
-		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播")
+		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
 	}
 	streamers.mu.Unlock()
 
@@ -109,7 +109,7 @@ func delRecord(uid int) bool {
 	return true
 }
 
-// 临时下载指定主播的直播
+// 临时下载指定主播的直播视频
 func startRec(uid int) bool {
 	name := getName(uid)
 	if name == "" {
@@ -120,14 +120,14 @@ func startRec(uid int) bool {
 
 	msgMap.mu.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
-		lPrintln("已经在下载" + s.longID() + "的直播，如要重启下载，请先运行stoprecord " + s.itoa())
+		lPrintln("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行stoprecord " + s.itoa())
 		msgMap.mu.Unlock()
 		return false
 	}
 	msgMap.mu.Unlock()
 
 	if !s.isLiveOn() {
-		lPrintln(s.longID() + "不在直播，取消下载直播")
+		lPrintln(s.longID() + "不在直播，取消下载直播视频")
 		return false
 	}
 
@@ -136,20 +136,20 @@ func startRec(uid int) bool {
 		// goroutine是为了快速返回
 		go s.recordLive()
 	} else {
-		// 程序只在单独下载一个直播，不用goroutine，防止程序提前结束运行
+		// 程序只在单独下载一个直播视频，不用goroutine，防止程序提前结束运行
 		s.recordLive()
 	}
 	return true
 }
 
-// 停止下载指定主播的直播
+// 停止下载指定主播的直播视频
 func stopRec(uid int) bool {
 	// web服务需要快速返回
 	go func() {
 		msgMap.mu.Lock()
 		if m, ok := msgMap.msg[uid]; ok && m.recording {
 			s := streamer{UID: uid, Name: getName(uid)}
-			lPrintln("开始停止下载" + s.longID() + "的直播")
+			lPrintln("开始停止下载" + s.longID() + "的直播视频")
 			m.rec.ch <- stopRecord
 			io.WriteString(m.rec.stdin, "q")
 			// 等待20秒强关下载，goroutine是为了防止锁住时间过长
@@ -161,7 +161,7 @@ func stopRec(uid int) bool {
 			m.recording = false
 			msgMap.msg[uid] = m
 		} else {
-			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播")
+			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
 		}
 		msgMap.mu.Unlock()
 	}()
@@ -169,13 +169,13 @@ func stopRec(uid int) bool {
 	return true
 }
 
-// 下载主播的直播
+// 下载主播的直播视频
 func (s streamer) recordLive() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播发生错误，如要重启下载，请运行startrecord " + s.itoa())
-			desktopNotify("下载" + s.Name + "的直播发生错误")
+			lPrintln("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行startrecord " + s.itoa())
+			desktopNotify("下载" + s.Name + "的直播视频发生错误")
 			msgMap.mu.Lock()
 			m := msgMap.msg[s.UID]
 			m.recording = false
@@ -188,8 +188,8 @@ func (s streamer) recordLive() {
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _, cfg := s.getStreamURL()
 	if liveURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载，如要重启下载，请运行startrecord " + s.itoa())
-		desktopNotify("无法获取" + s.Name + "的直播源，退出下载")
+		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行startrecord " + s.itoa())
+		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
 		return
 	}
 
@@ -207,14 +207,14 @@ func (s streamer) recordLive() {
 	// 想要输出其他视频格式可以修改这里的mp4
 	recordFile = recordFile + ".mp4"
 
-	lPrintln("开始下载" + s.longID() + "的直播")
+	lPrintln("开始下载" + s.longID() + "的直播视频")
 	lPrintln("本次下载的视频文件保存在" + recordFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载直播，运行stoprecord " + s.itoa())
+		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行stoprecord " + s.itoa())
 	}
-	desktopNotify("开始下载" + s.Name + "的直播")
+	desktopNotify("开始下载" + s.Name + "的直播视频")
 
-	// 运行ffmpeg下载直播
+	// 运行ffmpeg下载直播视频
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, ffmpegFile,
@@ -238,9 +238,9 @@ func (s streamer) recordLive() {
 	msgMap.mu.Unlock()
 
 	if !*isListen {
-		// 程序单独下载一个直播时可以按q键退出（ffmpeg的特性）
+		// 程序单独下载一个直播视频时可以按q键退出（ffmpeg的特性）
 		cmd.Stdin = os.Stdin
-		lPrintln("按q键退出下载")
+		lPrintln("按q键退出下载直播视频")
 	}
 
 	// 下载弹幕
@@ -250,7 +250,7 @@ func (s streamer) recordLive() {
 
 	err = cmd.Run()
 	if err != nil {
-		lPrintln("下载"+s.longID()+"的直播出现错误，尝试重启下载：", err)
+		lPrintln("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
 
 	if s.isLiveOn() {
@@ -268,7 +268,7 @@ func (s streamer) recordLive() {
 			// 程序处于监听状态时重启下载，否则不重启
 			if *isListen {
 				// 由于某种原因导致下载意外结束
-				lPrintln("因意外结束下载" + s.longID() + "的直播，尝试重启下载")
+				lPrintln("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
 				go s.recordLive()
@@ -284,6 +284,6 @@ func (s streamer) recordLive() {
 
 	deleteMsg(s.UID)
 
-	lPrintln(s.longID() + "的直播下载已经结束")
-	desktopNotify(s.Name + "的直播下载已经结束")
+	lPrintln(s.longID() + "的直播视频下载已经结束")
+	desktopNotify(s.Name + "的直播视频下载已经结束")
 }

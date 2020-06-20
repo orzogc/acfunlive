@@ -91,7 +91,7 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	lPrintln("开始下载" + s.longID() + "的直播弹幕")
 	lPrintln("本次下载的ass文件保存在" + assFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载直播弹幕，运行stopdanmu " + s.itoa())
+		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行stopdanmu " + s.itoa())
 	}
 	desktopNotify("开始下载" + s.Name + "的直播弹幕")
 	q := acfundanmu.Start(dctx, s.UID)
@@ -120,11 +120,16 @@ func startDanmu(uid int) bool {
 	s := streamer{UID: uid, Name: name}
 
 	if !s.isLiveOn() {
-		lPrintln(s.longID() + "不在直播，取消下载弹幕")
+		lPrintln(s.longID() + "不在直播，取消下载直播弹幕")
 		return false
 	}
 
-	_, _, cfg := s.getStreamURL()
+	hlsURL, _, cfg := s.getStreamURL()
+	if hlsURL == "" {
+		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行startdanmu " + s.itoa())
+		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
+		return false
+	}
 	filename := getTime() + " " + s.Name + " " + s.getTitle()
 
 	// 查看程序是否处于监听状态
@@ -136,7 +141,7 @@ func startDanmu(uid int) bool {
 			s.getDanmu(ctx, cfg, filename)
 		}()
 	} else {
-		// 程序只在单独下载一个直播，不用goroutine，防止程序提前结束运行
+		// 程序只在单独下载一个直播弹幕，不用goroutine，防止程序提前结束运行
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		s.getDanmu(ctx, cfg, filename)
