@@ -9,7 +9,7 @@ import (
 )
 
 var subConfigs = map[int]acfundanmu.SubConfig{
-	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 20},
+	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 20}, // 这是手机直播
 	540:  {PlayResX: 960, PlayResY: 540, FontSize: 30},
 	720:  {PlayResX: 1280, PlayResY: 720, FontSize: 40},
 	1080: {PlayResX: 1920, PlayResY: 1080, FontSize: 60},
@@ -59,9 +59,9 @@ func delDanmu(uid int) bool {
 		} else {
 			deleteStreamer(uid)
 		}
-		lPrintln("成功取消订阅" + s.Name + "的开播提醒")
+		lPrintln("成功取消自动下载" + s.Name + "的直播弹幕")
 	} else {
-		lPrintln("没有订阅过uid为" + itoa(uid) + "的主播的开播提醒")
+		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
 	}
 	streamers.mu.Unlock()
 
