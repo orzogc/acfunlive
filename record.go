@@ -1,4 +1,4 @@
-// 下载直播相关
+// 直播下载相关
 package main
 
 import (

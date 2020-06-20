@@ -27,6 +27,17 @@ stoprecord 数字：正在下载指定主播的直播时取消下载，数字为
 quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
+var dispatch = map[string]func(int) bool{
+	"addnotify":   addNotify,
+	"delnotify":   delNotify,
+	"addrecord":   addRecord,
+	"delrecord":   delRecord,
+	"adddanmu":    addDanmu,
+	"deldanmu":    delDanmu,
+	"startrecord": startRec,
+	"stoprecord":  stopRec,
+}
+
 // 正在直播的主播
 type streaming streamer
 
@@ -129,70 +140,15 @@ func handleInput() {
 				printErr()
 			}
 		} else if len(cmd) == 2 {
-			switch cmd[0] {
-			case "addnotify":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				addNotify(uid)
-			case "delnotify":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				delNotify(uid)
-			case "addrecord":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				addRecord(uid)
-			case "delrecord":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				delRecord(uid)
-			case "adddanmu":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				addDanmu(uid)
-			case "deldanmu":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				delDanmu(uid)
-			case "getdlurl":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
+			d, ok := dispatch[cmd[0]]
+			uid, err := atoi(cmd[1])
+			switch {
+			case err != nil:
+				printErr()
+			case ok:
+				d(uid)
+			case cmd[0] == "getdlurl":
 				printStreamURL(uid)
-			case "startrecord":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				startRec(uid)
-			case "stoprecord":
-				uid, err := atoi(cmd[1])
-				if err != nil {
-					printErr()
-					break
-				}
-				stopRec(uid)
 			default:
 				printErr()
 			}

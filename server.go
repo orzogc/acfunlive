@@ -32,17 +32,6 @@ const webHelp = `/listlive ：列出正在直播的主播
 // web服务本地默认端口
 const port = ":51880"
 
-var dispatch = map[string]func(int) bool{
-	"addnotify":   addNotify,
-	"delnotify":   delNotify,
-	"addrecord":   addRecord,
-	"delrecord":   delRecord,
-	"adddanmu":    addDanmu,
-	"deldanmu":    delDanmu,
-	"startrecord": startRec,
-	"stoprecord":  stopRec,
-}
-
 // 储存日志
 var webLog strings.Builder
 
