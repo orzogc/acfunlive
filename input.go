@@ -27,6 +27,8 @@ startrecord 数字：临时下载指定主播的直播视频，数字为主播�
 stoprecord 数字：正在下载指定主播的直播视频时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
 startdanmu 数字：临时下载指定主播的直播弹幕，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播弹幕，这次为一次性的下载
 stopdanmu 数字：正在下载指定主播的直播弹幕时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
+startrecdan 数字：临时下载指定主播的直播视频和弹幕，数字为主播的uid（在主播的网页版个人主页查看），如果没有设置自动下载该主播的直播视频和弹幕，这次为一次性的下载
+stoprecdan 数字：正在下载指定主播的直播视频和弹幕时取消下载，数字为主播的uid（在主播的网页版个人主页查看）
 quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
@@ -41,6 +43,8 @@ var dispatch = map[string]func(int) bool{
 	"stoprecord":  stopRec,
 	"startdanmu":  startDanmu,
 	"stopdanmu":   stopDanmu,
+	"startrecdan": startRecDan,
+	"stoprecdan":  stopRecDan,
 }
 
 // 正在直播的主播

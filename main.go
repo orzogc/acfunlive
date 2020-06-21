@@ -128,6 +128,7 @@ func argsHandle() {
 	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的uid（在主播的网页版个人主页查看）")
 	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
 	startDlDanmu := flag.Uint("startdanmu", 0, "临时下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
+	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
@@ -174,6 +175,9 @@ func argsHandle() {
 		}
 		if *startDlDanmu != 0 {
 			startDanmu(int(*startDlDanmu))
+		}
+		if *startRecDanmu != 0 {
+			startRecDan(int(*startRecDanmu))
 		}
 	}
 }

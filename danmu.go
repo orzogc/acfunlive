@@ -184,3 +184,22 @@ func stopDanmu(uid int) bool {
 	}
 	return true
 }
+
+// 临时下载指定主播的直播视频和弹幕
+func startRecDan(uid int) bool {
+	if *isListen {
+		go startDanmu(uid)
+		go startRec(uid)
+	} else {
+		go startDanmu(uid)
+		startRec(uid)
+	}
+	return true
+}
+
+// 取消下载指定主播的直播视频和弹幕
+func stopRecDan(uid int) bool {
+	go stopDanmu(uid)
+	go stopRec(uid)
+	return true
+}
