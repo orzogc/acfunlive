@@ -71,6 +71,20 @@ func delDanmu(uid int) bool {
 
 // 下载直播弹幕
 func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filename string) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintln("Recovering from panic in getDanmu(), the error is:", err)
+			lPrintln("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行startdanmu " + s.itoa())
+			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
+			msgMap.mu.Lock()
+			m := msgMap.msg[s.UID]
+			m.danmuCancel = nil
+			msgMap.msg[s.UID] = m
+			msgMap.mu.Unlock()
+			deleteMsg(s.UID)
+		}
+	}()
+
 	dctx, dcancel := context.WithCancel(ctx)
 	defer dcancel()
 	msgMap.mu.Lock()
@@ -93,7 +107,9 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行stopdanmu " + s.itoa())
 	}
-	desktopNotify("开始下载" + s.Name + "的直播弹幕")
+	if !s.Record {
+		desktopNotify("开始下载" + s.Name + "的直播弹幕")
+	}
 	q := acfundanmu.Start(dctx, s.UID)
 	cfg.Title = filename
 	cfg.StartTime = time.Now().UnixNano()
@@ -107,7 +123,9 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	deleteMsg(s.UID)
 
 	lPrintln(s.longID() + "的直播弹幕下载已经结束")
-	desktopNotify(s.Name + "的直播弹幕下载已经结束")
+	if !s.Record {
+		desktopNotify(s.Name + "的直播弹幕下载已经结束")
+	}
 }
 
 // 临时下载指定主播的直播弹幕

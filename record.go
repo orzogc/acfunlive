@@ -212,7 +212,11 @@ func (s streamer) recordLive() {
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行stoprecord " + s.itoa())
 	}
-	desktopNotify("开始下载" + s.Name + "的直播视频")
+	if s.Danmu {
+		desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
+	} else {
+		desktopNotify("开始下载" + s.Name + "的直播视频")
+	}
 
 	// 运行ffmpeg下载直播视频
 	ctx, cancel := context.WithCancel(context.Background())
@@ -285,5 +289,9 @@ func (s streamer) recordLive() {
 	deleteMsg(s.UID)
 
 	lPrintln(s.longID() + "的直播视频下载已经结束")
-	desktopNotify(s.Name + "的直播视频下载已经结束")
+	if s.Danmu {
+		desktopNotify(s.Name + "的直播视频和弹幕下载已经结束")
+	} else {
+		desktopNotify(s.Name + "的直播视频下载已经结束")
+	}
 }
