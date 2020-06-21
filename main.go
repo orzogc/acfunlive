@@ -223,7 +223,7 @@ func main() {
 
 	if *isListen {
 		if len(streamers.crt) == 0 {
-			lPrintln("请订阅指定主播的开播提醒或自动下载，运行acfun_live -h查看帮助")
+			lPrintln("请订阅指定主播的开播提醒或自动下载，运行 acfun_live -h 查看帮助")
 			return
 		}
 
@@ -240,7 +240,7 @@ func main() {
 		defer configCancel()
 		go cycleConfig(ctx)
 
-		lPrintln("现在可以输入命令修改设置，输入help查看全部命令的解释")
+		lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
 		go handleInput()
 
 		if *isWebServer {

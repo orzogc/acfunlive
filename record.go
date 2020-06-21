@@ -120,7 +120,7 @@ func startRec(uid int) bool {
 
 	msgMap.mu.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
-		lPrintln("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行stoprecord " + s.itoa())
+		lPrintln("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
 		msgMap.mu.Unlock()
 		return false
 	}
@@ -174,7 +174,7 @@ func (s streamer) recordLive() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行startrecord " + s.itoa())
+			lPrintln("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
 			msgMap.mu.Lock()
 			m := msgMap.msg[s.UID]
@@ -188,7 +188,7 @@ func (s streamer) recordLive() {
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _, cfg := s.getStreamURL()
 	if liveURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行startrecord " + s.itoa())
+		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
 		return
 	}
@@ -210,7 +210,7 @@ func (s streamer) recordLive() {
 	lPrintln("开始下载" + s.longID() + "的直播视频")
 	lPrintln("本次下载的视频文件保存在" + recordFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行stoprecord " + s.itoa())
+		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行 stoprecord " + s.itoa())
 	}
 	if s.Danmu {
 		desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")

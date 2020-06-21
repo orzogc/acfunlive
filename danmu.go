@@ -74,7 +74,7 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in getDanmu(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行startdanmu " + s.itoa())
+			lPrintln("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
 			msgMap.mu.Lock()
 			m := msgMap.msg[s.UID]
@@ -105,7 +105,7 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	lPrintln("开始下载" + s.longID() + "的直播弹幕")
 	lPrintln("本次下载的ass文件保存在" + assFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行stopdanmu " + s.itoa())
+		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行 stopdanmu " + s.itoa())
 	}
 	if !s.Record {
 		desktopNotify("开始下载" + s.Name + "的直播弹幕")
@@ -144,7 +144,7 @@ func startDanmu(uid int) bool {
 
 	hlsURL, _, cfg := s.getStreamURL()
 	if hlsURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行startdanmu " + s.itoa())
+		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
 		return false
 	}

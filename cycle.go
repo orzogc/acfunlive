@@ -90,7 +90,7 @@ func (s streamer) cycle() {
 						}
 						msgMap.mu.Unlock()
 					} else {
-						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行startrecord " + s.itoa())
+						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 						// 不下载直播视频时下载弹幕
 						if s.Danmu {
 							startDanmu(s.UID)
