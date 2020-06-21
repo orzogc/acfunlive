@@ -104,7 +104,8 @@ func deleteMsg(uid int) {
 	defer msgMap.mu.Unlock()
 	_, oks := streamers.crt[uid]
 	m, okm := msgMap.msg[uid]
-	if !oks && okm && !m.recording {
+	// 删除临时下载的msg
+	if !oks && okm && !m.recording && (m.danmuCancel == nil) {
 		delete(msgMap.msg, uid)
 	}
 }
