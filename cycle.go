@@ -82,11 +82,11 @@ func (s streamer) cycle() {
 								danglingRec.mu.Lock()
 								danglingRec.records = append(danglingRec.records, m.rec)
 								danglingRec.mu.Unlock()
-								go s.recordLive()
+								go s.recordLive(getFFmpeg())
 							}
 						} else {
 							// 没有下载时就直接启动下载
-							go s.recordLive()
+							go s.recordLive(getFFmpeg())
 						}
 						msgMap.mu.Unlock()
 					} else {

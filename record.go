@@ -27,6 +27,29 @@ var danglingRec struct {
 	records []record
 }
 
+// 查看并获取FFmpeg的位置
+func getFFmpeg() (ffmpegFile string) {
+	ffmpegFile = "ffmpeg"
+	// linux和macOS下确认有没有安装FFmpeg
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		_, err := exec.LookPath(ffmpegFile)
+		if err != nil {
+			lPrintln("系统没有安装FFmpeg")
+			return ""
+		}
+	}
+	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
+	if runtime.GOOS == "windows" {
+		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
+		_, err := os.Stat(ffmpegFile)
+		if os.IsNotExist(err) {
+			lPrintln("ffmpeg.exe需要和本程序放在同一文件夹下")
+			return ""
+		}
+	}
+	return ffmpegFile
+}
+
 // 转换文件名和限制文件名长度
 func transFilename(filename string) (string, bool) {
 	// 转换文件名不允许的特殊字符
@@ -131,13 +154,19 @@ func startRec(uid int) bool {
 		return false
 	}
 
+	ffmpegFile := getFFmpeg()
+	if ffmpegFile == "" {
+		desktopNotify("没有找到FFmpeg，停止下载直播视频")
+		return false
+	}
+
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.recordLive()
+		go s.recordLive(ffmpegFile)
 	} else {
 		// 程序只在单独下载一个直播视频，不用goroutine，防止程序提前结束运行
-		s.recordLive()
+		s.recordLive(ffmpegFile)
 	}
 	return true
 }
@@ -170,7 +199,7 @@ func stopRec(uid int) bool {
 }
 
 // 下载主播的直播视频
-func (s streamer) recordLive() {
+func (s streamer) recordLive(ffmpegFile string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
@@ -185,18 +214,17 @@ func (s streamer) recordLive() {
 		}
 	}()
 
+	if ffmpegFile == "" {
+		desktopNotify("没有找到FFmpeg，停止下载直播视频")
+		return
+	}
+
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
 	liveURL, _, cfg := s.getStreamURL()
 	if liveURL == "" {
 		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
 		return
-	}
-
-	ffmpegFile := "ffmpeg"
-	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
-	if runtime.GOOS == "windows" {
-		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 	}
 
 	filename := getTime() + " " + s.Name + " " + s.getTitle()
@@ -275,7 +303,7 @@ func (s streamer) recordLive() {
 				lPrintln("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
-				go s.recordLive()
+				go s.recordLive(ffmpegFile)
 			}
 		}
 	} else {
