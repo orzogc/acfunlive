@@ -174,13 +174,13 @@ func fetchAcLogo() {
 }
 
 // 获取AcFun的直播源，分为hls和flv两种
-func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.SubConfig) {
+func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName string, cfg acfundanmu.SubConfig) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in getStreamURL(), the error is:", err)
 			lPrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			hlsURL, flvURL, cfg = s.getStreamURL()
+			hlsURL, flvURL, streamName, cfg = s.getStreamURL()
 		}
 	}()
 
@@ -220,7 +220,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 0 {
-		return "", "", cfg
+		return "", "", "", cfg
 	}
 	// 获取userId和对应的令牌
 	userID := v.GetInt("userId")
@@ -241,12 +241,12 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	v, err = p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 1 {
-		return "", "", cfg
+		return "", "", "", cfg
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
 	v, err = p.ParseBytes(videoPlayRes)
 	checkErr(err)
-	streamName := string(v.GetStringBytes("streamName"))
+	streamName = string(v.GetStringBytes("streamName"))
 
 	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
 
@@ -272,7 +272,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	// 这是码率最高的hls视频源
 	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull", "hlspull") + streamName + ".m3u8"
 
-	return hlsURL, flvURL, cfg
+	return hlsURL, flvURL, streamName, cfg
 }
 
 // 查看指定主播是否在直播和输出其直播源
@@ -286,7 +286,7 @@ func printStreamURL(uid int) (string, string) {
 
 	if s.isLiveOn() {
 		title := s.getTitle()
-		hlsURL, flvURL, _ := s.getStreamURL()
+		hlsURL, flvURL, _, _ := s.getStreamURL()
 		lPrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
 			lPrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")
