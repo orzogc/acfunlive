@@ -133,6 +133,13 @@ func getName(uid int) (name string) {
 		}
 	}()
 
+	liveRooms.mu.Lock()
+	if room, ok := (*liveRooms.rooms)[uid]; ok {
+		liveRooms.mu.Unlock()
+		return room.name
+	}
+	liveRooms.mu.Unlock()
+
 	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 

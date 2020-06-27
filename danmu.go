@@ -96,8 +96,8 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	}
 	msgMap.mu.Unlock()
 
-	assFile, ok := transFilename(filename)
-	if !ok {
+	assFile := transFilename(filename)
+	if assFile == "" {
 		return
 	}
 	assFile = assFile + ".ass"

@@ -51,7 +51,7 @@ func getFFmpeg() (ffmpegFile string) {
 }
 
 // 转换文件名和限制文件名长度
-func transFilename(filename string) (string, bool) {
+func transFilename(filename string) string {
 	// 转换文件名不允许的特殊字符
 	var re *regexp.Regexp
 	if runtime.GOOS == "linux" {
@@ -72,10 +72,11 @@ func transFilename(filename string) (string, bool) {
 	if runtime.GOOS == "windows" {
 		if utf8.RuneCountInString(outFilename) > 255 {
 			lPrintln("全路径文件名太长，取消下载")
-			return "", false
+			desktopNotify("全路径文件名太长，取消下载")
+			return ""
 		}
 	}
-	return outFilename, true
+	return outFilename
 }
 
 // 设置自动下载指定主播的直播视频
@@ -228,8 +229,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	}
 
 	filename := getTime() + " " + s.Name + " " + s.getTitle()
-	recordFile, ok := transFilename(filename)
-	if !ok {
+	recordFile := transFilename(filename)
+	if recordFile == "" {
 		return
 	}
 	// 想要输出其他视频格式可以修改这里的mp4
