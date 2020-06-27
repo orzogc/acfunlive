@@ -76,9 +76,11 @@ func loadConfig() {
 			var ss []streamer
 			err = json.Unmarshal(data, &ss)
 			checkErr(err)
+			news := make(map[int]streamer)
 			for _, s := range ss {
-				sets(s)
+				news[s.UID] = s
 			}
+			streamers.crt = news
 		} else {
 			lPrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
 		}
