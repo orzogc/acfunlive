@@ -45,8 +45,8 @@ type sMsg struct {
 
 // sMsg的map
 var msgMap struct {
-	mu  sync.Mutex
-	msg map[int]sMsg
+	sync.Mutex
+	msg map[int]*sMsg
 }
 
 // 程序是否处于监听状态
@@ -98,10 +98,10 @@ func (s streamer) longID() string {
 
 // 尝试删除msgMap.msg里的键
 func deleteMsg(uid int) {
-	streamers.mu.Lock()
-	defer streamers.mu.Unlock()
-	msgMap.mu.Lock()
-	defer msgMap.mu.Unlock()
+	streamers.Lock()
+	defer streamers.Unlock()
+	msgMap.Lock()
+	defer msgMap.Unlock()
 	_, oks := streamers.crt[uid]
 	m, okm := msgMap.msg[uid]
 	// 删除临时下载的msg
@@ -204,7 +204,7 @@ func initialize() {
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
-	msgMap.msg = make(map[int]sMsg)
+	msgMap.msg = make(map[int]*sMsg)
 	streamers.crt = make(map[int]streamer)
 	streamers.old = make(map[int]streamer)
 	loadConfig()
@@ -230,7 +230,7 @@ func main() {
 		lPrintln("本程序开始监听主播的直播状态")
 
 		mainCh := make(chan controlMsg, 20)
-		msgMap.msg[0] = sMsg{ch: mainCh}
+		msgMap.msg[0] = &sMsg{ch: mainCh}
 
 		for _, s := range streamers.crt {
 			go s.cycle()
@@ -265,7 +265,7 @@ func main() {
 					fetchCancel()
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
-					msgMap.mu.Lock()
+					msgMap.Lock()
 					for _, m := range msgMap.msg {
 						// 退出各主播的循环
 						if m.ch != nil {
@@ -281,13 +281,13 @@ func main() {
 							m.danmuCancel()
 						}
 					}
-					msgMap.mu.Unlock()
-					danglingRec.mu.Lock()
+					msgMap.Unlock()
+					danglingRec.Lock()
 					for _, rec := range danglingRec.records {
 						rec.ch <- stopRecord
 						io.WriteString(rec.stdin, "q")
 					}
-					danglingRec.mu.Unlock()
+					danglingRec.Unlock()
 					// 停止web服务
 					if *isWebServer {
 						lPrintln("正在停止web服务")

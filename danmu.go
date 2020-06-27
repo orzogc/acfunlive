@@ -18,7 +18,7 @@ var subConfigs = map[int]acfundanmu.SubConfig{
 // 设置自动下载指定主播的直播弹幕
 func addDanmu(uid int) bool {
 	isExist := false
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Danmu {
@@ -29,7 +29,7 @@ func addDanmu(uid int) bool {
 			lPrintln("成功设置自动下载" + s.Name + "的直播弹幕")
 		}
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	if !isExist {
 		name := getName(uid)
@@ -39,9 +39,9 @@ func addDanmu(uid int) bool {
 		}
 
 		newStreamer := streamer{UID: uid, Name: name, Notify: false, Record: false, Danmu: true}
-		streamers.mu.Lock()
+		streamers.Lock()
 		sets(newStreamer)
-		streamers.mu.Unlock()
+		streamers.Unlock()
 		lPrintln("成功设置自动下载" + name + "的直播弹幕")
 	}
 
@@ -51,7 +51,7 @@ func addDanmu(uid int) bool {
 
 // 取消自动下载指定主播的直播弹幕
 func delDanmu(uid int) bool {
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		if s.Notify || s.Record {
 			s.Danmu = false
@@ -63,7 +63,7 @@ func delDanmu(uid int) bool {
 	} else {
 		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	saveConfig()
 	return true
@@ -76,25 +76,23 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 			lPrintln("Recovering from panic in getDanmu(), the error is:", err)
 			lPrintln("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
-			msgMap.mu.Lock()
+			msgMap.Lock()
 			m := msgMap.msg[s.UID]
 			m.danmuCancel = nil
-			msgMap.msg[s.UID] = m
-			msgMap.mu.Unlock()
+			msgMap.Unlock()
 			deleteMsg(s.UID)
 		}
 	}()
 
 	dctx, dcancel := context.WithCancel(ctx)
 	defer dcancel()
-	msgMap.mu.Lock()
+	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok {
 		m.danmuCancel = dcancel
-		msgMap.msg[s.UID] = m
 	} else {
-		msgMap.msg[s.UID] = sMsg{danmuCancel: dcancel}
+		msgMap.msg[s.UID] = &sMsg{danmuCancel: dcancel}
 	}
-	msgMap.mu.Unlock()
+	msgMap.Unlock()
 
 	assFile := transFilename(filename)
 	if assFile == "" {
@@ -115,11 +113,10 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 	cfg.StartTime = time.Now().UnixNano()
 	q.WriteASS(dctx, cfg, assFile)
 
-	msgMap.mu.Lock()
+	msgMap.Lock()
 	m := msgMap.msg[s.UID]
 	m.danmuCancel = nil
-	msgMap.msg[s.UID] = m
-	msgMap.mu.Unlock()
+	msgMap.Unlock()
 	deleteMsg(s.UID)
 
 	lPrintln(s.longID() + "的直播弹幕下载已经结束")
@@ -169,8 +166,8 @@ func startDanmu(uid int) bool {
 
 // 停止下载指定主播的直播弹幕
 func stopDanmu(uid int) bool {
-	msgMap.mu.Lock()
-	defer msgMap.mu.Unlock()
+	msgMap.Lock()
+	defer msgMap.Unlock()
 	if m, ok := msgMap.msg[uid]; ok {
 		s := streamer{UID: uid, Name: getName(uid)}
 		if m.danmuCancel != nil {

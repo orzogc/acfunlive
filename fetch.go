@@ -30,7 +30,7 @@ type liveRoom struct {
 
 // liveRoom的map
 var liveRooms struct {
-	mu    sync.Mutex
+	sync.Mutex
 	rooms *map[int]liveRoom
 }
 
@@ -56,8 +56,8 @@ func fetchAllRooms() {
 		}
 	}
 
-	liveRooms.mu.Lock()
-	defer liveRooms.mu.Unlock()
+	liveRooms.Lock()
+	defer liveRooms.Unlock()
 	liveRooms.rooms = &allRooms
 }
 
@@ -106,16 +106,16 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
-	liveRooms.mu.Lock()
-	defer liveRooms.mu.Unlock()
+	liveRooms.Lock()
+	defer liveRooms.Unlock()
 	_, ok := (*liveRooms.rooms)[s.UID]
 	return ok
 }
 
 // 获取主播直播的标题
 func (s streamer) getTitle() string {
-	liveRooms.mu.Lock()
-	defer liveRooms.mu.Unlock()
+	liveRooms.Lock()
+	defer liveRooms.Unlock()
 	if room, ok := (*liveRooms.rooms)[s.UID]; ok {
 		return room.title
 	}
@@ -133,12 +133,12 @@ func getName(uid int) (name string) {
 		}
 	}()
 
-	liveRooms.mu.Lock()
+	liveRooms.Lock()
 	if room, ok := (*liveRooms.rooms)[uid]; ok {
-		liveRooms.mu.Unlock()
+		liveRooms.Unlock()
 		return room.name
 	}
-	liveRooms.mu.Unlock()
+	liveRooms.Unlock()
 
 	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"

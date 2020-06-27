@@ -23,8 +23,8 @@ type record struct {
 
 // 存放某些没在recordMap的下载
 var danglingRec struct {
-	mu      sync.Mutex // records的锁
-	records []record
+	sync.Mutex // records的锁
+	records    []record
 }
 
 // 查看并获取FFmpeg的位置
@@ -82,7 +82,7 @@ func transFilename(filename string) string {
 // 设置自动下载指定主播的直播视频
 func addRecord(uid int) bool {
 	isExist := false
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Record {
@@ -93,7 +93,7 @@ func addRecord(uid int) bool {
 			lPrintln("成功设置自动下载" + s.Name + "的直播视频")
 		}
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	if !isExist {
 		name := getName(uid)
@@ -103,9 +103,9 @@ func addRecord(uid int) bool {
 		}
 
 		newStreamer := streamer{UID: uid, Name: name, Notify: false, Record: true}
-		streamers.mu.Lock()
+		streamers.Lock()
 		sets(newStreamer)
-		streamers.mu.Unlock()
+		streamers.Unlock()
 		lPrintln("成功设置自动下载" + name + "的直播视频")
 	}
 
@@ -115,7 +115,7 @@ func addRecord(uid int) bool {
 
 // 取消自动下载指定主播的直播视频
 func delRecord(uid int) bool {
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		if s.Notify || s.Danmu {
 			s.Record = false
@@ -127,7 +127,7 @@ func delRecord(uid int) bool {
 	} else {
 		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	saveConfig()
 	return true
@@ -142,13 +142,13 @@ func startRec(uid int, danmu bool) bool {
 	}
 	s := streamer{UID: uid, Name: name}
 
-	msgMap.mu.Lock()
+	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
 		lPrintln("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
-		msgMap.mu.Unlock()
+		msgMap.Unlock()
 		return false
 	}
-	msgMap.mu.Unlock()
+	msgMap.Unlock()
 
 	if !s.isLiveOn() {
 		lPrintln(s.longID() + "不在直播，取消下载直播视频")
@@ -176,7 +176,8 @@ func startRec(uid int, danmu bool) bool {
 func stopRec(uid int) bool {
 	// web服务需要快速返回
 	go func() {
-		msgMap.mu.Lock()
+		msgMap.Lock()
+		defer msgMap.Unlock()
 		if m, ok := msgMap.msg[uid]; ok && m.recording {
 			s := streamer{UID: uid, Name: getName(uid)}
 			lPrintln("开始停止下载" + s.longID() + "的直播视频")
@@ -189,11 +190,9 @@ func stopRec(uid int) bool {
 			}()
 			// 需要设置recording为false
 			m.recording = false
-			msgMap.msg[uid] = m
 		} else {
 			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
 		}
-		msgMap.mu.Unlock()
 	}()
 
 	return true
@@ -206,11 +205,10 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
 			lPrintln("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
-			msgMap.mu.Lock()
+			msgMap.Lock()
 			m := msgMap.msg[s.UID]
 			m.recording = false
-			msgMap.msg[s.UID] = m
-			msgMap.mu.Unlock()
+			msgMap.Unlock()
 			deleteMsg(s.UID)
 		}
 	}()
@@ -260,15 +258,14 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	defer stdin.Close()
 	ch := make(chan control, 20)
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
-	msgMap.mu.Lock()
+	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok {
 		m.recording = true
 		m.rec = rec
-		msgMap.msg[s.UID] = m
 	} else {
-		msgMap.msg[s.UID] = sMsg{recording: true, rec: rec}
+		msgMap.msg[s.UID] = &sMsg{recording: true, rec: rec}
 	}
-	msgMap.mu.Unlock()
+	msgMap.Unlock()
 
 	if !*isListen {
 		// 程序单独下载一个直播视频时可以按q键退出（ffmpeg的特性）
@@ -308,11 +305,10 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 			}
 		}
 	} else {
-		msgMap.mu.Lock()
+		msgMap.Lock()
 		m := msgMap.msg[s.UID]
 		m.recording = false
-		msgMap.msg[s.UID] = m
-		msgMap.mu.Unlock()
+		msgMap.Unlock()
 	}
 
 	deleteMsg(s.UID)

@@ -8,8 +8,8 @@ func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
 		lPrintln("重启监听" + s.longID() + "的直播状态")
-		msgMap.mu.Lock()
-		defer msgMap.mu.Unlock()
+		msgMap.Lock()
+		defer msgMap.Unlock()
 		msgMap.msg[0].ch <- msg
 	case stopCycle:
 		lPrintln("退出" + s.longID() + "的循环")
@@ -28,21 +28,20 @@ func (s streamer) cycle() {
 			lPrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
-			msgMap.mu.Lock()
+			msgMap.Lock()
 			msgMap.msg[0].ch <- restart
-			msgMap.mu.Unlock()
+			msgMap.Unlock()
 		}
 	}()
 
 	ch := make(chan controlMsg, 20)
-	msgMap.mu.Lock()
+	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok {
 		m.ch = ch
-		msgMap.msg[s.UID] = m
 	} else {
-		msgMap.msg[s.UID] = sMsg{ch: ch}
+		msgMap.msg[s.UID] = &sMsg{ch: ch}
 	}
-	msgMap.mu.Unlock()
+	msgMap.Unlock()
 
 	// 设置文件里有该主播，但是不通知不下载
 	if !(s.Notify || s.Record || s.Danmu) {
@@ -73,22 +72,22 @@ func (s streamer) cycle() {
 						desktopNotify(s.Name + "正在直播：" + title)
 					}
 					if s.Record {
-						msgMap.mu.Lock()
+						msgMap.Lock()
 						// 直播短时间内重启的情况下，通常上一次的直播视频下载的退出会比较慢
 						if m := msgMap.msg[s.UID]; m.recording {
 							// 如果设置被修改，不重启已有的下载
 							if !m.modify {
 								m.rec.ch <- stopRecord
-								danglingRec.mu.Lock()
+								danglingRec.Lock()
 								danglingRec.records = append(danglingRec.records, m.rec)
-								danglingRec.mu.Unlock()
+								danglingRec.Unlock()
 								go s.recordLive(getFFmpeg(), s.Danmu)
 							}
 						} else {
 							// 没有下载时就直接启动下载
 							go s.recordLive(getFFmpeg(), s.Danmu)
 						}
-						msgMap.mu.Unlock()
+						msgMap.Unlock()
 					} else {
 						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 						// 不下载直播视频时下载弹幕
@@ -107,22 +106,21 @@ func (s streamer) cycle() {
 							desktopNotify(s.Name + "已经下播")
 						}
 						if s.Record {
-							msgMap.mu.Lock()
+							msgMap.Lock()
 							if m := msgMap.msg[s.UID]; m.recording {
 								m.rec.ch <- liveOff
 							}
-							msgMap.mu.Unlock()
+							msgMap.Unlock()
 						}
 					}
 				}
 			}
 
-			msgMap.mu.Lock()
+			msgMap.Lock()
 			if m := msgMap.msg[s.UID]; m.modify {
 				m.modify = false
-				msgMap.msg[s.UID] = m
 			}
-			msgMap.mu.Unlock()
+			msgMap.Unlock()
 		}
 
 		time.Sleep(time.Second)

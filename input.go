@@ -62,8 +62,8 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
 	lPrintln("正在直播的主播：")
-	streamers.mu.Lock()
-	defer streamers.mu.Unlock()
+	streamers.Lock()
+	defer streamers.Unlock()
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
 			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
@@ -77,8 +77,8 @@ func listLive() (streamings []streaming) {
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
 	lPrintln("正在下载的直播视频：")
-	msgMap.mu.Lock()
-	defer msgMap.mu.Unlock()
+	msgMap.Lock()
+	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.recording {
 			s := streamer{UID: uid, Name: getName(uid)}
@@ -93,8 +93,8 @@ func listRecord() (recordings []streaming) {
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
 	lPrintln("正在下载的直播弹幕：")
-	msgMap.mu.Lock()
-	defer msgMap.mu.Unlock()
+	msgMap.Lock()
+	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.danmuCancel != nil {
 			s := streamer{UID: uid, Name: getName(uid)}
@@ -110,8 +110,8 @@ func listDanmu() (danmu []streaming) {
 func quitRun() {
 	lPrintln("正在准备退出，请等待...")
 	q := controlMsg{c: quit}
-	msgMap.mu.Lock()
-	defer msgMap.mu.Unlock()
+	msgMap.Lock()
+	defer msgMap.Unlock()
 	msgMap.msg[0].ch <- q
 }
 

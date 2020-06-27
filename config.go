@@ -28,9 +28,9 @@ type streamer struct {
 
 // 存放主播的设置数据
 var streamers struct {
-	mu  sync.Mutex       // crt的锁
-	crt map[int]streamer // 现在的主播的设置数据
-	old map[int]streamer // 旧的主播的设置数据
+	sync.Mutex                  // crt的锁
+	crt        map[int]streamer // 现在的主播的设置数据
+	old        map[int]streamer // 旧的主播的设置数据
 }
 
 // 将s放进streamers里
@@ -41,11 +41,11 @@ func sets(s streamer) {
 // 将map[int]streamer转换为[]streamer，按照uid大小排序
 func getStreamers() []streamer {
 	var ss []streamer
-	streamers.mu.Lock()
+	streamers.Lock()
 	for _, s := range streamers.crt {
 		ss = append(ss, s)
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 	// 按uid大小排序
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].UID < ss[j].UID
@@ -121,7 +121,7 @@ func cycleConfig(ctx context.Context) {
 			info, err := os.Stat(configFileLocation)
 			checkErr(err)
 
-			streamers.mu.Lock()
+			streamers.Lock()
 			if info.ModTime().After(modTime) {
 				lPrintln("设置文件" + configFile + "被修改，重新读取设置")
 				modTime = info.ModTime()
@@ -133,26 +133,24 @@ func cycleConfig(ctx context.Context) {
 							// olds的设置被修改
 							lPrintln(s.longID() + "的设置被修改，重新设置")
 							restart := controlMsg{s: s, c: startCycle}
-							msgMap.mu.Lock()
+							msgMap.Lock()
 							m := msgMap.msg[s.UID]
 							m.modify = true
-							msgMap.msg[s.UID] = m
 							m.ch <- restart
-							msgMap.mu.Unlock()
+							msgMap.Unlock()
 						}
 					} else {
 						// s为新增的主播
 						lPrintln("新增" + s.longID() + "的设置")
 						start := controlMsg{s: s, c: startCycle}
-						msgMap.mu.Lock()
+						msgMap.Lock()
 						if m, ok := msgMap.msg[s.UID]; ok {
 							m.modify = true
-							msgMap.msg[s.UID] = m
 						} else {
-							msgMap.msg[s.UID] = sMsg{modify: true}
+							msgMap.msg[s.UID] = &sMsg{modify: true}
 						}
 						msgMap.msg[0].ch <- start
-						msgMap.mu.Unlock()
+						msgMap.Unlock()
 					}
 				}
 
@@ -161,9 +159,9 @@ func cycleConfig(ctx context.Context) {
 						// olds为被删除的主播
 						lPrintln(olds.longID() + "的设置被删除")
 						stop := controlMsg{s: olds, c: stopCycle}
-						msgMap.mu.Lock()
+						msgMap.Lock()
 						msgMap.msg[olds.UID].ch <- stop
-						msgMap.mu.Unlock()
+						msgMap.Unlock()
 					}
 				}
 
@@ -173,7 +171,7 @@ func cycleConfig(ctx context.Context) {
 				}
 				streamers.old = oldstreamers
 			}
-			streamers.mu.Unlock()
+			streamers.Unlock()
 
 			// 每半分钟循环一次
 			time.Sleep(30 * time.Second)

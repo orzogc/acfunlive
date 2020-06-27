@@ -14,7 +14,7 @@ var logoFileLocation string
 // 添加订阅指定uid的直播提醒
 func addNotify(uid int) bool {
 	isExist := false
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Notify {
@@ -25,7 +25,7 @@ func addNotify(uid int) bool {
 			lPrintln("成功订阅" + s.Name + "的开播提醒")
 		}
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	if !isExist {
 		name := getName(uid)
@@ -35,9 +35,9 @@ func addNotify(uid int) bool {
 		}
 
 		newStreamer := streamer{UID: uid, Name: name, Notify: true, Record: false}
-		streamers.mu.Lock()
+		streamers.Lock()
 		sets(newStreamer)
-		streamers.mu.Unlock()
+		streamers.Unlock()
 		lPrintln("成功订阅" + name + "的开播提醒")
 	}
 
@@ -47,7 +47,7 @@ func addNotify(uid int) bool {
 
 // 取消订阅指定uid的直播提醒
 func delNotify(uid int) bool {
-	streamers.mu.Lock()
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		if s.Record || s.Danmu {
 			s.Notify = false
@@ -59,7 +59,7 @@ func delNotify(uid int) bool {
 	} else {
 		lPrintln("没有订阅过uid为" + itoa(uid) + "的主播的开播提醒")
 	}
-	streamers.mu.Unlock()
+	streamers.Unlock()
 
 	saveConfig()
 	return true
