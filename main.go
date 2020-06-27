@@ -41,7 +41,6 @@ type sMsg struct {
 	recording   bool               // 是否正在下载
 	modify      bool               // 是否被修改设置
 	danmuCancel context.CancelFunc // 用来停止下载弹幕
-	streamName  string             //直播间的streamName
 }
 
 // sMsg的map

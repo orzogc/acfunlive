@@ -76,27 +76,13 @@ func (s streamer) cycle() {
 						msgMap.mu.Lock()
 						// 直播短时间内重启的情况下，通常上一次的直播视频下载的退出会比较慢
 						if m := msgMap.msg[s.UID]; m.recording {
-							// 如果设置被修改不进入下面分支
+							// 如果设置被修改，不重启已有的下载
 							if !m.modify {
-								_, _, streamName, _ := s.getStreamURL()
-								// 如果streamName被改变，重启下载直播视频
-								if m.streamName != streamName {
-									m.rec.ch <- stopRecord
-									danglingRec.mu.Lock()
-									danglingRec.records = append(danglingRec.records, m.rec)
-									danglingRec.mu.Unlock()
-									go s.recordLive(getFFmpeg())
-								} else {
-									// 主播没下播但是liveRoom里没有该主播导致重新显示开播（可能是A站的bug）
-									recCh := m.rec.ch
-									go func() {
-										// 回收liveOff信号
-										msg := <-recCh
-										if msg != liveOff {
-											recCh <- msg
-										}
-									}()
-								}
+								m.rec.ch <- stopRecord
+								danglingRec.mu.Lock()
+								danglingRec.records = append(danglingRec.records, m.rec)
+								danglingRec.mu.Unlock()
+								go s.recordLive(getFFmpeg())
 							}
 						} else {
 							// 没有下载时就直接启动下载

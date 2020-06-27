@@ -220,7 +220,7 @@ func (s streamer) recordLive(ffmpegFile string) {
 	}
 
 	// 下载hls直播源，想下载flv直播源的话可手动更改此处
-	liveURL, _, streamName, cfg := s.getStreamURL()
+	liveURL, _, cfg := s.getStreamURL()
 	if liveURL == "" {
 		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
@@ -263,10 +263,9 @@ func (s streamer) recordLive(ffmpegFile string) {
 	if m, ok := msgMap.msg[s.UID]; ok {
 		m.recording = true
 		m.rec = rec
-		m.streamName = streamName
 		msgMap.msg[s.UID] = m
 	} else {
-		msgMap.msg[s.UID] = sMsg{recording: true, rec: rec, streamName: streamName}
+		msgMap.msg[s.UID] = sMsg{recording: true, rec: rec}
 	}
 	msgMap.mu.Unlock()
 
