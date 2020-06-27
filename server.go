@@ -66,6 +66,14 @@ func handleListDispatch(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 }
 
+func handleStartRec(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	uid, err := atoi(vars["uid"])
+	checkErr(err)
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, startRec(uid, false))
+}
+
 // 列出直播的下载源
 func handleStreamURL(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -123,6 +131,7 @@ func httpServer() {
 	for str := range listDispatch {
 		r.HandleFunc(fmt.Sprintf("/%s", str), handleListDispatch).Name(str)
 	}
+	r.HandleFunc("/startrecord/{uid:[1-9][0-9]*}", handleStartRec)
 	r.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
 	r.HandleFunc("/liststreamer", handleListStreamer)
 	r.HandleFunc("/log", handleLog)

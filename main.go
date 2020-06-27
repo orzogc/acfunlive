@@ -171,7 +171,7 @@ func argsHandle() {
 			printStreamURL(int(*getStreamURL))
 		}
 		if *startRecord != 0 {
-			startRec(int(*startRecord))
+			startRec(int(*startRecord), false)
 		}
 		if *startDlDanmu != 0 {
 			startDanmu(int(*startDlDanmu))

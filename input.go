@@ -39,7 +39,6 @@ var dispatch = map[string]func(int) bool{
 	"delrecord":   delRecord,
 	"adddanmu":    addDanmu,
 	"deldanmu":    delDanmu,
-	"startrecord": startRec,
 	"stoprecord":  stopRec,
 	"startdanmu":  startDanmu,
 	"stopdanmu":   stopDanmu,
@@ -174,6 +173,8 @@ func handleInput() {
 				printErr()
 			case ok:
 				d(uid)
+			case cmd[0] == "startrecord":
+				startRec(uid, false)
 			case cmd[0] == "getdlurl":
 				printStreamURL(uid)
 			default:

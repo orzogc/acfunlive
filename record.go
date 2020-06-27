@@ -133,7 +133,7 @@ func delRecord(uid int) bool {
 }
 
 // 临时下载指定主播的直播视频
-func startRec(uid int) bool {
+func startRec(uid int, danmu bool) bool {
 	name := getName(uid)
 	if name == "" {
 		lPrintln("不存在uid为" + itoa(uid) + "的用户")
@@ -163,10 +163,10 @@ func startRec(uid int) bool {
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.recordLive(ffmpegFile)
+		go s.recordLive(ffmpegFile, danmu)
 	} else {
 		// 程序只在单独下载一个直播视频，不用goroutine，防止程序提前结束运行
-		s.recordLive(ffmpegFile)
+		s.recordLive(ffmpegFile, danmu)
 	}
 	return true
 }
@@ -199,7 +199,7 @@ func stopRec(uid int) bool {
 }
 
 // 下载主播的直播视频
-func (s streamer) recordLive(ffmpegFile string) {
+func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in recordLive(), the error is:", err)
@@ -240,7 +240,7 @@ func (s streamer) recordLive(ffmpegFile string) {
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行 stoprecord " + s.itoa())
 	}
-	if s.Danmu {
+	if danmu {
 		desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
 	} else {
 		desktopNotify("开始下载" + s.Name + "的直播视频")
@@ -276,7 +276,7 @@ func (s streamer) recordLive(ffmpegFile string) {
 	}
 
 	// 下载弹幕
-	if s.Danmu {
+	if danmu {
 		go s.getDanmu(ctx, cfg, filename)
 	}
 
@@ -303,7 +303,7 @@ func (s streamer) recordLive(ffmpegFile string) {
 				lPrintln("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
-				go s.recordLive(ffmpegFile)
+				go s.recordLive(ffmpegFile, danmu)
 			}
 		}
 	} else {
@@ -317,7 +317,7 @@ func (s streamer) recordLive(ffmpegFile string) {
 	deleteMsg(s.UID)
 
 	lPrintln(s.longID() + "的直播视频下载已经结束")
-	if s.Danmu {
+	if danmu {
 		desktopNotify(s.Name + "的直播视频和弹幕下载已经结束")
 	} else {
 		desktopNotify(s.Name + "的直播视频下载已经结束")
