@@ -6,24 +6,33 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
 )
 
+// 主播设置文件名字
+const liveFile = "live.json"
+
 // 设置文件名字
 const configFile = "config.json"
+
+// 主播设置文件位置
+var liveFileLocation string
 
 // 设置文件位置
 var configFileLocation string
 
 // 主播的设置数据
 type streamer struct {
-	UID    int    // 主播uid
-	Name   string // 主播名字
-	Notify bool   // 是否开播提醒
-	Record bool   // 是否自动下载直播视频
-	Danmu  bool   // 是否自动下载直播弹幕
+	UID         int    // 主播uid
+	Name        string // 主播名字
+	Notify      bool   // 是否开播提醒
+	Record      bool   // 是否自动下载直播视频
+	Danmu       bool   // 是否自动下载直播弹幕
+	SendQQ      int    // 给这个QQ号发送消息
+	SendQQGroup int    // 给这个QQ群发送消息
 }
 
 // 存放主播的设置数据
@@ -31,6 +40,32 @@ var streamers struct {
 	sync.Mutex                  // crt的锁
 	crt        map[int]streamer // 现在的主播的设置数据
 	old        map[int]streamer // 旧的主播的设置数据
+}
+
+// 酷Q相关设置数据
+type coolqData struct {
+	CqhttpPort    int    // CQHTTP的端口
+	CqhttpPostURL string // CQHTTP的post_url
+	AccessToken   string // CQHTTP的access_token
+	Secret        string // CQHTTP的secret
+}
+
+// 设置数据
+type configData struct {
+	Source string    // 直播源
+	Output string    // 直播下载视频的格式
+	Coolq  coolqData // 酷Q相关设置
+}
+
+var config = configData{
+	Source: "hls",
+	Output: "mp4",
+	Coolq: coolqData{
+		CqhttpPort:    5700,
+		CqhttpPostURL: "http://localhost:51890",
+		AccessToken:   "",
+		Secret:        "",
+	},
 }
 
 // 将s放进streamers里
@@ -54,22 +89,23 @@ func getStreamers() []streamer {
 }
 
 // 查看设置文件是否存在
-func isConfigFileExist() bool {
-	info, err := os.Stat(configFileLocation)
+func isConfigFileExist(filename string) bool {
+	fileLocation := filepath.Join(exeDir, filename)
+	info, err := os.Stat(fileLocation)
 	if os.IsNotExist(err) {
 		return false
 	}
 	if info.IsDir() {
-		lPrintln(configFile + "不能是目录")
+		lPrintln(filename + "不能是目录")
 		os.Exit(1)
 	}
 	return true
 }
 
 // 读取设置文件
-func loadConfig() {
-	if isConfigFileExist() {
-		data, err := ioutil.ReadFile(configFileLocation)
+func loadLiveConfig() {
+	if isConfigFileExist(liveFile) {
+		data, err := ioutil.ReadFile(liveFileLocation)
 		checkErr(err)
 
 		if json.Valid(data) {
@@ -82,6 +118,20 @@ func loadConfig() {
 			}
 			streamers.crt = news
 		} else {
+			lPrintln("设置文件" + liveFile + "的内容不符合json格式，请检查其内容")
+		}
+	}
+}
+
+func loadConfig() {
+	if isConfigFileExist(configFile) {
+		data, err := ioutil.ReadFile(configFileLocation)
+		checkErr(err)
+
+		if json.Valid(data) {
+			err = json.Unmarshal(data, &config)
+			checkErr(err)
+		} else {
 			lPrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
 		}
 	}
@@ -92,7 +142,7 @@ func saveConfig() {
 	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
 
-	err = ioutil.WriteFile(configFileLocation, data, 0644)
+	err = ioutil.WriteFile(liveFileLocation, data, 0644)
 	checkErr(err)
 }
 
@@ -109,7 +159,7 @@ func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintln("Recovering from panic in cycleConfig(), the error is:", err)
-			lPrintln("循环读取设置文件" + configFile + "时出错，请重启本程序")
+			lPrintln("循环读取设置文件" + liveFile + "时出错，请重启本程序")
 		}
 	}()
 
@@ -120,14 +170,14 @@ func cycleConfig(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		default:
-			info, err := os.Stat(configFileLocation)
+			info, err := os.Stat(liveFileLocation)
 			checkErr(err)
 
 			streamers.Lock()
 			if info.ModTime().After(modTime) {
-				lPrintln("设置文件" + configFile + "被修改，重新读取设置")
+				lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
 				modTime = info.ModTime()
-				loadConfig()
+				loadLiveConfig()
 
 				for uid, s := range streamers.crt {
 					if olds, ok := streamers.old[uid]; ok {

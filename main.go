@@ -3,9 +3,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -116,7 +118,7 @@ func argsHandle() {
 
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
-	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+configFile)
+	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
 	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 http://localhost"+port+" 来查看状态和发送命令，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -188,6 +190,7 @@ func initialize() {
 	checkErr(err)
 	exeDir = filepath.Dir(exePath)
 	logoFileLocation = filepath.Join(exeDir, logoFile)
+	liveFileLocation = filepath.Join(exeDir, liveFile)
 	configFileLocation = filepath.Join(exeDir, configFile)
 
 	_, err = os.Stat(logoFileLocation)
@@ -196,17 +199,23 @@ func initialize() {
 		fetchAcLogo()
 	}
 
-	if !isConfigFileExist() {
-		newConfigFile, err := os.Create(configFileLocation)
+	if !isConfigFileExist(liveFile) {
+		err = ioutil.WriteFile(liveFileLocation, []byte("[]"), 0644)
 		checkErr(err)
-		defer newConfigFile.Close()
-		_, err = newConfigFile.WriteString("[]")
+		lPrintln("创建设置文件" + liveFile)
+	}
+	if !isConfigFileExist(configFile) {
+		data, err := json.MarshalIndent(config, "", "    ")
+		checkErr(err)
+		err = ioutil.WriteFile(configFileLocation, data, 0644)
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
+
 	msgMap.msg = make(map[int]*sMsg)
 	streamers.crt = make(map[int]streamer)
 	streamers.old = make(map[int]streamer)
+	loadLiveConfig()
 	loadConfig()
 
 	for uid, s := range streamers.crt {
