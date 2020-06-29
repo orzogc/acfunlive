@@ -144,7 +144,7 @@ func handleInput() {
 			case "startweb":
 				if !*isWebServer {
 					*isWebServer = true
-					lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来发送命令")
+					lPrintln("启动web服务，现在可以通过 http://localhost:" + itoa(config.WebPort) + " 来发送命令")
 					go httpServer()
 				} else {
 					lPrintln("已经启动过web服务")

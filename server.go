@@ -34,9 +34,6 @@ const webHelp = `/listlive ：列出正在直播的主播
 /quit ：退出本程序，退出需要等待半分钟左右
 /help ：本帮助信息`
 
-// web服务本地默认端口
-const port = ":51880"
-
 var listDispatch = map[string]func() []streaming{
 	"listlive":   listLive,
 	"listrecord": listRecord,
@@ -143,7 +140,7 @@ func httpServer() {
 	handler := cors.Default().Handler(r)
 
 	srv = &http.Server{
-		Addr:         port,
+		Addr:         ":" + itoa(config.WebPort),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  60 * time.Second,

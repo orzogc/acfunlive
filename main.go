@@ -119,7 +119,7 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 http://localhost"+port+" 来查看状态和发送命令，需要listen参数")
+	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 http://localhost:"+itoa(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -188,6 +188,9 @@ func checkConfig() {
 	switch {
 	case config.Source != "hls" && config.Source != "flv":
 		lPrintln(configFile + "里的Source必须是hls或flv")
+		os.Exit(1)
+	case config.WebPort < 1024 || config.WebPort > 65535:
+		lPrintln(configFile + "里的WebPort必须大于1023且少于65536")
 		os.Exit(1)
 	case config.Coolq.CqhttpPort < 1024 || config.Coolq.CqhttpPort > 65535:
 		lPrintln(configFile + "里的CqhttpPort必须大于1023且少于65536")
@@ -265,7 +268,7 @@ func main() {
 		go handleInput()
 
 		if *isWebServer {
-			lPrintln("启动web服务，现在可以通过 http://localhost" + port + " 来查看状态和发送命令")
+			lPrintln("启动web服务，现在可以通过 http://localhost:" + itoa(config.WebPort) + " 来查看状态和发送命令")
 			go httpServer()
 		}
 
