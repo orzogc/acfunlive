@@ -81,10 +81,10 @@ web服务默认本地端口为51880
 `http://localhost:51880/help` 显示帮助信息
 
 ### 酷Q使用方法
-本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 来发送消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/)。
+本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 来发送消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
 config.json里Coolq相关设置的说明：
-```json
+```
 "Coolq": {
     "CqhttpPort": 5700, // CQHTTP的端口，一般用默认值
     "CqhttpPostURL": "http://localhost:51890", // CQHTTP的post_url，目前不用这个
