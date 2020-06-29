@@ -1,7 +1,9 @@
 // 循环相关
 package main
 
-import "time"
+import (
+	"time"
+)
 
 // 处理管道信号
 func (s streamer) handleMsg(msg controlMsg) {
@@ -70,6 +72,7 @@ func (s streamer) cycle() {
 
 					if s.Notify {
 						desktopNotify(s.Name + "正在直播：" + title)
+						s.sendCoolq(s.Name + "正在直播：" + title)
 					}
 					if s.Record {
 						msgMap.Lock()

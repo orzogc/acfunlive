@@ -11,6 +11,8 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 `acfunlive -listen -web` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来查看状态和发送命令
 
+`acfunlive -listen -coolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
+
 `acfunlive -listlive` 列出正在直播的主播
 
 `acfunlive -addnotify 23682490` 通知uid为23682490的用户的直播
@@ -77,3 +79,17 @@ web服务默认本地端口为51880
 `http://localhost:51880/quit` 退出本程序
 
 `http://localhost:51880/help` 显示帮助信息
+
+### 酷Q使用方法
+本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 来发送消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/)。
+
+config.json里Coolq相关设置的说明：
+```json
+"Coolq": {
+    "CqhttpPort": 5700, // CQHTTP的端口，一般用默认值
+    "CqhttpPostURL": "http://localhost:51890", // CQHTTP的post_url，目前不用这个
+    "AccessToken": "", // CQHTTP的access_token，可以为空
+    "Secret": "" // CQHTTP的secret，可以为空
+}
+```
+目前群通知@全体成员 貌似需要酷Q Pro。

@@ -119,7 +119,8 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 http://localhost:"+itoa(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
+	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
+	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -142,9 +143,9 @@ func argsHandle() {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
-		if *isWebServer {
+		if *isWebServer || *isCoolq {
 			if *isListen != true {
-				fmt.Println("web参数需要和listen参数一起运行")
+				fmt.Println("web和coolq参数需要和listen参数一起运行")
 				os.Exit(1)
 			}
 		}
@@ -268,8 +269,13 @@ func main() {
 		go handleInput()
 
 		if *isWebServer {
-			lPrintln("启动web服务，现在可以通过 http://localhost:" + itoa(config.WebPort) + " 来查看状态和发送命令")
+			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
 			go httpServer()
+		}
+
+		if *isCoolq {
+			lPrintln("通过 " + address(config.Coolq.CqhttpPort) + " 连接酷Q")
+			initCoolq()
 		}
 
 		ctx, fetchCancel := context.WithCancel(context.Background())

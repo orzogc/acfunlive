@@ -31,8 +31,8 @@ type streamer struct {
 	Notify      bool   // 是否开播提醒
 	Record      bool   // 是否自动下载直播视频
 	Danmu       bool   // 是否自动下载直播弹幕
-	SendQQ      int    // 给这个QQ号发送消息
-	SendQQGroup int    // 给这个QQ群发送消息
+	SendQQ      int64  // 给这个QQ号发送消息
+	SendQQGroup int64  // 给这个QQ群发送消息
 }
 
 // 存放主播的设置数据
@@ -40,14 +40,6 @@ var streamers struct {
 	sync.Mutex                  // crt的锁
 	crt        map[int]streamer // 现在的主播的设置数据
 	old        map[int]streamer // 旧的主播的设置数据
-}
-
-// 酷Q相关设置数据
-type coolqData struct {
-	CqhttpPort    int    // CQHTTP的端口
-	CqhttpPostURL string // CQHTTP的post_url
-	AccessToken   string // CQHTTP的access_token
-	Secret        string // CQHTTP的secret
 }
 
 // 设置数据
@@ -58,6 +50,7 @@ type configData struct {
 	Coolq   coolqData // 酷Q相关设置
 }
 
+// 默认设置
 var config = configData{
 	Source:  "hls",
 	Output:  "mp4",

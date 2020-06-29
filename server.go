@@ -45,6 +45,11 @@ var webLog strings.Builder
 
 var srv *http.Server
 
+// 返回localhost地址和端口
+func address(port int) string {
+	return "http://localhost:" + itoa(port)
+}
+
 // 处理dispatch
 func handleDispatch(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
