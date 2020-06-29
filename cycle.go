@@ -99,7 +99,7 @@ func (s streamer) cycle() {
 			} else {
 				if isLive {
 					// 主播没下播但是liveRoom里没有该主播导致重新显示开播（可能是A站的bug）
-					if hlsURL, _, _ := s.getStreamURL(); hlsURL == "" {
+					if _, flvURL, _ := s.getStreamURL(); flvURL == "" {
 						isLive = false
 						lPrintln(s.longID() + "已经下播")
 						if s.Notify {

@@ -184,6 +184,17 @@ func argsHandle() {
 	}
 }
 
+func checkConfig() {
+	switch {
+	case config.Source != "hls" && config.Source != "flv":
+		lPrintln(configFile + "里的Source必须是hls或flv")
+		os.Exit(1)
+	case config.Coolq.CqhttpPort < 1024 || config.Coolq.CqhttpPort > 65535:
+		lPrintln(configFile + "里的CqhttpPort必须大于1023且少于65536")
+		os.Exit(1)
+	}
+}
+
 // 程序初始化
 func initialize() {
 	exePath, err := os.Executable()
@@ -217,6 +228,7 @@ func initialize() {
 	streamers.old = make(map[int]streamer)
 	loadLiveConfig()
 	loadConfig()
+	checkConfig()
 
 	for uid, s := range streamers.crt {
 		streamers.old[uid] = s

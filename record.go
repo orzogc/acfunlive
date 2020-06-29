@@ -218,8 +218,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 		return
 	}
 
-	// 下载hls直播源，想下载flv直播源的话可手动更改此处
-	liveURL, _, cfg := s.getStreamURL()
+	// 获取直播源和对应的弹幕设置
+	liveURL, cfg := s.getLiveURL()
 	if liveURL == "" {
 		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
@@ -231,8 +231,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	if recordFile == "" {
 		return
 	}
-	// 想要输出其他视频格式可以修改这里的mp4
-	recordFile = recordFile + ".mp4"
+	// 想要输出其他视频格式可以修改config.json里的Output
+	recordFile = recordFile + "." + config.Output
 
 	lPrintln("开始下载" + s.longID() + "的直播视频")
 	lPrintln("本次下载的视频文件保存在" + recordFile)

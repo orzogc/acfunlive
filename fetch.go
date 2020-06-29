@@ -282,6 +282,19 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	return hlsURL, flvURL, cfg
 }
 
+func (s streamer) getLiveURL() (liveURL string, cfg acfundanmu.SubConfig) {
+	switch config.Source {
+	case "hls":
+		liveURL, _, cfg = s.getStreamURL()
+	case "flv":
+		_, liveURL, cfg = s.getStreamURL()
+	default:
+		lPrintln(configFile + "里的Source必须是hls或flv")
+		return "", cfg
+	}
+	return liveURL, cfg
+}
+
 // 查看指定主播是否在直播和输出其直播源
 func printStreamURL(uid int) (string, string) {
 	name := getName(uid)

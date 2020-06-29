@@ -139,8 +139,8 @@ func startDanmu(uid int) bool {
 		return false
 	}
 
-	hlsURL, _, cfg := s.getStreamURL()
-	if hlsURL == "" {
+	_, flvURL, cfg := s.getStreamURL()
+	if flvURL == "" {
 		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
 		return false
