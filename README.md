@@ -5,7 +5,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 - ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 配置文件详解
-live.conf
+live.json
 ```
 {
     "UID": 23682490,      // 主播的uid

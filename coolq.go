@@ -3,6 +3,7 @@ package main
 
 import qqbotapi "github.com/catsworld/qq-bot-api"
 
+// 是否连接酷Q
 var isCoolq *bool
 
 var bot *qqbotapi.BotAPI
@@ -15,6 +16,7 @@ type coolqData struct {
 	Secret        string // CQHTTP的secret
 }
 
+// 初始化酷Q
 func initCoolq() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -29,16 +31,19 @@ func initCoolq() {
 	bot = newBot
 }
 
+// 发送消息到指定的QQ
 func sendQQ(qq int64, text string) {
 	s := bot.NewMessage(qq, "private").Text(text).Send()
 	checkErr(s.Err)
 }
 
+// 发送消息到指定的QQ群
 func sendQQGroup(qqGroup int64, text string) {
 	s := bot.NewMessage(qqGroup, "group").At("all").Text(text).Send()
 	checkErr(s.Err)
 }
 
+// 发送消息
 func (s streamer) sendCoolq(text string) {
 	defer func() {
 		if err := recover(); err != nil {

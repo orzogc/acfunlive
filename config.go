@@ -97,7 +97,7 @@ func isConfigFileExist(filename string) bool {
 	return true
 }
 
-// 读取设置文件
+// 读取live.json
 func loadLiveConfig() {
 	if isConfigFileExist(liveFile) {
 		data, err := ioutil.ReadFile(liveFileLocation)
@@ -118,6 +118,7 @@ func loadLiveConfig() {
 	}
 }
 
+// 读取config.json
 func loadConfig() {
 	if isConfigFileExist(configFile) {
 		data, err := ioutil.ReadFile(configFileLocation)
