@@ -43,6 +43,7 @@ func address(port int) string {
 	return "http://localhost:" + itoa(port)
 }
 
+// 处理 "/cmd"
 func cmdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cmd := vars["cmd"]
@@ -54,6 +55,7 @@ func cmdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 处理 "/cmd/UID"
 func cmdUIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cmd := vars["cmd"]
@@ -67,6 +69,7 @@ func cmdUIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 显示favicon
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, logoFile)
 }

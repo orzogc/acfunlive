@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-var dispatch = map[string]func(int) bool{
+var boolDispatch = map[string]func(int) bool{
 	"addnotify":   addNotify,
 	"delnotify":   delNotify,
 	"addrecord":   addRecord,
@@ -26,6 +26,7 @@ var listDispatch = map[string]func() []streaming{
 	"listdanmu":  listDanmu,
 }
 
+// 将bool类型转换为字符串
 var boolStr = strconv.FormatBool
 
 // 处理单个命令
@@ -50,9 +51,9 @@ func handleCmd(cmd string) string {
 	}
 }
 
-// 处理“命令 UID”
+// 处理 "命令 UID"
 func handleCmdUID(cmd string, uid int) string {
-	if d, ok := dispatch[cmd]; ok {
+	if d, ok := boolDispatch[cmd]; ok {
 		return boolStr(d(uid))
 	}
 	switch cmd {
