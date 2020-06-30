@@ -200,6 +200,7 @@ func checkConfig() {
 func initialize() {
 	// 避免 initialization loop
 	boolDispatch["startweb"] = startWeb
+	boolDispatch["startcoolq"] = startCoolq
 
 	exePath, err := os.Executable()
 	checkErr(err)

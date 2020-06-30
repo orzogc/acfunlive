@@ -4,10 +4,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"os"
-	"strconv"
-	"strings"
 )
 
 // 帮助信息
@@ -106,11 +103,6 @@ func quitRun() {
 	msgMap.msg[0].ch <- q
 }
 
-// 打印错误命令信息
-func printErr() {
-	lPrintln("请输入正确的命令，输入 help 查看全部命令的解释")
-}
-
 // 处理输入
 func handleInput() {
 	defer func() {
@@ -123,33 +115,7 @@ func handleInput() {
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		cmd := strings.Fields(scanner.Text())
-		switch len(cmd) {
-		case 1:
-			switch cmd[0] {
-			case "help":
-				fmt.Println(helpMsg)
-			default:
-				handleCmd(cmd[0])
-			}
-		case 2:
-			uid, err := strconv.ParseUint(cmd[1], 10, 64)
-			if err != nil {
-				printErr()
-			} else {
-				handleCmdUID(cmd[0], int(uid))
-			}
-		case 3:
-			uid, err1 := strconv.ParseUint(cmd[1], 10, 64)
-			qq, err2 := strconv.ParseUint(cmd[2], 10, 64)
-			if err1 != nil || err2 != nil {
-				printErr()
-			} else {
-				handleCmdQQ(cmd[0], int(uid), int(qq))
-			}
-		default:
-			printErr()
-		}
+		handleAllCmd(scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
 		lPrintln("Reading standard input err:", err)

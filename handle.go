@@ -3,13 +3,17 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
+	"strings"
 )
+
+const handleErrMsg = "请输入正确的命令，输入 help 查看全部命令的解释"
 
 var boolDispatch = map[string]func() bool{
 	//"startweb":   startWeb,
-	"stopweb":    stopWeb,
-	"startcoolq": startCoolq,
+	"stopweb": stopWeb,
+	//"startcoolq": startCoolq,
 }
 
 var uidBoolDispatch = map[string]func(int) bool{
@@ -97,5 +101,44 @@ func handleCmdQQ(cmd string, uid int, qq int) string {
 
 	lPrintln("错误的命令："+cmd, uid, qq)
 	printErr()
+	return ""
+}
+
+// 打印错误命令信息
+func printErr() {
+	lPrintln(handleErrMsg)
+}
+
+// 处理所有命令
+func handleAllCmd(text string) string {
+	cmd := strings.Fields(text)
+	switch len(cmd) {
+	case 1:
+		switch cmd[0] {
+		case "help":
+			fmt.Println(helpMsg)
+			return helpMsg
+		default:
+			return handleCmd(cmd[0])
+		}
+	case 2:
+		uid, err := strconv.ParseUint(cmd[1], 10, 64)
+		if err != nil {
+			printErr()
+		} else {
+			return handleCmdUID(cmd[0], int(uid))
+		}
+	case 3:
+		uid, err1 := strconv.ParseUint(cmd[1], 10, 64)
+		qq, err2 := strconv.ParseUint(cmd[2], 10, 64)
+		if err1 != nil || err2 != nil {
+			printErr()
+		} else {
+			return handleCmdQQ(cmd[0], int(uid), int(qq))
+		}
+	default:
+		printErr()
+	}
+
 	return ""
 }

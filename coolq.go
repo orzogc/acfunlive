@@ -2,6 +2,8 @@
 package main
 
 import (
+	"strings"
+
 	qqbotapi "github.com/catsworld/qq-bot-api"
 )
 
@@ -13,11 +15,12 @@ var bot *qqbotapi.BotAPI = nil
 // 酷Q相关设置数据
 type coolqData struct {
 	CqhttpWSAddr string // CQHTTP的WebSocket地址
-	AdminQQ      int    // 管理者的QQ，通过这个QQ发送命令
+	AdminQQ      int64  // 管理者的QQ，通过这个QQ发送命令
 	AccessToken  string // CQHTTP的access_token
 	Secret       string // CQHTTP的secret
 }
 
+// 建立对酷Q的连接
 func startCoolq() bool {
 	if *isCoolq {
 		lPrintln("已经建立过对酷Q的连接")
@@ -138,9 +141,7 @@ func initCoolq() {
 			continue
 		}
 
-		//fmt.Printf("%s: %s", update.Message.From.String(), update.Message.Text)
-
-		bot.SendMessage(update.Message.Chat.ID, update.Message.Chat.Type, update.Message.Text)
+		replyCoolq(update.Message)
 	}
 }
 
@@ -171,6 +172,27 @@ func (s streamer) sendCoolq(text string) {
 		}
 		if s.SendQQGroup != 0 {
 			sendQQGroup(s.SendQQGroup, text)
+		}
+	}
+}
+
+func replyCoolq(msg *qqbotapi.Message) {
+	if msg.From.ID == config.Coolq.AdminQQ {
+		if msg.Chat.Type == "private" {
+			if s := handleAllCmd(msg.Text); s != "" {
+				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
+			} else {
+				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
+			}
+		} else {
+			if bot.IsMessageToMe(*msg) {
+				i := strings.Index(msg.Text, "]")
+				if s := handleAllCmd(msg.Text[i+1:]); s != "" {
+					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
+				} else {
+					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
+				}
+			}
 		}
 	}
 }
