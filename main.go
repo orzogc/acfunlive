@@ -193,9 +193,6 @@ func checkConfig() {
 	case config.WebPort < 1024 || config.WebPort > 65535:
 		lPrintln(configFile + "里的WebPort必须大于1023且少于65536")
 		os.Exit(1)
-	case config.Coolq.CqhttpPort < 1024 || config.Coolq.CqhttpPort > 65535:
-		lPrintln(configFile + "里的CqhttpPort必须大于1023且少于65536")
-		os.Exit(1)
 	}
 }
 
@@ -274,8 +271,8 @@ func main() {
 		}
 
 		if *isCoolq {
-			lPrintln("通过 " + address(config.Coolq.CqhttpPort) + " 连接酷Q")
-			initCoolq()
+			lPrintln("通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
+			go initCoolq()
 		}
 
 		ctx, fetchCancel := context.WithCancel(context.Background())

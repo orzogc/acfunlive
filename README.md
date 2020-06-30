@@ -20,13 +20,14 @@ live.json
 config.json
 ```
 {
-    "Source": "hls", // 直播源，有hls和flv两种
-    "Output": "mp4", // 下载的直播视频的格式，必须是有效的视频格式后缀名
+    "Source": "hls",  // 直播源，有hls和flv两种
+    "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
+    "WebPort": 51880, // web服务的本地端口
     "Coolq": {
-        "CqhttpPort": 5700,  // CQHTTP的端口，一般用默认值
-        "CqhttpPostURL": "", // CQHTTP的post_url，目前不用这个
-        "AccessToken": "",   // CQHTTP的access_token，可以为空
-        "Secret": ""         // CQHTTP的secret，可以为空
+        "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
+        "AdminQQ": 0,                          // 用来发送命令控制本程序的管理者QQ
+        "AccessToken": "",                     // CQHTTP的access_token，可以为空
+        "Secret": ""                           // CQHTTP的secret，可以为空
     }
 }
 ```
@@ -108,7 +109,7 @@ web服务默认本地端口为51880
 `http://localhost:51880/help` 显示帮助信息
 
 ### 酷Q使用方法
-本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 来发送消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
+本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
 Coolq相关设置参考 [配置文件详解](#配置文件详解) 。
 

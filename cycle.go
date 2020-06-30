@@ -107,6 +107,7 @@ func (s streamer) cycle() {
 						lPrintln(s.longID() + "已经下播")
 						if s.Notify {
 							desktopNotify(s.Name + "已经下播")
+							s.sendCoolq(s.Name + "已经下播")
 						}
 						if s.Record {
 							msgMap.Lock()

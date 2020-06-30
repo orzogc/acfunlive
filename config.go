@@ -56,10 +56,10 @@ var config = configData{
 	Output:  "mp4",
 	WebPort: 51880,
 	Coolq: coolqData{
-		CqhttpPort:    5700,
-		CqhttpPostURL: "http://localhost:51890",
-		AccessToken:   "",
-		Secret:        "",
+		CqhttpWSAddr: "ws://localhost:6700",
+		AdminQQ:      0,
+		AccessToken:  "",
+		Secret:       "",
 	},
 }
 
