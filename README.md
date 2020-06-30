@@ -25,7 +25,7 @@ config.json
     "WebPort": 51880, // web服务的本地端口
     "Coolq": {
         "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
-        "AdminQQ": 0,                          // 用来发送命令控制本程序的管理者QQ
+        "AdminQQ": 12345,                      // 用来发送命令控制本程序的管理者QQ
         "AccessToken": "",                     // CQHTTP的access_token，可以为空
         "Secret": ""                           // CQHTTP的secret，可以为空
     }

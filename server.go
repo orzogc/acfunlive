@@ -2,7 +2,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -34,12 +33,6 @@ const webHelp = `/listlive ：列出正在直播的主播
 /quit ：退出本程序，退出需要等待半分钟左右
 /help ：本帮助信息`
 
-var listDispatch = map[string]func() []streaming{
-	"listlive":   listLive,
-	"listrecord": listRecord,
-	"listdanmu":  listDanmu,
-}
-
 // 储存日志
 var webLog strings.Builder
 
@@ -50,68 +43,41 @@ func address(port int) string {
 	return "http://localhost:" + itoa(port)
 }
 
-// 处理dispatch
-func handleDispatch(w http.ResponseWriter, r *http.Request) {
+func cmdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	cmd := vars["cmd"]
+	w.Header().Set("Content-Type", "application/json")
+	if s := handleCmd(cmd); s != "" {
+		fmt.Fprint(w, s)
+	} else {
+		fmt.Fprint(w, "null")
+	}
+}
+
+func cmdUIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	cmd := vars["cmd"]
 	uid, err := atoi(vars["uid"])
 	checkErr(err)
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, dispatch[mux.CurrentRoute(r).GetName()](uid))
+	if s := handleCmdUID(cmd, uid); s != "" {
+		fmt.Fprint(w, s)
+	} else {
+		fmt.Fprint(w, "null")
+	}
 }
 
-// 处理listDispatch
-func handleListDispatch(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	err := j.Encode(listDispatch[mux.CurrentRoute(r).GetName()]())
-	checkErr(err)
-}
-
-func handleStartRec(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	uid, err := atoi(vars["uid"])
-	checkErr(err)
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, startRec(uid, false))
-}
-
-// 列出直播的下载源
-func handleStreamURL(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	uid, err := atoi(vars["uid"])
-	checkErr(err)
-	hlsURL, flvURL := printStreamURL(uid)
-	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	err = j.Encode([]string{hlsURL, flvURL})
-	checkErr(err)
-}
-
-// 列出设置里的主播
-func handleListStreamer(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	j := json.NewEncoder(w)
-	j.SetIndent("", "    ")
-	err := j.Encode(getStreamers())
-	checkErr(err)
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, logoFile)
 }
 
 // 打印日志
-func handleLog(w http.ResponseWriter, r *http.Request) {
+func logHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webLog.String())
 }
 
-// 退出程序
-func handleQuit(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprint(w, true)
-	quitRun()
-}
-
 // 打印帮助
-func handleHelp(w http.ResponseWriter, r *http.Request) {
+func helpHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
 
@@ -127,19 +93,12 @@ func httpServer() {
 	}()
 
 	r := mux.NewRouter()
-	for str := range dispatch {
-		r.HandleFunc(fmt.Sprintf("/%s/{uid:[1-9][0-9]*}", str), handleDispatch).Name(str)
-	}
-	for str := range listDispatch {
-		r.HandleFunc(fmt.Sprintf("/%s", str), handleListDispatch).Name(str)
-	}
-	r.HandleFunc("/startrecord/{uid:[1-9][0-9]*}", handleStartRec)
-	r.HandleFunc("/getdlurl/{uid:[1-9][0-9]*}", handleStreamURL)
-	r.HandleFunc("/liststreamer", handleListStreamer)
-	r.HandleFunc("/log", handleLog)
-	r.HandleFunc("/quit", handleQuit)
-	r.HandleFunc("/help", handleHelp)
-	r.HandleFunc("/", handleHelp)
+	r.HandleFunc("/favicon.ico", faviconHandler)
+	r.HandleFunc("/log", logHandler)
+	r.HandleFunc("/help", helpHandler)
+	r.HandleFunc("/", helpHandler)
+	r.HandleFunc("/{cmd}", cmdHandler)
+	r.HandleFunc("/{cmd}/{uid:[1-9][0-9]*}", cmdUIDHandler)
 
 	// 跨域处理
 	handler := cors.Default().Handler(r)

@@ -32,20 +32,6 @@ stoprecdan 数字：正在下载指定主播的直播视频和弹幕时取消下
 quit：退出本程序，退出需要等待半分钟左右
 help：本帮助信息`
 
-var dispatch = map[string]func(int) bool{
-	"addnotify":   addNotify,
-	"delnotify":   delNotify,
-	"addrecord":   addRecord,
-	"delrecord":   delRecord,
-	"adddanmu":    addDanmu,
-	"deldanmu":    delDanmu,
-	"stoprecord":  stopRec,
-	"startdanmu":  startDanmu,
-	"stopdanmu":   stopDanmu,
-	"startrecdan": startRecDan,
-	"stoprecdan":  stopRecDan,
-}
-
 // 正在直播的主播
 type streaming streamer
 
@@ -135,12 +121,6 @@ func handleInput() {
 		cmd := strings.Fields(scanner.Text())
 		if len(cmd) == 1 {
 			switch cmd[0] {
-			case "listlive":
-				listLive()
-			case "listrecord":
-				listRecord()
-			case "listdanmu":
-				listDanmu()
 			case "startweb":
 				if !*isWebServer {
 					*isWebServer = true
@@ -157,28 +137,17 @@ func handleInput() {
 				} else {
 					lPrintln("没有启动web服务")
 				}
-			case "quit":
-				quitRun()
-				return
 			case "help":
 				fmt.Println(helpMsg)
 			default:
-				printErr()
+				handleCmd(cmd[0])
 			}
 		} else if len(cmd) == 2 {
-			d, ok := dispatch[cmd[0]]
 			uid, err := atoi(cmd[1])
-			switch {
-			case err != nil:
+			if err != nil {
 				printErr()
-			case ok:
-				d(uid)
-			case cmd[0] == "startrecord":
-				startRec(uid, false)
-			case cmd[0] == "getdlurl":
-				printStreamURL(uid)
-			default:
-				printErr()
+			} else {
+				handleCmdUID(cmd[0], uid)
 			}
 		} else {
 			printErr()
