@@ -102,14 +102,14 @@ func addRecord(uid int) bool {
 			return false
 		}
 
-		newStreamer := streamer{UID: uid, Name: name, Notify: false, Record: true}
+		newStreamer := streamer{UID: uid, Name: name, Record: true}
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
 		lPrintln("成功设置自动下载" + name + "的直播视频")
 	}
 
-	saveConfig()
+	saveLiveConfig()
 	return true
 }
 
@@ -129,7 +129,7 @@ func delRecord(uid int) bool {
 	}
 	streamers.Unlock()
 
-	saveConfig()
+	saveLiveConfig()
 	return true
 }
 

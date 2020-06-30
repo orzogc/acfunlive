@@ -6,7 +6,13 @@ import (
 	"strconv"
 )
 
-var boolDispatch = map[string]func(int) bool{
+var boolDispatch = map[string]func() bool{
+	//"startweb":   startWeb,
+	"stopweb":    stopWeb,
+	"startcoolq": startCoolq,
+}
+
+var uidBoolDispatch = map[string]func(int) bool{
 	"addnotify":   addNotify,
 	"delnotify":   delNotify,
 	"addrecord":   addRecord,
@@ -18,12 +24,19 @@ var boolDispatch = map[string]func(int) bool{
 	"stopdanmu":   stopDanmu,
 	"startrecdan": startRecDan,
 	"stoprecdan":  stopRecDan,
+	"delqq":       delQQNotify,
+	"delqqgroup":  delQQGroup,
 }
 
 var listDispatch = map[string]func() []streaming{
 	"listlive":   listLive,
 	"listrecord": listRecord,
 	"listdanmu":  listDanmu,
+}
+
+var qqDispatch = map[string]func(int, int) bool{
+	"addqq":      addQQNotify,
+	"addqqgroup": addQQGroup,
 }
 
 // 将bool类型转换为字符串
@@ -36,6 +49,11 @@ func handleCmd(cmd string) string {
 		checkErr(err)
 		return string(data)
 	}
+
+	if d, ok := boolDispatch[cmd]; ok {
+		return boolStr(d())
+	}
+
 	switch cmd {
 	case "liststreamer":
 		data, err := json.MarshalIndent(getStreamers(), "", "    ")
@@ -53,9 +71,10 @@ func handleCmd(cmd string) string {
 
 // 处理 "命令 UID"
 func handleCmdUID(cmd string, uid int) string {
-	if d, ok := boolDispatch[cmd]; ok {
+	if d, ok := uidBoolDispatch[cmd]; ok {
 		return boolStr(d(uid))
 	}
+
 	switch cmd {
 	case "startrecord":
 		return boolStr(startRec(uid, false))
@@ -69,4 +88,14 @@ func handleCmdUID(cmd string, uid int) string {
 		printErr()
 		return ""
 	}
+}
+
+func handleCmdQQ(cmd string, uid int, qq int) string {
+	if d, ok := qqDispatch[cmd]; ok {
+		return boolStr(d(uid, qq))
+	}
+
+	lPrintln("错误的命令："+cmd, uid, qq)
+	printErr()
+	return ""
 }

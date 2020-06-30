@@ -5,7 +5,8 @@ AcFun直播桌面通知和下载助手（命令行版本）
 - ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 配置文件详解
-live.json
+#### live.json
+live.json的内容可以手动修改，本程序会自动读取更改后的设置
 ```
 {
     "UID": 23682490,      // 主播的uid
@@ -14,10 +15,11 @@ live.json
     "Record": true,       // 是否下载直播视频
     "Danmu": true,        // 是否下载直播弹幕
     "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）
-    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群）
+    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群，最好是管理员）
 }
 ```
-config.json
+#### config.json
+config.json的内容手动修改后需要重新启动本程序
 ```
 {
     "Source": "hls",  // 直播源，有hls和flv两种
@@ -43,25 +45,25 @@ config.json
 
 `acfunlive -listlive` 列出正在直播的主播
 
-`acfunlive -addnotify 23682490` 通知uid为23682490的用户的直播
+`acfunlive -addnotify 23682490` 通知uid为23682490的主播的直播
 
-`acfunlive -delnotify 23682490` 取消通知uid为23682490的用户的直播
+`acfunlive -delnotify 23682490` 取消通知uid为23682490的主播的直播
 
-`acfunlive -addrecord 23682490` uid为23682490的用户直播时自动下载其直播视频
+`acfunlive -addrecord 23682490` uid为23682490的主播直播时自动下载其直播视频
 
-`acfunlive -delrecord 23682490` 取消自动下载uid为23682490的用户的直播视频
+`acfunlive -delrecord 23682490` 取消自动下载uid为23682490的主播的直播视频
 
-`acfunlive -adddanmu 23682490` uid为23682490的用户直播时自动下载其直播弹幕
+`acfunlive -adddanmu 23682490` uid为23682490的主播直播时自动下载其直播弹幕
 
-`acfunlive -deldanmu 23682490` 取消自动下载uid为23682490的用户的直播弹幕
+`acfunlive -deldanmu 23682490` 取消自动下载uid为23682490的主播的直播弹幕
 
-`acfunlive -getdlurl 23682490` 查看uid为23682490的用户是否在直播，输出其直播源
+`acfunlive -getdlurl 23682490` 查看uid为23682490的主播是否在直播，输出其直播源
 
-`acfunlive -startrecord 23682490` 临时下载uid为23682490的用户的直播视频
+`acfunlive -startrecord 23682490` 临时下载uid为23682490的主播的直播视频
 
-`acfunlive -startdanmu 23682490` 临时下载uid为23682490的用户的直播弹幕
+`acfunlive -startdanmu 23682490` 临时下载uid为23682490的主播的直播弹幕
 
-`acfunlive -startrecdan 23682490` 临时下载uid为23682490的用户的直播视频和弹幕
+`acfunlive -startrecdan 23682490` 临时下载uid为23682490的主播的直播视频和弹幕
 
 运行`acfunlive -h`查看详细设置说明
 
@@ -76,31 +78,41 @@ web服务默认本地端口为51880
 
 `http://localhost:51880/liststreamer` 列出设置了开播提醒或自动下载直播的主播
 
-`http://localhost:51880/addnotify/23682490` 通知uid为23682490的用户的直播
+`http://localhost:51880/startcoolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 
-`http://localhost:51880/delnotify/23682490` 取消通知uid为23682490的用户的直播
+`http://localhost:51880/addnotify/23682490` 通知uid为23682490的主播的直播
 
-`http://localhost:51880/addrecord/23682490` uid为23682490的用户直播时自动下载其直播视频
+`http://localhost:51880/delnotify/23682490` 取消通知uid为23682490的主播的直播
 
-`http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的用户的直播视频
+`http://localhost:51880/addrecord/23682490` uid为23682490的主播直播时自动下载其直播视频
 
-`http://localhost:51880/adddanmu/23682490` uid为23682490的用户直播时自动下载其直播弹幕
+`http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的主播的直播视频
 
-`http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的用户的直播弹幕
+`http://localhost:51880/adddanmu/23682490` uid为23682490的主播直播时自动下载其直播弹幕
 
-`http://localhost:51880/getdlurl/23682490` 查看uid为23682490的用户是否在直播，并输出其直播源
+`http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的主播的直播弹幕
 
-`http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的用户的直播视频
+`http://localhost:51880/getdlurl/23682490` 查看uid为23682490的主播是否在直播，并输出其直播源
 
-`http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的用户的直播视频
+`http://localhost:51880/addqq/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ12345，需要QQ机器人已经添加其为好友
 
-`http://localhost:51880/startdanmu/23682490` 临时下载uid为23682490的用户的直播弹幕
+`http://localhost:51880/delqq/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ
 
-`http://localhost:51880/stopdanmu/23682490` 取消下载uid为23682490的用户的直播弹幕
+`http://localhost:51880/addqqgroup/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ群12345，需要QQ机器人已经加入该群
 
-`http://localhost:51880/startrecdan/23682490` 临时下载uid为23682490的用户的直播视频和弹幕
+`http://localhost:51880/delqqgroup/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ群
 
-`http://localhost:51880/stoprecdan/23682490` 取消下载uid为23682490的用户的直播视频和弹幕
+`http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的主播的直播视频
+
+`http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的主播的直播视频
+
+`http://localhost:51880/startdanmu/23682490` 临时下载uid为23682490的主播的直播弹幕
+
+`http://localhost:51880/stopdanmu/23682490` 取消下载uid为23682490的主播的直播弹幕
+
+`http://localhost:51880/startrecdan/23682490` 临时下载uid为23682490的主播的直播视频和弹幕
+
+`http://localhost:51880/stoprecdan/23682490` 取消下载uid为23682490的主播的直播视频和弹幕
 
 `http://localhost:51880/log` 查看log
 
@@ -109,7 +121,7 @@ web服务默认本地端口为51880
 `http://localhost:51880/help` 显示帮助信息
 
 ### 酷Q使用方法
-本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
+本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
 Coolq相关设置参考 [配置文件详解](#配置文件详解) 。
 

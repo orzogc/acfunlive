@@ -34,14 +34,14 @@ func addNotify(uid int) bool {
 			return false
 		}
 
-		newStreamer := streamer{UID: uid, Name: name, Notify: true, Record: false}
+		newStreamer := streamer{UID: uid, Name: name, Notify: true}
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
 		lPrintln("成功订阅" + name + "的开播提醒")
 	}
 
-	saveConfig()
+	saveLiveConfig()
 	return true
 }
 
@@ -61,7 +61,7 @@ func delNotify(uid int) bool {
 	}
 	streamers.Unlock()
 
-	saveConfig()
+	saveLiveConfig()
 	return true
 }
 

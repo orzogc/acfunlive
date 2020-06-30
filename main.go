@@ -198,6 +198,9 @@ func checkConfig() {
 
 // 程序初始化
 func initialize() {
+	// 避免 initialization loop
+	boolDispatch["startweb"] = startWeb
+
 	exePath, err := os.Executable()
 	checkErr(err)
 	exeDir = filepath.Dir(exePath)
@@ -290,6 +293,11 @@ func main() {
 					configCancel()
 					// 结束cycleFetch()
 					fetchCancel()
+					// 停止web服务
+					if *isWebServer {
+						lPrintln("正在停止web服务")
+						srv.Shutdown(context.TODO())
+					}
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
 					msgMap.Lock()
@@ -315,11 +323,6 @@ func main() {
 						io.WriteString(rec.stdin, "q")
 					}
 					danglingRec.Unlock()
-					// 停止web服务
-					if *isWebServer {
-						lPrintln("正在停止web服务")
-						srv.Shutdown(context.TODO())
-					}
 					// 等待20秒，等待其他goroutine结束
 					time.Sleep(20 * time.Second)
 					lPrintln("本程序结束运行")

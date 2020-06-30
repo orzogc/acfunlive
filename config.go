@@ -133,8 +133,8 @@ func loadConfig() {
 	}
 }
 
-// 保存设置文件
-func saveConfig() {
+// 保存live.json
+func saveLiveConfig() {
 	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
 
