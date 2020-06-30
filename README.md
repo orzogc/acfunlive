@@ -4,6 +4,33 @@ AcFun直播桌面通知和下载助手（命令行版本）
 ### 运行依赖
 - ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
+### 配置文件详解
+live.conf
+```
+{
+    "UID": 23682490,      // 主播的uid
+    "Name": "AC娘本体",   // 主播的昵称
+    "Notify": true,       // 是否开播提醒
+    "Record": true,       // 是否下载直播视频
+    "Danmu": true,        // 是否下载直播弹幕
+    "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）
+    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群）
+}
+```
+config.json
+```
+{
+    "Source": "hls", // 直播源，有hls和flv两种
+    "Output": "mp4", // 下载的直播视频的格式，必须是有效的视频格式后缀名
+    "Coolq": {
+        "CqhttpPort": 5700,  // CQHTTP的端口，一般用默认值
+        "CqhttpPostURL": "", // CQHTTP的post_url，目前不用这个
+        "AccessToken": "",   // CQHTTP的access_token，可以为空
+        "Secret": ""         // CQHTTP的secret，可以为空
+    }
+}
+```
+
 ### 使用方法
 桌面通知和自动下载直播需要运行`acfunlive -listen`，下载的视频和弹幕默认保存在本程序所在文件夹内
 
@@ -83,13 +110,6 @@ web服务默认本地端口为51880
 ### 酷Q使用方法
 本程序使用 [CQHTTP](https://github.com/richardchien/coolq-http-api) 来发送消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
-config.json里Coolq相关设置的说明：
-```
-"Coolq": {
-    "CqhttpPort": 5700, // CQHTTP的端口，一般用默认值
-    "CqhttpPostURL": "http://localhost:51890", // CQHTTP的post_url，目前不用这个
-    "AccessToken": "", // CQHTTP的access_token，可以为空
-    "Secret": "" // CQHTTP的secret，可以为空
-}
-```
+Coolq相关设置参考 [配置文件详解](#配置文件详解) 。
+
 目前群通知@全体成员 貌似需要酷Q Pro。
