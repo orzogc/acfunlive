@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -57,6 +58,9 @@ var isListen *bool
 // 程序是否启动web服务
 var isWebServer *bool
 
+// 储存日志
+var logString strings.Builder
+
 // 可以同步输出的logger
 var logger = log.New(os.Stdout, "", log.LstdFlags)
 
@@ -79,7 +83,23 @@ func getTime() string {
 func lPrintln(msg ...interface{}) {
 	logger.Println(msg...)
 	// 同时输出日志到web服务
-	fmt.Fprintln(&webLog, msg...)
+	fmt.Fprintln(&logString, msg...)
+}
+
+// 打印错误信息
+func lPrintErr(msg ...interface{}) {
+	e := make([]interface{}, 1)
+	e[0] = "[ERROR]"
+	msg = append(e, msg...)
+	lPrintln(msg...)
+}
+
+// 打印警告信息
+func lPrintWarn(msg ...interface{}) {
+	e := make([]interface{}, 1)
+	e[0] = "[WARN]"
+	msg = append(e, msg...)
+	lPrintln(msg...)
 }
 
 // 将int转换为字符串
@@ -135,7 +155,7 @@ func argsHandle() {
 	flag.Parse()
 
 	if flag.NArg() != 0 || flag.NFlag() == 0 {
-		fmt.Println("请输入正确的参数")
+		lPrintErr("请输入正确的参数")
 		fmt.Println(usageStr)
 		flag.PrintDefaults()
 	} else {
@@ -145,7 +165,7 @@ func argsHandle() {
 		}
 		if *isWebServer || *isCoolq {
 			if *isListen != true {
-				fmt.Println("web和coolq参数需要和listen参数一起运行")
+				lPrintErr("web和coolq参数需要和listen参数一起运行")
 				os.Exit(1)
 			}
 		}
@@ -188,10 +208,10 @@ func argsHandle() {
 func checkConfig() {
 	switch {
 	case config.Source != "hls" && config.Source != "flv":
-		lPrintln(configFile + "里的Source必须是hls或flv")
+		lPrintErr(configFile + "里的Source必须是hls或flv")
 		os.Exit(1)
 	case config.WebPort < 1024 || config.WebPort > 65535:
-		lPrintln(configFile + "里的WebPort必须大于1023且少于65536")
+		lPrintErr(configFile + "里的WebPort必须大于1023且少于65536")
 		os.Exit(1)
 	}
 }
@@ -249,7 +269,7 @@ func main() {
 
 	if *isListen {
 		if len(streamers.crt) == 0 {
-			lPrintln("请订阅指定主播的开播提醒或自动下载，运行 acfun_live -h 查看帮助")
+			lPrintErr("请订阅指定主播的开播提醒或自动下载，运行 acfun_live -h 查看帮助")
 			return
 		}
 
@@ -329,7 +349,7 @@ func main() {
 					lPrintln("本程序结束运行")
 					return
 				default:
-					lPrintln("未知controlMsg：", msg)
+					lPrintErr("未知controlMsg：", msg)
 				}
 			}
 		}

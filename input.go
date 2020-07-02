@@ -80,8 +80,8 @@ func quitRun() {
 func handleInput() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in handleInput(), the error is:", err)
-			lPrintln("输入处理发生错误，尝试重启输入处理")
+			lPrintErr("Recovering from panic in handleInput(), the error is:", err)
+			lPrintErr("输入处理发生错误，尝试重启输入处理")
 			go handleInput()
 		}
 	}()
@@ -91,6 +91,6 @@ func handleInput() {
 		handleAllCmd(scanner.Text())
 	}
 	if err := scanner.Err(); err != nil {
-		lPrintln("Reading standard input err:", err)
+		lPrintErr("Reading standard input err:", err)
 	}
 }

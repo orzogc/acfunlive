@@ -94,7 +94,7 @@ func handleCmd(cmd string) string {
 		quitRun()
 		return "true"
 	default:
-		lPrintln("错误的命令：" + cmd)
+		lPrintErr("错误的命令：" + cmd)
 		printErr()
 		return ""
 	}
@@ -115,7 +115,7 @@ func handleCmdUID(cmd string, uid int) string {
 		checkErr(err)
 		return string(data)
 	default:
-		lPrintln("错误的命令："+cmd, uid)
+		lPrintErr("错误的命令："+cmd, uid)
 		printErr()
 		return ""
 	}
@@ -126,14 +126,14 @@ func handleCmdQQ(cmd string, uid int, qq int) string {
 		return boolStr(d(uid, qq))
 	}
 
-	lPrintln("错误的命令："+cmd, uid, qq)
+	lPrintErr("错误的命令："+cmd, uid, qq)
 	printErr()
 	return ""
 }
 
 // 打印错误命令信息
 func printErr() {
-	lPrintln(handleErrMsg)
+	lPrintWarn(handleErrMsg)
 }
 
 // 处理所有命令

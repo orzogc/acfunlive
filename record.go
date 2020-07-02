@@ -34,7 +34,7 @@ func getFFmpeg() (ffmpegFile string) {
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 		_, err := exec.LookPath(ffmpegFile)
 		if err != nil {
-			lPrintln("系统没有安装FFmpeg")
+			lPrintErr("系统没有安装FFmpeg")
 			return ""
 		}
 	}
@@ -43,7 +43,7 @@ func getFFmpeg() (ffmpegFile string) {
 		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 		_, err := os.Stat(ffmpegFile)
 		if os.IsNotExist(err) {
-			lPrintln("ffmpeg.exe需要和本程序放在同一文件夹下")
+			lPrintErr("ffmpeg.exe需要和本程序放在同一文件夹下")
 			return ""
 		}
 	}
@@ -71,7 +71,7 @@ func transFilename(filename string) string {
 	// windows下全路径文件名不能过长
 	if runtime.GOOS == "windows" {
 		if utf8.RuneCountInString(outFilename) > 255 {
-			lPrintln("全路径文件名太长，取消下载")
+			lPrintErr("全路径文件名太长，取消下载")
 			desktopNotify("全路径文件名太长，取消下载")
 			return ""
 		}
@@ -86,7 +86,7 @@ func addRecord(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Record {
-			lPrintln("已经设置过自动下载" + s.Name + "的直播视频")
+			lPrintWarn("已经设置过自动下载" + s.Name + "的直播视频")
 		} else {
 			s.Record = true
 			sets(s)
@@ -98,7 +98,7 @@ func addRecord(uid int) bool {
 	if !isExist {
 		name := getName(uid)
 		if name == "" {
-			lPrintln("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 			return false
 		}
 
@@ -125,7 +125,7 @@ func delRecord(uid int) bool {
 		}
 		lPrintln("成功取消自动下载" + s.Name + "的直播视频")
 	} else {
-		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
+		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
 	}
 	streamers.Unlock()
 
@@ -137,21 +137,21 @@ func delRecord(uid int) bool {
 func startRec(uid int, danmu bool) bool {
 	name := getName(uid)
 	if name == "" {
-		lPrintln("不存在uid为" + itoa(uid) + "的用户")
+		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
 	s := streamer{UID: uid, Name: name}
 
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
-		lPrintln("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
+		lPrintWarn("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
 		msgMap.Unlock()
 		return false
 	}
 	msgMap.Unlock()
 
 	if !s.isLiveOn() {
-		lPrintln(s.longID() + "不在直播，取消下载直播视频")
+		lPrintWarn(s.longID() + "不在直播，取消下载直播视频")
 		return false
 	}
 
@@ -191,7 +191,7 @@ func stopRec(uid int) bool {
 			// 需要设置recording为false
 			m.recording = false
 		} else {
-			lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
+			lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
 		}
 	}()
 
@@ -202,8 +202,8 @@ func stopRec(uid int) bool {
 func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in recordLive(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
+			lPrintErr("Recovering from panic in recordLive(), the error is:", err)
+			lPrintErr("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
 			msgMap.Lock()
 			m := msgMap.msg[s.UID]
@@ -221,7 +221,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	// 获取直播源和对应的弹幕设置
 	liveURL, cfg := s.getLiveURL()
 	if liveURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
+		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
 		return
 	}
@@ -280,7 +280,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 
 	err = cmd.Run()
 	if err != nil {
-		lPrintln("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
+		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
 
 	if s.isLiveOn() {
@@ -292,13 +292,13 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 			// 收到停止下载的信号
 			case stopRecord:
 			default:
-				lPrintln("未知的controlMsg：", msg)
+				lPrintErr("未知的controlMsg：", msg)
 			}
 		default:
 			// 程序处于监听状态时重启下载，否则不重启
 			if *isListen {
 				// 由于某种原因导致下载意外结束
-				lPrintln("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
+				lPrintWarn("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
 				go s.recordLive(ffmpegFile, danmu)

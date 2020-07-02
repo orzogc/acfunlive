@@ -22,7 +22,7 @@ func addDanmu(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Danmu {
-			lPrintln("已经设置过自动下载" + s.Name + "的直播弹幕")
+			lPrintWarn("已经设置过自动下载" + s.Name + "的直播弹幕")
 		} else {
 			s.Danmu = true
 			sets(s)
@@ -34,7 +34,7 @@ func addDanmu(uid int) bool {
 	if !isExist {
 		name := getName(uid)
 		if name == "" {
-			lPrintln("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 			return false
 		}
 
@@ -61,7 +61,7 @@ func delDanmu(uid int) bool {
 		}
 		lPrintln("成功取消自动下载" + s.Name + "的直播弹幕")
 	} else {
-		lPrintln("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
+		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
 	}
 	streamers.Unlock()
 
@@ -73,8 +73,8 @@ func delDanmu(uid int) bool {
 func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filename string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in getDanmu(), the error is:", err)
-			lPrintln("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
+			lPrintErr("ERROR: Recovering from panic in getDanmu(), the error is:", err)
+			lPrintErr("ERROR: 下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
 			msgMap.Lock()
 			m := msgMap.msg[s.UID]
@@ -129,19 +129,19 @@ func (s streamer) getDanmu(ctx context.Context, cfg acfundanmu.SubConfig, filena
 func startDanmu(uid int) bool {
 	name := getName(uid)
 	if name == "" {
-		lPrintln("不存在uid为" + itoa(uid) + "的用户")
+		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
 	s := streamer{UID: uid, Name: name}
 
 	if !s.isLiveOn() {
-		lPrintln(s.longID() + "不在直播，取消下载直播弹幕")
+		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
 		return false
 	}
 
 	_, flvURL, cfg := s.getStreamURL()
 	if flvURL == "" {
-		lPrintln("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
+		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
 		return false
 	}
@@ -174,10 +174,10 @@ func stopDanmu(uid int) bool {
 			lPrintln("开始停止下载" + s.longID() + "的直播弹幕")
 			m.danmuCancel()
 		} else {
-			lPrintln("没有在下载" + s.longID() + "的直播弹幕")
+			lPrintWarn("没有在下载" + s.longID() + "的直播弹幕")
 		}
 	} else {
-		lPrintln("没有在下载uid为" + itoa(uid) + "的主播的直播弹幕")
+		lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播弹幕")
 	}
 	return true
 }

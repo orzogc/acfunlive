@@ -91,7 +91,7 @@ func isConfigFileExist(filename string) bool {
 		return false
 	}
 	if info.IsDir() {
-		lPrintln(filename + "不能是目录")
+		lPrintErr(filename + "不能是目录")
 		os.Exit(1)
 	}
 	return true
@@ -113,7 +113,7 @@ func loadLiveConfig() {
 			}
 			streamers.crt = news
 		} else {
-			lPrintln("设置文件" + liveFile + "的内容不符合json格式，请检查其内容")
+			lPrintErr("设置文件" + liveFile + "的内容不符合json格式，请检查其内容")
 		}
 	}
 }
@@ -128,7 +128,7 @@ func loadConfig() {
 			err = json.Unmarshal(data, &config)
 			checkErr(err)
 		} else {
-			lPrintln("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
+			lPrintErr("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
 		}
 	}
 }
@@ -154,8 +154,8 @@ func deleteStreamer(uid int) {
 func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in cycleConfig(), the error is:", err)
-			lPrintln("循环读取设置文件" + liveFile + "时出错，请重启本程序")
+			lPrintErr("Recovering from panic in cycleConfig(), the error is:", err)
+			lPrintErr("循环读取设置文件" + liveFile + "时出错，请重启本程序")
 		}
 	}()
 

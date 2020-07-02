@@ -24,7 +24,7 @@ type coolqData struct {
 // 建立对酷Q的连接
 func startCoolq() bool {
 	if *isCoolq {
-		lPrintln("已经建立过对酷Q的连接")
+		lPrintWarn("已经建立过对酷Q的连接")
 	} else {
 		*isCoolq = true
 		lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
@@ -42,12 +42,12 @@ func addQQNotify(uid int, qq int) bool {
 			sets(s)
 			lPrintln("成功设置将" + s.Name + "的开播提醒发送到QQ" + itoa(qq))
 		} else {
-			lPrintln("设置QQ的开播提醒需要先订阅" + s.Name + "的开播提醒，请运行addnotify " + s.itoa())
+			lPrintWarn("设置QQ的开播提醒需要先订阅" + s.Name + "的开播提醒，请运行addnotify " + s.itoa())
 			streamers.Unlock()
 			return false
 		}
 	} else {
-		lPrintln("设置QQ的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
+		lPrintWarn("设置QQ的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
 		streamers.Unlock()
 		return false
 	}
@@ -65,7 +65,7 @@ func delQQNotify(uid int) bool {
 		sets(s)
 		lPrintln("成功取消设置" + s.Name + "的QQ开播提醒")
 	} else {
-		lPrintln("没有设置过uid为" + itoa(uid) + "的主播的QQ开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ开播提醒")
 	}
 	streamers.Unlock()
 
@@ -82,12 +82,12 @@ func addQQGroup(uid int, qqGroup int) bool {
 			sets(s)
 			lPrintln("成功设置将" + s.Name + "的开播提醒发送到QQ群" + itoa(qqGroup))
 		} else {
-			lPrintln("设置QQ群的开播提醒需要先订阅" + s.Name + "的开播提醒，请运行addnotify " + s.itoa())
+			lPrintWarn("设置QQ群的开播提醒需要先订阅" + s.Name + "的开播提醒，请运行addnotify " + s.itoa())
 			streamers.Unlock()
 			return false
 		}
 	} else {
-		lPrintln("设置QQ群的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
+		lPrintWarn("设置QQ群的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
 		streamers.Unlock()
 		return false
 	}
@@ -105,7 +105,7 @@ func delQQGroup(uid int) bool {
 		sets(s)
 		lPrintln("成功取消设置" + s.Name + "的QQ群开播提醒")
 	} else {
-		lPrintln("没有设置过uid为" + itoa(uid) + "的主播的QQ群开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群开播提醒")
 	}
 	streamers.Unlock()
 
@@ -117,15 +117,15 @@ func delQQGroup(uid int) bool {
 func initCoolq() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in initCoolq(), the error is:", err)
-			lPrintln("连接酷Q出现问题，请确定已启动酷Q")
+			lPrintErr("Recovering from panic in initCoolq(), the error is:", err)
+			lPrintErr("连接酷Q出现问题，请确定已启动酷Q")
 			bot = nil
 			*isCoolq = false
 		}
 	}()
 
 	if bot != nil {
-		lPrintln("已经建立过对酷Q的连接")
+		lPrintWarn("已经建立过对酷Q的连接")
 		return
 	}
 
@@ -153,8 +153,8 @@ func sendQQGroup(qqGroup int64, text string) {
 func (s streamer) sendCoolq(text string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in sendCoolq(), the error is:", err)
-			lPrintln("发送" + s.longID() + "的消息到指定的QQ/QQ群时发生错误")
+			lPrintErr("Recovering from panic in sendCoolq(), the error is:", err)
+			lPrintErr("发送" + s.longID() + "的消息到指定的QQ/QQ群时发生错误")
 		}
 	}()
 
@@ -187,7 +187,7 @@ func getCoolqMsg() {
 func handleCoolqMsg(msg *qqbotapi.Message) {
 	if msg.From.ID == config.Coolq.AdminQQ {
 		if msg.Chat.Type == "private" {
-			lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", config.Coolq.AdminQQ, msg.Text))
+			lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", msg.From.ID, msg.Text))
 			if s := handleAllCmd(msg.Text); s != "" {
 				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 			} else {
@@ -197,7 +197,7 @@ func handleCoolqMsg(msg *qqbotapi.Message) {
 			if bot.IsMessageToMe(*msg) {
 				i := strings.Index(msg.Text, "]")
 				text := msg.Text[i+1:]
-				lPrintln(fmt.Sprintf("处理来自QQ群%d里QQ%d的命令：%s", msg.Chat.ID, config.Coolq.AdminQQ, text))
+				lPrintln(fmt.Sprintf("处理来自QQ群%d里QQ%d的命令：%s", msg.Chat.ID, msg.From.ID, text))
 				if s := handleAllCmd(text); s != "" {
 					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 				} else {

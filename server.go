@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -38,9 +37,6 @@ const webHelp = `/listlive ：列出正在直播的主播
 /log ：查看log
 /quit ：退出本程序，退出需要等待半分钟左右
 /help ：本帮助信息`
-
-// 储存日志
-var webLog strings.Builder
 
 var srv *http.Server
 
@@ -98,7 +94,7 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 
 // 打印日志
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, webLog.String())
+	fmt.Fprint(w, logString.String())
 }
 
 // 打印帮助
@@ -118,8 +114,8 @@ func printRequestURI(next http.Handler) http.Handler {
 func httpServer() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in httpServer(), the error is:", err)
-			lPrintln("web服务发生错误，尝试重启web服务")
+			lPrintErr("Recovering from panic in httpServer(), the error is:", err)
+			lPrintErr("web服务发生错误，尝试重启web服务")
 			time.Sleep(2 * time.Second)
 			go httpServer()
 		}
@@ -156,7 +152,7 @@ func httpServer() {
 // 启动web服务
 func startWeb() bool {
 	if *isWebServer {
-		lPrintln("已经启动过web服务")
+		lPrintWarn("已经启动过web服务")
 	} else {
 		*isWebServer = true
 		lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
@@ -172,7 +168,7 @@ func stopWeb() bool {
 		lPrintln("停止web服务")
 		srv.Shutdown(context.TODO())
 	} else {
-		lPrintln("没有启动web服务")
+		lPrintWarn("没有启动web服务")
 	}
 	return true
 }

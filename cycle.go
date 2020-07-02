@@ -18,7 +18,7 @@ func (s streamer) handleMsg(msg controlMsg) {
 		deleteMsg(s.UID)
 	case quit:
 	default:
-		lPrintln("未知的controlMsg：", msg)
+		lPrintErr("未知的controlMsg：", msg)
 	}
 }
 
@@ -26,8 +26,8 @@ func (s streamer) handleMsg(msg controlMsg) {
 func (s streamer) cycle() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in cycle(), the error is:", err)
-			lPrintln(s.longID() + "的循环处理发生错误，尝试重启循环")
+			lPrintErr("Recovering from panic in cycle(), the error is:", err)
+			lPrintErr(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
 			msgMap.Lock()

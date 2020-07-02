@@ -65,8 +65,8 @@ func fetchAllRooms() {
 func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in fetchLiveRoom(), the error is:", err)
-			lPrintln("获取AcFun直播间API的json时发生错误，尝试重新运行")
+			lPrintErr("Recovering from panic in fetchLiveRoom(), the error is:", err)
+			lPrintErr("获取AcFun直播间API的json时发生错误，尝试重新运行")
 			// 延迟两秒，防止意外情况下刷屏
 			time.Sleep(2 * time.Second)
 			r, nextPage = fetchLiveRoom(page)
@@ -126,8 +126,8 @@ func (s streamer) getTitle() string {
 func getName(uid int) (name string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in getName(), the error is:", err)
-			lPrintln("获取uid为" + itoa(uid) + "的主播的名字时出现错误，尝试重新运行")
+			lPrintErr("Recovering from panic in getName(), the error is:", err)
+			lPrintErr("获取uid为" + itoa(uid) + "的主播的名字时出现错误，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			name = getName(uid)
 		}
@@ -184,8 +184,8 @@ func fetchAcLogo() {
 func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.SubConfig) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintln("Recovering from panic in getStreamURL(), the error is:", err)
-			lPrintln("获取" + s.longID() + "的直播源时出错，尝试重新运行")
+			lPrintErr("Recovering from panic in getStreamURL(), the error is:", err)
+			lPrintErr("获取" + s.longID() + "的直播源时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
 			hlsURL, flvURL, cfg = s.getStreamURL()
 		}
@@ -289,7 +289,7 @@ func (s streamer) getLiveURL() (liveURL string, cfg acfundanmu.SubConfig) {
 	case "flv":
 		_, liveURL, cfg = s.getStreamURL()
 	default:
-		lPrintln(configFile + "里的Source必须是hls或flv")
+		lPrintErr(configFile + "里的Source必须是hls或flv")
 		return "", cfg
 	}
 	return liveURL, cfg
@@ -299,7 +299,7 @@ func (s streamer) getLiveURL() (liveURL string, cfg acfundanmu.SubConfig) {
 func printStreamURL(uid int) (string, string) {
 	name := getName(uid)
 	if name == "" {
-		lPrintln("不存在uid为" + itoa(uid) + "的用户")
+		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return "", ""
 	}
 	s := streamer{UID: uid, Name: name}
@@ -309,7 +309,7 @@ func printStreamURL(uid int) (string, string) {
 		hlsURL, flvURL, _ := s.getStreamURL()
 		lPrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
-			lPrintln("无法获取" + s.longID() + "的直播源，请重新运行命令")
+			lPrintErr("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {
 			lPrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
 		}
