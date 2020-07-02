@@ -32,8 +32,7 @@ func getFFmpeg() (ffmpegFile string) {
 	ffmpegFile = "ffmpeg"
 	// linux和macOS下确认有没有安装FFmpeg
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		_, err := exec.LookPath(ffmpegFile)
-		if err != nil {
+		if _, err := exec.LookPath(ffmpegFile); err != nil {
 			lPrintErr("系统没有安装FFmpeg")
 			return ""
 		}
@@ -41,8 +40,7 @@ func getFFmpeg() (ffmpegFile string) {
 	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
 	if runtime.GOOS == "windows" {
 		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
-		_, err := os.Stat(ffmpegFile)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(ffmpegFile); os.IsNotExist(err) {
 			lPrintErr("ffmpeg.exe需要和本程序放在同一文件夹下")
 			return ""
 		}
@@ -219,7 +217,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	}
 
 	// 获取直播源和对应的弹幕设置
-	liveURL, cfg := s.getLiveURL()
+	liveURL := s.getLiveURL()
 	if liveURL == "" {
 		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
@@ -275,7 +273,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 
 	// 下载弹幕
 	if danmu {
-		go s.getDanmu(ctx, cfg, filename)
+		go s.initDanmu(ctx, filename)
 	}
 
 	err = cmd.Run()

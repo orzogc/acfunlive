@@ -229,8 +229,7 @@ func initialize() {
 	liveFileLocation = filepath.Join(exeDir, liveFile)
 	configFileLocation = filepath.Join(exeDir, configFile)
 
-	_, err = os.Stat(logoFileLocation)
-	if os.IsNotExist(err) {
+	if _, err := os.Stat(logoFileLocation); os.IsNotExist(err) {
 		lPrintln("下载AcFun的logo")
 		fetchAcLogo()
 	}
@@ -269,7 +268,7 @@ func main() {
 
 	if *isListen {
 		if len(streamers.crt) == 0 {
-			lPrintErr("请订阅指定主播的开播提醒或自动下载，运行 acfun_live -h 查看帮助")
+			lPrintErr("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
 			return
 		}
 

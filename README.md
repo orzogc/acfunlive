@@ -31,7 +31,7 @@ live.json的内容可以手动修改，本程序会自动读取更改后的设�
 config.json的内容手动修改后需要重新启动本程序以生效
 ```
 {
-    "Source": "flv",  // 直播源，有flv和hls两种，默认是flv
+    "Source": "flv",  // 直播源，有hls和flv两种，默认是flv
     "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
     "WebPort": 51880, // web服务的本地端口
     "Coolq": {

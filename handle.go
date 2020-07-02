@@ -149,8 +149,7 @@ func handleAllCmd(text string) string {
 			return handleCmd(cmd[0])
 		}
 	case 2:
-		uid, err := strconv.ParseUint(cmd[1], 10, 64)
-		if err != nil {
+		if uid, err := strconv.ParseUint(cmd[1], 10, 64); err != nil {
 			printErr()
 		} else {
 			return handleCmdUID(cmd[0], int(uid))

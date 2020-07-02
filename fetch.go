@@ -181,13 +181,13 @@ func fetchAcLogo() {
 }
 
 // 获取AcFun的直播源，分为hls和flv两种
-func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.SubConfig) {
+func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName string, cfg acfundanmu.SubConfig) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in getStreamURL(), the error is:", err)
 			lPrintErr("获取" + s.longID() + "的直播源时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			hlsURL, flvURL, cfg = s.getStreamURL()
+			hlsURL, flvURL, streamName, cfg = s.getStreamURL()
 		}
 	}()
 
@@ -227,7 +227,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 0 {
-		return "", "", cfg
+		return "", "", "", cfg
 	}
 	// 获取userId和对应的令牌
 	userID := v.GetInt("userId")
@@ -248,12 +248,12 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	v, err = p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 1 {
-		return "", "", cfg
+		return "", "", "", cfg
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
 	v, err = p.ParseBytes(videoPlayRes)
 	checkErr(err)
-	streamName := string(v.GetStringBytes("streamName"))
+	streamName = string(v.GetStringBytes("streamName"))
 
 	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
 
@@ -279,20 +279,20 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, cfg acfundanmu.S
 	// 这是码率最高的hls视频源
 	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull", "hlspull") + streamName + ".m3u8"
 
-	return hlsURL, flvURL, cfg
+	return hlsURL, flvURL, streamName, cfg
 }
 
-func (s streamer) getLiveURL() (liveURL string, cfg acfundanmu.SubConfig) {
+func (s streamer) getLiveURL() (liveURL string) {
 	switch config.Source {
 	case "hls":
-		liveURL, _, cfg = s.getStreamURL()
+		liveURL, _, _, _ = s.getStreamURL()
 	case "flv":
-		_, liveURL, cfg = s.getStreamURL()
+		_, liveURL, _, _ = s.getStreamURL()
 	default:
 		lPrintErr(configFile + "里的Source必须是hls或flv")
-		return "", cfg
+		return ""
 	}
-	return liveURL, cfg
+	return liveURL
 }
 
 // 查看指定主播是否在直播和输出其直播源
@@ -306,7 +306,7 @@ func printStreamURL(uid int) (string, string) {
 
 	if s.isLiveOn() {
 		title := s.getTitle()
-		hlsURL, flvURL, _ := s.getStreamURL()
+		hlsURL, flvURL, _, _ := s.getStreamURL()
 		lPrintln(s.longID() + "正在直播：" + title)
 		if flvURL == "" {
 			lPrintErr("无法获取" + s.longID() + "的直播源，请重新运行命令")
