@@ -106,6 +106,14 @@ func helpHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
 
+// 打印web请求
+func printRequestURI(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		lPrintln("处理web请求：" + r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
+}
+
 // web服务
 func httpServer() {
 	defer func() {
@@ -125,6 +133,7 @@ func httpServer() {
 	r.HandleFunc("/{cmd}", cmdHandler)
 	r.HandleFunc("/{cmd}/{uid:[1-9][0-9]*}", cmdUIDHandler)
 	r.HandleFunc("/{cmd}/{uid:[1-9][0-9]*}/{qq:[1-9][0-9]*}", cmdQQHandler)
+	r.Use(printRequestURI)
 
 	// 跨域处理
 	handler := cors.Default().Handler(r)

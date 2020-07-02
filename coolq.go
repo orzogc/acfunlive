@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	qqbotapi "github.com/catsworld/qq-bot-api"
@@ -26,8 +27,8 @@ func startCoolq() bool {
 		lPrintln("已经建立过对酷Q的连接")
 	} else {
 		*isCoolq = true
-		lPrintln("通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
-		go initCoolq()
+		lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
+		initCoolq()
 	}
 	return true
 }
@@ -131,18 +132,9 @@ func initCoolq() {
 	newBot, err := qqbotapi.NewBotAPI(config.Coolq.AccessToken, config.Coolq.CqhttpWSAddr, config.Coolq.Secret)
 	checkErr(err)
 	bot = newBot
+	lPrintln("成功通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
 
-	u := qqbotapi.NewUpdate(0)
-	updates, err := bot.GetUpdatesChan(u)
-	checkErr(err)
-
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
-
-		replyCoolq(update.Message)
-	}
+	go getCoolqMsg()
 }
 
 // 发送消息到指定的QQ
@@ -176,9 +168,26 @@ func (s streamer) sendCoolq(text string) {
 	}
 }
 
+// 获取发送给酷Q机器人的消息
+func getCoolqMsg() {
+	u := qqbotapi.NewUpdate(0)
+	updates, err := bot.GetUpdatesChan(u)
+	checkErr(err)
+
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+
+		replyCoolq(update.Message)
+	}
+}
+
+// 回复QQ消息
 func replyCoolq(msg *qqbotapi.Message) {
 	if msg.From.ID == config.Coolq.AdminQQ {
 		if msg.Chat.Type == "private" {
+			lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", config.Coolq.AdminQQ, msg.Text))
 			if s := handleAllCmd(msg.Text); s != "" {
 				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 			} else {
@@ -187,7 +196,9 @@ func replyCoolq(msg *qqbotapi.Message) {
 		} else {
 			if bot.IsMessageToMe(*msg) {
 				i := strings.Index(msg.Text, "]")
-				if s := handleAllCmd(msg.Text[i+1:]); s != "" {
+				text := msg.Text[i+1:]
+				lPrintln(fmt.Sprintf("处理来自QQ群%d里QQ%d的命令：%s", msg.Chat.ID, config.Coolq.AdminQQ, text))
+				if s := handleAllCmd(text); s != "" {
 					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 				} else {
 					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)

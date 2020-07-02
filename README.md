@@ -11,7 +11,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
     * [酷Q使用方法](#酷Q使用方法)
 
 ### 运行依赖
-- ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
+* ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
 ### 配置文件详解
 #### live.json
@@ -31,7 +31,7 @@ live.json的内容可以手动修改，本程序会自动读取更改后的设�
 config.json的内容手动修改后需要重新启动本程序以生效
 ```
 {
-    "Source": "hls",  // 直播源，有hls和flv两种
+    "Source": "flv",  // 直播源，有flv和hls两种，默认是flv
     "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
     "WebPort": 51880, // web服务的本地端口
     "Coolq": {
@@ -132,8 +132,10 @@ web服务默认本地端口为51880
 ### 酷Q使用方法
 本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
-Coolq相关设置参考 [配置文件详解](#配置文件详解) 。
+CQHTTP插件必须启用WebSocket服务端，也就是其配置里的use_ws必须为true。
 
-目前群通知@全体成员 貌似需要酷Q Pro。
+Coolq相关设置参考 [config\.json配置](#configjson) 。
+
+目前群通知@全体成员 需要酷Q Pro。
 
 config.json里的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。

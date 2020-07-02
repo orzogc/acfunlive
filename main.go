@@ -275,8 +275,8 @@ func main() {
 		}
 
 		if *isCoolq {
-			lPrintln("通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
-			go initCoolq()
+			lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
+			initCoolq()
 		}
 
 		ctx, fetchCancel := context.WithCancel(context.Background())
