@@ -196,6 +196,15 @@ func stopRec(uid int) bool {
 	return true
 }
 
+// 退出直播视频下载
+func (s streamer) quitRec() {
+	msgMap.Lock()
+	m := msgMap.msg[s.UID]
+	m.recording = false
+	msgMap.Unlock()
+	deleteMsg(s.UID)
+}
+
 // 下载主播的直播视频
 func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	defer func() {
@@ -203,16 +212,13 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 			lPrintErr("Recovering from panic in recordLive(), the error is:", err)
 			lPrintErr("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
-			msgMap.Lock()
-			m := msgMap.msg[s.UID]
-			m.recording = false
-			msgMap.Unlock()
-			deleteMsg(s.UID)
+			s.quitRec()
 		}
 	}()
 
 	if ffmpegFile == "" {
 		desktopNotify("没有找到FFmpeg，停止下载直播视频")
+		s.quitRec()
 		return
 	}
 
@@ -221,12 +227,14 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	if liveURL == "" {
 		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
+		s.quitRec()
 		return
 	}
 
 	filename := getTime() + " " + s.Name + " " + s.getTitle()
 	recordFile := transFilename(filename)
 	if recordFile == "" {
+		s.quitRec()
 		return
 	}
 	// 想要输出其他视频格式可以修改config.json里的Output

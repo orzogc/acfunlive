@@ -328,8 +328,8 @@ func cycleFetch(ctx context.Context) {
 			return
 		default:
 			fetchAllRooms()
-			// 每20秒循环一次
-			time.Sleep(20 * time.Second)
+			// 每10秒循环一次
+			time.Sleep(10 * time.Second)
 		}
 	}
 }
