@@ -179,12 +179,12 @@ func getCoolqMsg() {
 			continue
 		}
 
-		replyCoolq(update.Message)
+		handleCoolqMsg(update.Message)
 	}
 }
 
-// 回复QQ消息
-func replyCoolq(msg *qqbotapi.Message) {
+// 处理并回复QQ消息
+func handleCoolqMsg(msg *qqbotapi.Message) {
 	if msg.From.ID == config.Coolq.AdminQQ {
 		if msg.Chat.Type == "private" {
 			lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", config.Coolq.AdminQQ, msg.Text))

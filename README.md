@@ -134,7 +134,7 @@ web服务默认本地端口为51880
 
 CQHTTP插件必须启用WebSocket服务端，也就是其配置里的use_ws必须为true。
 
-Coolq相关设置参考 [config\.json配置](#configjson) 。
+本程序酷Q相关配置参考 [config\.json配置](#configjson) 。
 
 目前群通知@全体成员 需要酷Q Pro。
 
