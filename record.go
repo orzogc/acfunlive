@@ -289,7 +289,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
 
-	if s.isLiveOn() {
+	if _, _, streamName, _ := s.getStreamURL(); streamName != "" {
 		select {
 		case msg := <-ch:
 			switch msg {

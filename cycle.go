@@ -76,7 +76,7 @@ func (s streamer) cycle() {
 					}
 					if s.Record {
 						msgMap.Lock()
-						// 直播短时间内重启的情况下，通常上一次的直播视频下载的退出会比较慢
+						// 直播短时间内重启的情况下，上一次的直播视频下载的退出可能会比较慢
 						if m := msgMap.msg[s.UID]; m.recording {
 							// 如果设置被修改，不重启已有的下载
 							if !m.modify {
