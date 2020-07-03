@@ -76,11 +76,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			lPrintErr("ERROR: Recovering from panic in getDanmu(), the error is:", err)
 			lPrintErr("ERROR: 下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
-			msgMap.Lock()
-			m := msgMap.msg[s.UID]
-			m.danmuCancel = nil
-			msgMap.Unlock()
-			deleteMsg(s.UID)
+			s.quitDanmu()
 		}
 	}()
 
@@ -88,11 +84,13 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	if streamName == "" {
 		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
+		s.quitDanmu()
 		return
 	}
 
 	assFile := transFilename(filename)
 	if assFile == "" {
+		s.quitDanmu()
 		return
 	}
 	assFile = assFile + ".ass"
@@ -135,16 +133,22 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		}
 	}
 
-	msgMap.Lock()
-	m := msgMap.msg[s.UID]
-	m.danmuCancel = nil
-	msgMap.Unlock()
-	deleteMsg(s.UID)
+	s.quitDanmu()
 
 	lPrintln(s.longID() + "的直播弹幕下载已经结束")
 	if !s.Record {
 		desktopNotify(s.Name + "的直播弹幕下载已经结束")
 	}
+}
+
+// 退出直播弹幕下载相关操作
+func (s streamer) quitDanmu() {
+	msgMap.Lock()
+	if m, ok := msgMap.msg[s.UID]; ok {
+		m.danmuCancel = nil
+	}
+	msgMap.Unlock()
+	deleteMsg(s.UID)
 }
 
 // 初始化弹幕下载

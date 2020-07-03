@@ -172,35 +172,35 @@ func startRec(uid int, danmu bool) bool {
 
 // 停止下载指定主播的直播视频
 func stopRec(uid int) bool {
-	// web服务需要快速返回
-	go func() {
-		msgMap.Lock()
-		defer msgMap.Unlock()
-		if m, ok := msgMap.msg[uid]; ok && m.recording {
-			s := streamer{UID: uid, Name: getName(uid)}
-			lPrintln("开始停止下载" + s.longID() + "的直播视频")
-			m.rec.ch <- stopRecord
-			io.WriteString(m.rec.stdin, "q")
-			// 等待20秒强关下载，goroutine是为了防止锁住时间过长
-			go func() {
-				time.Sleep(20 * time.Second)
-				m.rec.cancel()
-			}()
-			// 需要设置recording为false
-			m.recording = false
-		} else {
-			lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
-		}
-	}()
+	msgMap.Lock()
+	if m, ok := msgMap.msg[uid]; ok && m.recording {
+		s := streamer{UID: uid, Name: getName(uid)}
+		lPrintln("开始停止下载" + s.longID() + "的直播视频")
+		m.rec.ch <- stopRecord
+		io.WriteString(m.rec.stdin, "q")
+		// 等待20秒强关下载，goroutine是为了防止锁住时间过长
+		go func() {
+			time.Sleep(20 * time.Second)
+			m.rec.cancel()
+		}()
+		// 需要设置recording为false
+		m.recording = false
+	} else {
+		lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
+	}
+	msgMap.Unlock()
+
+	deleteMsg(uid)
 
 	return true
 }
 
-// 退出直播视频下载
+// 退出直播视频下载相关操作
 func (s streamer) quitRec() {
 	msgMap.Lock()
-	m := msgMap.msg[s.UID]
-	m.recording = false
+	if m, ok := msgMap.msg[s.UID]; ok {
+		m.recording = false
+	}
 	msgMap.Unlock()
 	deleteMsg(s.UID)
 }
@@ -311,13 +311,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 			}
 		}
 	} else {
-		msgMap.Lock()
-		m := msgMap.msg[s.UID]
-		m.recording = false
-		msgMap.Unlock()
+		s.quitRec()
 	}
-
-	deleteMsg(s.UID)
 
 	lPrintln(s.longID() + "的直播视频下载已经结束")
 	if danmu {
