@@ -52,6 +52,12 @@ var msgMap struct {
 	msg map[int]*sMsg
 }
 
+// main()的管道
+var mainCh chan controlMsg
+
+// main()的ctx
+var mainCtx context.Context
+
 // 程序是否处于监听状态
 var isListen *bool
 
@@ -274,15 +280,16 @@ func main() {
 
 		lPrintln("本程序开始监听主播的直播状态")
 
-		mainCh := make(chan controlMsg, 20)
-		msgMap.msg[0] = &sMsg{ch: mainCh}
+		mainCh = make(chan controlMsg, 20)
 
 		for _, s := range streamers.crt {
 			go s.cycle()
 		}
 
-		ctx, configCancel := context.WithCancel(context.Background())
-		defer configCancel()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		mainCtx = ctx
+
 		go cycleConfig(ctx)
 
 		lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
@@ -298,8 +305,6 @@ func main() {
 			initCoolq()
 		}
 
-		ctx, fetchCancel := context.WithCancel(context.Background())
-		defer fetchCancel()
 		go cycleFetch(ctx)
 
 		for {
@@ -309,15 +314,15 @@ func main() {
 				case startCycle:
 					go msg.s.cycle()
 				case quit:
-					// 结束cycleConfig()
-					configCancel()
-					// 结束cycleFetch()
-					fetchCancel()
 					// 停止web服务
 					if *isWebServer {
 						lPrintln("正在停止web服务")
-						srv.Shutdown(context.TODO())
+						if err := srv.Shutdown(ctx); err != nil {
+							lPrintErr("web服务关闭错误：", err)
+						}
 					}
+					// 结束所有mainCtx的子ctx
+					cancel()
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
 					msgMap.Lock()

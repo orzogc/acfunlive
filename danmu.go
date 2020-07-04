@@ -103,12 +103,10 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	if !s.Record {
 		desktopNotify("开始下载" + s.Name + "的直播弹幕")
 	}
-	dctx, dcancel := context.WithCancel(ctx)
-	defer dcancel()
-	q := acfundanmu.Start(dctx, s.UID)
+	q := acfundanmu.Start(ctx, s.UID)
 	cfg.Title = filename
 	cfg.StartTime = time.Now().UnixNano()
-	q.WriteASS(cfg, assFile, true)
+	q.WriteASS(ctx, cfg, assFile, true)
 
 	for {
 		isDone := false
@@ -121,8 +119,8 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			_, _, newStreamName, _ := s.getStreamURL()
 			if newStreamName == streamName {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				q = acfundanmu.Start(dctx, s.UID)
-				q.WriteASS(cfg, assFile, false)
+				q = acfundanmu.Start(ctx, s.UID)
+				q.WriteASS(ctx, cfg, assFile, false)
 			} else {
 				isDone = true
 			}
@@ -184,10 +182,10 @@ func startDanmu(uid int) bool {
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.initDanmu(context.Background(), filename)
+		go s.initDanmu(mainCtx, filename)
 	} else {
 		// 程序只在单独下载一个直播弹幕，不用goroutine，防止程序提前结束运行
-		s.initDanmu(context.Background(), filename)
+		s.initDanmu(mainCtx, filename)
 	}
 	return true
 }

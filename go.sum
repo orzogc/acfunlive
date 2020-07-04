@@ -86,6 +86,8 @@ github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/orzogc/acfundanmu v0.0.0-20200702133819-7d2351c59011 h1:aLRXwneWXbj5OG3/DXXTgs84CKkrMzhjwer9CFXlHys=
 github.com/orzogc/acfundanmu v0.0.0-20200702133819-7d2351c59011/go.mod h1:TuMUQgMnH+rVNlZFl+wxlxOz+S6d5sNWUBvj9yOrXug=
+github.com/orzogc/acfundanmu v0.0.0-20200704034913-a19186bda35c h1:rSanZ8/sp+3RboEDyJrTAV0KhDF6vdu/IKuMAnuzIxI=
+github.com/orzogc/acfundanmu v0.0.0-20200704034913-a19186bda35c/go.mod h1:TuMUQgMnH+rVNlZFl+wxlxOz+S6d5sNWUBvj9yOrXug=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

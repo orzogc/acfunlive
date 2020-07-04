@@ -10,9 +10,7 @@ func (s streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
 		lPrintln("重启监听" + s.longID() + "的直播状态")
-		msgMap.Lock()
-		defer msgMap.Unlock()
-		msgMap.msg[0].ch <- msg
+		mainCh <- msg
 	case stopCycle:
 		lPrintln("退出" + s.longID() + "的循环")
 		deleteMsg(s.UID)
@@ -30,9 +28,7 @@ func (s streamer) cycle() {
 			lPrintErr(s.longID() + "的循环处理发生错误，尝试重启循环")
 
 			restart := controlMsg{s: s, c: startCycle}
-			msgMap.Lock()
-			msgMap.msg[0].ch <- restart
-			msgMap.Unlock()
+			mainCh <- restart
 		}
 	}()
 

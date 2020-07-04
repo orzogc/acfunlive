@@ -251,7 +251,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 		desktopNotify("开始下载" + s.Name + "的直播视频")
 	}
 
-	// 运行ffmpeg下载直播视频
+	// 运行ffmpeg下载直播视频，不用mainCtx是为了能正常退出
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, ffmpegFile,

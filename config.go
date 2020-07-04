@@ -197,8 +197,8 @@ func cycleConfig(ctx context.Context) {
 						} else {
 							msgMap.msg[s.UID] = &sMsg{modify: true}
 						}
-						msgMap.msg[0].ch <- start
 						msgMap.Unlock()
+						mainCh <- start
 					}
 				}
 

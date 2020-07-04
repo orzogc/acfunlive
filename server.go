@@ -166,7 +166,13 @@ func stopWeb() bool {
 	if *isWebServer {
 		*isWebServer = false
 		lPrintln("停止web服务")
-		srv.Shutdown(context.TODO())
+		ctx, cancel := context.WithCancel(mainCtx)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			lPrintErr("web服务关闭错误：", err)
+			lPrintWarn("强行关闭web服务")
+			cancel()
+		}
 	} else {
 		lPrintWarn("没有启动web服务")
 	}

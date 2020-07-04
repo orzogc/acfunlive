@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// 错误命令信息
 const handleErrMsg = "请输入正确的命令，输入 help 查看全部命令的解释"
 
 // 帮助信息
@@ -121,6 +122,7 @@ func handleCmdUID(cmd string, uid int) string {
 	}
 }
 
+// 处理QQ命令
 func handleCmdQQ(cmd string, uid int, qq int) string {
 	if d, ok := qqDispatch[cmd]; ok {
 		return boolStr(d(uid, qq))

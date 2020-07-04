@@ -71,9 +71,7 @@ func listDanmu() (danmu []streaming) {
 func quitRun() {
 	lPrintln("正在准备退出，请等待...")
 	q := controlMsg{c: quit}
-	msgMap.Lock()
-	defer msgMap.Unlock()
-	msgMap.msg[0].ch <- q
+	mainCh <- q
 }
 
 // 处理输入
