@@ -66,6 +66,6 @@ func delNotify(uid int) bool {
 }
 
 // 桌面通知
-func desktopNotify(notifyWords string) {
-	beeep.Alert("AcFun直播通知", notifyWords, logoFileLocation)
+func desktopNotify(text string) {
+	beeep.Alert("AcFun直播通知", text, logoFileLocation)
 }

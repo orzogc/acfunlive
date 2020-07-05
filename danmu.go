@@ -8,6 +8,7 @@ import (
 	"github.com/orzogc/acfundanmu"
 )
 
+// 不同的视频分辨率对应的弹幕字幕设置
 var subConfigs = map[int]acfundanmu.SubConfig{
 	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 60}, // 这是手机直播，有一些是540X960
 	540:  {PlayResX: 960, PlayResY: 540, FontSize: 30},

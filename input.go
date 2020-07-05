@@ -88,7 +88,6 @@ func handleInput() {
 	for scanner.Scan() {
 		handleAllCmd(scanner.Text())
 	}
-	if err := scanner.Err(); err != nil {
-		lPrintErr("Reading standard input err:", err)
-	}
+	err := scanner.Err()
+	checkErr(err)
 }

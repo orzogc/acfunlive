@@ -282,6 +282,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	return hlsURL, flvURL, streamName, cfg
 }
 
+// 根据config.Source获取直播源
 func (s streamer) getLiveURL() (liveURL string) {
 	switch config.Source {
 	case "hls":

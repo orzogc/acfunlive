@@ -245,7 +245,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行 stoprecord " + s.itoa())
 	}
-	if danmu {
+	if s.Danmu {
 		desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
 	} else {
 		desktopNotify("开始下载" + s.Name + "的直播视频")

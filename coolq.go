@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	qqbotapi "github.com/catsworld/qq-bot-api"
 )
@@ -154,7 +155,7 @@ func (s streamer) sendCoolq(text string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in sendCoolq(), the error is:", err)
-			lPrintErr("发送" + s.longID() + "的消息到指定的QQ/QQ群时发生错误")
+			lPrintErr("发送" + s.longID() + "的消息（" + text + "）到指定的QQ（" + itoa(int(s.SendQQ)) + "）/QQ群（" + itoa(int(s.SendQQGroup)) + "）时发生错误，取消发送")
 		}
 	}()
 
@@ -170,6 +171,15 @@ func (s streamer) sendCoolq(text string) {
 
 // 获取发送给酷Q机器人的消息
 func getCoolqMsg() {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in getCoolqMsg(), the error is:", err)
+			lPrintErr("获取发送给酷Q机器人的消息时出现错误，尝试重新获取")
+			time.Sleep(2 * time.Second)
+			go getCoolqMsg()
+		}
+	}()
+
 	u := qqbotapi.NewUpdate(0)
 	updates, err := bot.GetUpdatesChan(u)
 	checkErr(err)

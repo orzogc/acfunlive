@@ -8,7 +8,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/mitchellh/mapstructure v1.3.2 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20200704034913-a19186bda35c
+	github.com/orzogc/acfundanmu v0.0.0-20200705030331-d4794e008730
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/valyala/fastjson v1.5.3

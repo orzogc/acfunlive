@@ -73,7 +73,7 @@ var logger = log.New(os.Stdout, "", log.LstdFlags)
 // 检查错误
 func checkErr(err error) {
 	if err != nil {
-		lPrintln(err)
+		lPrintErr(err)
 		panic(err)
 	}
 }
@@ -211,6 +211,7 @@ func argsHandle() {
 	}
 }
 
+// 检查config.json里的配置
 func checkConfig() {
 	switch {
 	case config.Source != "hls" && config.Source != "flv":

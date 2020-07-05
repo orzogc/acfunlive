@@ -88,6 +88,8 @@ github.com/orzogc/acfundanmu v0.0.0-20200702133819-7d2351c59011 h1:aLRXwneWXbj5O
 github.com/orzogc/acfundanmu v0.0.0-20200702133819-7d2351c59011/go.mod h1:TuMUQgMnH+rVNlZFl+wxlxOz+S6d5sNWUBvj9yOrXug=
 github.com/orzogc/acfundanmu v0.0.0-20200704034913-a19186bda35c h1:rSanZ8/sp+3RboEDyJrTAV0KhDF6vdu/IKuMAnuzIxI=
 github.com/orzogc/acfundanmu v0.0.0-20200704034913-a19186bda35c/go.mod h1:TuMUQgMnH+rVNlZFl+wxlxOz+S6d5sNWUBvj9yOrXug=
+github.com/orzogc/acfundanmu v0.0.0-20200705030331-d4794e008730 h1:82lMW47qrC4IvWTlis8X1lYSdGOCr3g/X0WClxvG3JU=
+github.com/orzogc/acfundanmu v0.0.0-20200705030331-d4794e008730/go.mod h1:TuMUQgMnH+rVNlZFl+wxlxOz+S6d5sNWUBvj9yOrXug=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
