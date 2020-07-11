@@ -11,16 +11,23 @@ const logoFile = "acfunlogo.ico"
 // logo文件位置
 var logoFileLocation string
 
+type notify struct {
+	NotifyOn     bool // 通知开播
+	NotifyOff    bool // 通知下播
+	NotifyRecord bool // 通知下载直播相关
+	NotifyDanmu  bool // 通知下载直播弹幕相关
+}
+
 // 添加订阅指定uid的直播提醒
 func addNotify(uid int) bool {
 	isExist := false
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
-		if s.Notify {
+		if s.Notify.NotifyOn {
 			lPrintWarn("已经订阅过" + s.Name + "的开播提醒")
 		} else {
-			s.Notify = true
+			s.Notify.NotifyOn = true
 			sets(s)
 			lPrintln("成功订阅" + s.Name + "的开播提醒")
 		}
@@ -34,7 +41,7 @@ func addNotify(uid int) bool {
 			return false
 		}
 
-		newStreamer := streamer{UID: uid, Name: name, Notify: true}
+		newStreamer := streamer{UID: uid, Name: name, Notify: notify{NotifyOn: true}}
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
@@ -50,7 +57,7 @@ func delNotify(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		if s.Record || s.Danmu {
-			s.Notify = false
+			s.Notify.NotifyOn = false
 			sets(s)
 		} else {
 			deleteStreamer(uid)

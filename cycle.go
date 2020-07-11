@@ -42,7 +42,7 @@ func (s streamer) cycle() {
 	msgMap.Unlock()
 
 	// 设置文件里有该主播，但是不通知不下载
-	if !(s.Notify || s.Record || s.Danmu) {
+	if !(s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu || s.Record || s.Danmu) {
 		for {
 			msg := <-ch
 			s.handleMsg(msg)
@@ -66,7 +66,7 @@ func (s streamer) cycle() {
 					lPrintln(s.longID() + "正在直播：" + title)
 					lPrintln(s.Name + "的直播观看地址：" + s.getURL())
 
-					if s.Notify {
+					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
 						s.sendCoolq(s.Name + "正在直播：" + title + "，直播观看地址：" + s.getURL())
 					}
@@ -101,7 +101,7 @@ func (s streamer) cycle() {
 					if _, _, streamName, _ := s.getStreamURL(); streamName == "" {
 						isLive = false
 						lPrintln(s.longID() + "已经下播")
-						if s.Notify {
+						if s.Notify.NotifyOff {
 							desktopNotify(s.Name + "已经下播")
 							s.sendCoolq(s.Name + "已经下播")
 						}

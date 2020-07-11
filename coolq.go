@@ -38,7 +38,7 @@ func startCoolq() bool {
 func addQQNotify(uid int, qq int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify {
+		if s.Notify.NotifyOn {
 			s.SendQQ = int64(qq)
 			sets(s)
 			lPrintln("成功设置将" + s.Name + "的开播提醒发送到QQ" + itoa(qq))
@@ -78,7 +78,7 @@ func delQQNotify(uid int) bool {
 func addQQGroup(uid int, qqGroup int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify {
+		if s.Notify.NotifyOn {
 			s.SendQQGroup = int64(qqGroup)
 			sets(s)
 			lPrintln("成功设置将" + s.Name + "的开播提醒发送到QQ群" + itoa(qqGroup))

@@ -3,6 +3,7 @@ AcFun直播桌面通知和下载助手（命令行版本）
 
 * [acfunlive](#acfunlive)
     * [运行依赖](#运行依赖)
+    * [编译安装](#编译安装)
     * [配置文件详解](#配置文件详解)
       * [live\.json](#livejson)
       * [config\.json](#configjson)
@@ -13,14 +14,22 @@ AcFun直播桌面通知和下载助手（命令行版本）
 ### 运行依赖
 * ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
 
+### 编译安装
+`go get -u github.com/orzogc/acfunlive`
+
 ### 配置文件详解
 #### live.json
 live.json的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
 {
-    "UID": 23682490,      // 主播的uid
-    "Name": "AC娘本体",   // 主播的昵称
-    "Notify": true,       // 是否开播提醒
+    "UID": 23682490,    // 主播的uid
+    "Name": "AC娘本体", // 主播的昵称
+    "Notify": {
+            "NotifyOn": true,      // 主播开播通知
+            "NotifyOff": false,    // 主播下播通知（需自行修改设置）
+            "NotifyRecord": true,  // 下载主播直播相关的通知
+            "NotifyDanmu": false   // 下载主播直播弹幕相关的通知（需自行修改设置）
+        },
     "Record": true,       // 是否下载直播视频
     "Danmu": true,        // 是否下载直播弹幕
     "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）

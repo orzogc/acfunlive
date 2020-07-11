@@ -28,7 +28,7 @@ var configFileLocation string
 type streamer struct {
 	UID         int    // 主播uid
 	Name        string // 主播名字
-	Notify      bool   // 是否开播提醒
+	Notify      notify // 开播提醒相关
 	Record      bool   // 是否自动下载直播视频
 	Danmu       bool   // 是否自动下载直播弹幕
 	SendQQ      int64  // 给这个QQ号发送消息

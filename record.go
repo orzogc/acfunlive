@@ -87,6 +87,7 @@ func addRecord(uid int) bool {
 			lPrintWarn("已经设置过自动下载" + s.Name + "的直播视频")
 		} else {
 			s.Record = true
+			s.Notify.NotifyRecord = true
 			sets(s)
 			lPrintln("成功设置自动下载" + s.Name + "的直播视频")
 		}
@@ -100,7 +101,7 @@ func addRecord(uid int) bool {
 			return false
 		}
 
-		newStreamer := streamer{UID: uid, Name: name, Record: true}
+		newStreamer := streamer{UID: uid, Name: name, Record: true, Notify: notify{NotifyRecord: true}}
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
@@ -115,8 +116,9 @@ func addRecord(uid int) bool {
 func delRecord(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify || s.Danmu {
+		if s.Notify.NotifyOn || s.Danmu {
 			s.Record = false
+			s.Notify.NotifyRecord = false
 			sets(s)
 		} else {
 			deleteStreamer(uid)
@@ -138,7 +140,7 @@ func startRec(uid int, danmu bool) bool {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
-	s := streamer{UID: uid, Name: name}
+	s := streamer{UID: uid, Name: name, Notify: notify{NotifyRecord: true}}
 
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
@@ -245,10 +247,12 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行 stoprecord " + s.itoa())
 	}
-	if s.Danmu {
-		desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
-	} else {
-		desktopNotify("开始下载" + s.Name + "的直播视频")
+	if s.Notify.NotifyRecord {
+		if danmu {
+			desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
+		} else {
+			desktopNotify("开始下载" + s.Name + "的直播视频")
+		}
 	}
 
 	// 运行ffmpeg下载直播视频，不用mainCtx是为了能正常退出
@@ -315,9 +319,11 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	}
 
 	lPrintln(s.longID() + "的直播视频下载已经结束")
-	if danmu {
-		desktopNotify(s.Name + "的直播视频和弹幕下载已经结束")
-	} else {
-		desktopNotify(s.Name + "的直播视频下载已经结束")
+	if s.Notify.NotifyRecord {
+		if danmu {
+			desktopNotify(s.Name + "的直播视频和弹幕下载已经结束")
+		} else {
+			desktopNotify(s.Name + "的直播视频下载已经结束")
+		}
 	}
 }

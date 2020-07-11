@@ -54,7 +54,7 @@ func addDanmu(uid int) bool {
 func delDanmu(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify || s.Record {
+		if s.Notify.NotifyOn || s.Record {
 			s.Danmu = false
 			sets(s)
 		} else {
@@ -101,8 +101,10 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	if *isListen {
 		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行 stopdanmu " + s.itoa())
 	}
-	if !s.Record {
-		desktopNotify("开始下载" + s.Name + "的直播弹幕")
+	if s.Notify.NotifyDanmu {
+		if !s.Record {
+			desktopNotify("开始下载" + s.Name + "的直播弹幕")
+		}
 	}
 	q := acfundanmu.Start(ctx, s.UID)
 	cfg.Title = filename
@@ -135,8 +137,10 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	s.quitDanmu()
 
 	lPrintln(s.longID() + "的直播弹幕下载已经结束")
-	if !s.Record {
-		desktopNotify(s.Name + "的直播弹幕下载已经结束")
+	if s.Notify.NotifyDanmu {
+		if !s.Record {
+			desktopNotify(s.Name + "的直播弹幕下载已经结束")
+		}
 	}
 }
 
@@ -171,7 +175,7 @@ func startDanmu(uid int) bool {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
-	s := streamer{UID: uid, Name: name}
+	s := streamer{UID: uid, Name: name, Notify: notify{NotifyDanmu: true}}
 
 	if !s.isLiveOn() {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
