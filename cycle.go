@@ -68,7 +68,7 @@ func (s streamer) cycle() {
 
 					if s.Notify {
 						desktopNotify(s.Name + "正在直播：" + title)
-						s.sendCoolq(s.Name + "正在直播：" + title)
+						s.sendCoolq(s.Name + "正在直播：" + title + "，直播观看地址：" + s.getURL())
 					}
 					if s.Record {
 						msgMap.Lock()

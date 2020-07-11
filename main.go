@@ -275,8 +275,7 @@ func main() {
 
 	if *isListen {
 		if len(streamers.crt) == 0 {
-			lPrintErr("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
-			return
+			lPrintWarn("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
 		}
 
 		lPrintln("本程序开始监听主播的直播状态")
