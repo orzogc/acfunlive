@@ -280,7 +280,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	switch {
 	case bitrate >= 4000:
 		cfg = subConfigs[1080]
-	case bitrate >= 3000:
+	case len(representation) >= 2 && bitrate >= 2000:
 		cfg = subConfigs[720]
 	case bitrate == 0:
 		cfg = subConfigs[0]
