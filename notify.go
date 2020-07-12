@@ -14,7 +14,7 @@ var logoFileLocation string
 type notify struct {
 	NotifyOn     bool // 通知开播
 	NotifyOff    bool // 通知下播
-	NotifyRecord bool // 通知下载直播相关
+	NotifyRecord bool // 通知下载直播视频相关
 	NotifyDanmu  bool // 通知下载直播弹幕相关
 }
 

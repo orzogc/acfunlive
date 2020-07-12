@@ -33,6 +33,7 @@ type streamer struct {
 	Danmu       bool   // 是否自动下载直播弹幕
 	SendQQ      int64  // 给这个QQ号发送消息
 	SendQQGroup int64  // 给这个QQ群发送消息
+	resolution  string // 下载直播视频的清晰度，高清，超清，蓝光 4M到8M
 }
 
 // 存放主播的设置数据
