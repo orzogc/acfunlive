@@ -73,9 +73,13 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 		}
 	}()
 
-	const acLive = "https://live.acfun.cn/api/channel/list?pcursor=%s"
+	const acLive = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
-	resp, err := http.Get(fmt.Sprintf(acLive, page))
+	form := url.Values{}
+	form.Set("count", "100")
+	form.Set("pcursor", page)
+
+	resp, err := http.PostForm(acLive, form)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -84,12 +88,12 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	if v.GetInt("channelListData", "result") != 0 {
+	if v.GetInt("result") != 0 {
 		return nil, ""
 	}
 
 	var rooms = make(map[int]liveRoom)
-	liveList := v.GetArray("channelListData", "liveList")
+	liveList := v.GetArray("liveList")
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
 		room := liveRoom{
@@ -99,7 +103,7 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 		rooms[uid] = room
 	}
 
-	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
+	nextPage = string(v.GetStringBytes("pcursor"))
 
 	return &rooms, nextPage
 }
