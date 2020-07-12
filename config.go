@@ -31,7 +31,7 @@ type streamer struct {
 	Notify      notify // 开播提醒相关
 	Record      bool   // 是否自动下载直播视频
 	Danmu       bool   // 是否自动下载直播弹幕
-	Bitrate     int    // 下载直播视频的比特率
+	Bitrate     int    // 下载直播视频的最高码率
 	SendQQ      int64  // 给这个QQ号发送消息
 	SendQQGroup int64  // 给这个QQ群发送消息
 }
