@@ -26,12 +26,13 @@ live.json的内容可以手动修改，本程序会自动读取更改后的设�
     "Name": "AC娘本体", // 主播的昵称
     "Notify": {
             "NotifyOn": true,      // 主播开播通知
-            "NotifyOff": false,    // 主播下播通知（需自行修改设置）
+            "NotifyOff": false,    // 主播下播通知，需自行手动修改设置
             "NotifyRecord": true,  // 下载主播直播相关的通知
-            "NotifyDanmu": false   // 下载主播直播弹幕相关的通知（需自行修改设置）
+            "NotifyDanmu": false   // 下载主播直播弹幕相关的通知，需自行手动修改设置
         },
     "Record": true,       // 是否下载直播视频
     "Danmu": true,        // 是否下载直播弹幕
+    "Bitrate": 0,         // 设置要下载的直播源的比特率（Kbps），优先选择比特率小于等于Bitrate的清晰度最高的直播源，默认为0（即默认选择清晰度最高的直播源），需自行手动修改设置
     "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）
     "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群，最好是管理员）
 }

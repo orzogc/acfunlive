@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -261,13 +260,23 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
 
-	// 选择码率最高的flv视频源
-	sort.Slice(representation, func(i, j int) bool {
-		return representation[i].GetInt("bitrate") > representation[j].GetInt("bitrate")
-	})
-	flvURL = string(representation[0].GetStringBytes("url"))
+	// 选择s.Bitrate下比特率最高的直播源
+	index := 0
+	if s.Bitrate == 0 {
+		index = len(representation) - 1
+	} else {
+		for i, r := range representation {
+			if s.Bitrate >= r.GetInt("bitrate") {
+				index = i
+			} else {
+				break
+			}
+		}
+	}
 
-	bitrate := representation[0].GetInt("bitrate")
+	flvURL = string(representation[index].GetStringBytes("url"))
+
+	bitrate := representation[index].GetInt("bitrate")
 	switch {
 	case bitrate >= 4000:
 		cfg = subConfigs[1080]
@@ -279,9 +288,9 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 		cfg = subConfigs[540]
 	}
 
-	i := strings.Index(flvURL, streamName)
-	// 这是码率最高的hls视频源
-	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull", "hlspull") + streamName + ".m3u8"
+	i := strings.Index(flvURL, "flv?")
+	// 这是flv对应的hls视频源
+	hlsURL = strings.ReplaceAll(flvURL[0:i], "pull.etoote.com", "hlspull.etoote.com") + "m3u8"
 
 	return hlsURL, flvURL, streamName, cfg
 }
@@ -307,7 +316,12 @@ func printStreamURL(uid int) (string, string) {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return "", ""
 	}
-	s := streamer{UID: uid, Name: name}
+	streamers.Lock()
+	s, ok := streamers.crt[uid]
+	streamers.Unlock()
+	if !ok {
+		s = streamer{UID: uid, Name: name}
+	}
 
 	if s.isLiveOn() {
 		title := s.getTitle()
