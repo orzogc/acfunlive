@@ -1,5 +1,5 @@
 # acfunlive
-AcFun直播桌面通知和下载助手（命令行版本）
+AcFun直播通知和下载助手（命令行版本）
 
 * [acfunlive](#acfunlive)
     * [运行依赖](#运行依赖)

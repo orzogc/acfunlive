@@ -260,7 +260,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
 
-	// 选择s.Bitrate下码率率最高的直播源
+	// 选择s.Bitrate下码率最高的直播源
 	index := 0
 	if s.Bitrate == 0 {
 		index = len(representation) - 1
