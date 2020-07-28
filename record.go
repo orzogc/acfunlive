@@ -259,6 +259,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, ffmpegFile,
+		"-rw_timeout", "10000000",
 		"-timeout", "10000000",
 		"-i", liveURL,
 		"-c", "copy", recordFile)

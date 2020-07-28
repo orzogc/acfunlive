@@ -7,11 +7,11 @@ require (
 	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.7.4
-	github.com/mitchellh/mapstructure v1.3.2 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20200722000607-772ffe84b6d6
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/orzogc/acfundanmu v0.0.0-20200728090902-b9f42b0ecfeb
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/valyala/fastjson v1.5.3
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666 // indirect
+	golang.org/x/sys v0.0.0-20200727154430-2d971f7391a4 // indirect
 )

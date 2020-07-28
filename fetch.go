@@ -18,6 +18,9 @@ import (
 )
 
 const livePage = "https://live.acfun.cn/live/"
+const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
+const acAuthorID = "https://live.acfun.cn/api/live/info?authorId=%d"
+const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 
 // 直播间的数据结构
 type liveRoom struct {
@@ -107,47 +110,57 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	return &rooms, nextPage
 }
 
-// 查看主播是否在直播
-func (s streamer) isLiveOn() bool {
-	liveRooms.Lock()
-	defer liveRooms.Unlock()
-	_, ok := (*liveRooms.rooms)[s.UID]
-	return ok
-}
-
-// 获取主播直播的标题
+// 获取主播直播间的标题
 func (s streamer) getTitle() string {
 	liveRooms.Lock()
-	defer liveRooms.Unlock()
-	if room, ok := (*liveRooms.rooms)[s.UID]; ok {
+	room, ok := (*liveRooms.rooms)[s.UID]
+	liveRooms.Unlock()
+	if ok {
 		return room.title
+	}
+
+	v := getPage(fmt.Sprintf(acAuthorID, s.UID))
+
+	if v.Exists("liveInfo", "title") {
+		return string(v.GetStringBytes("liveInfo", "title"))
 	}
 	return ""
 }
 
-// 根据uid获取主播的名字
-func getName(uid int) (name string) {
+// 查看主播是否在直播
+func (s streamer) isLiveOn() bool {
+	liveRooms.Lock()
+	_, ok := (*liveRooms.rooms)[s.UID]
+	liveRooms.Unlock()
+	if ok {
+		return ok
+	}
+
+	v := getPage(fmt.Sprintf(acUserInfo, s.UID))
+
+	if v.GetInt("result") != 0 {
+		return false
+	}
+
+	if v.Exists("profile", "liveId") {
+		return true
+	}
+	return false
+}
+
+// 获取用户直播相关信息
+func getPage(pageURL string) (v *fastjson.Value) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in getName(), the error is:", err)
-			lPrintErr("获取uid为" + itoa(uid) + "的主播的名字时出现错误，尝试重新运行")
+			lPrintErr("Recovering from panic in getPage(), the error is:", err)
+			lPrintErr("获取页面 " + pageURL + " 时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			name = getName(uid)
+			v = getPage(pageURL)
 		}
 	}()
 
-	liveRooms.Lock()
-	if room, ok := (*liveRooms.rooms)[uid]; ok {
-		liveRooms.Unlock()
-		return room.name
-	}
-	liveRooms.Unlock()
-
-	const acUser = "https://www.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
-	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
-
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf(acUser, uid), nil)
+	req, err := http.NewRequest("GET", pageURL, nil)
 	checkErr(err)
 	// 需要浏览器user-agent
 	req.Header.Set("User-Agent", userAgent)
@@ -158,8 +171,23 @@ func getName(uid int) (name string) {
 	checkErr(err)
 
 	var p fastjson.Parser
-	v, err := p.ParseBytes(body)
+	v, err = p.ParseBytes(body)
 	checkErr(err)
+
+	return v
+}
+
+// 根据uid获取主播的名字
+func getName(uid int) string {
+	liveRooms.Lock()
+	room, ok := (*liveRooms.rooms)[uid]
+	liveRooms.Unlock()
+	if ok {
+		return room.name
+	}
+
+	v := getPage(fmt.Sprintf(acUserInfo, uid))
+
 	if v.GetInt("result") != 0 {
 		return ""
 	}
