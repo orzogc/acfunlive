@@ -97,21 +97,18 @@ func (s streamer) cycle() {
 				}
 			} else {
 				if isLive {
-					// 主播没下播但是liveRoom里没有该主播导致重新显示开播（可能是A站的bug）
-					if _, _, streamName, _ := s.getStreamURL(); streamName == "" {
-						isLive = false
-						lPrintln(s.longID() + "已经下播")
-						if s.Notify.NotifyOff {
-							desktopNotify(s.Name + "已经下播")
-							s.sendCoolq(s.Name + "已经下播")
+					isLive = false
+					lPrintln(s.longID() + "已经下播")
+					if s.Notify.NotifyOff {
+						desktopNotify(s.Name + "已经下播")
+						s.sendCoolq(s.Name + "已经下播")
+					}
+					if s.Record {
+						msgMap.Lock()
+						if m := msgMap.msg[s.UID]; m.recording {
+							m.rec.ch <- liveOff
 						}
-						if s.Record {
-							msgMap.Lock()
-							if m := msgMap.msg[s.UID]; m.recording {
-								m.rec.ch <- liveOff
-							}
-							msgMap.Unlock()
-						}
+						msgMap.Unlock()
 					}
 				}
 			}

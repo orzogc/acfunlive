@@ -13,5 +13,5 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/valyala/fastjson v1.5.3
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200727154430-2d971f7391a4 // indirect
+	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 )

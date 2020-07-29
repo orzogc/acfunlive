@@ -18,9 +18,11 @@ import (
 )
 
 const livePage = "https://live.acfun.cn/live/"
-const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
-const acAuthorID = "https://live.acfun.cn/api/live/info?authorId=%d"
-const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+
+//const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
+//const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
+//const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 
 // 直播间的数据结构
 type liveRoom struct {
@@ -119,10 +121,9 @@ func (s streamer) getTitle() string {
 		return room.title
 	}
 
-	v := getPage(fmt.Sprintf(acAuthorID, s.UID))
-
-	if v.Exists("liveInfo", "title") {
-		return string(v.GetStringBytes("liveInfo", "title"))
+	v := getLiveInfo(s.UID)
+	if v.Exists("title") {
+		return string(v.GetStringBytes("title"))
 	}
 	return ""
 }
@@ -136,35 +137,25 @@ func (s streamer) isLiveOn() bool {
 		return ok
 	}
 
-	v := getPage(fmt.Sprintf(acUserInfo, s.UID))
-
-	if v.GetInt("result") != 0 {
-		return false
-	}
-
-	if v.Exists("profile", "liveId") {
+	v := getLiveInfo(s.UID)
+	if v.Exists("user", "liveId") {
 		return true
 	}
 	return false
 }
 
 // 获取用户直播相关信息
-func getPage(pageURL string) (v *fastjson.Value) {
+func getLiveInfo(uid int) (v *fastjson.Value) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in getPage(), the error is:", err)
-			lPrintErr("获取页面 " + pageURL + " 时出错，尝试重新运行")
+			lPrintErr("Recovering from panic in getLiveInfo(), the error is:", err)
+			lPrintErr("获取uid为" + itoa(uid) + "的主播的直播信息时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			v = getPage(pageURL)
+			v = getLiveInfo(uid)
 		}
 	}()
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", pageURL, nil)
-	checkErr(err)
-	// 需要浏览器user-agent
-	req.Header.Set("User-Agent", userAgent)
-	resp, err := client.Do(req)
+	resp, err := http.Get(fmt.Sprintf(acLiveInfo, uid))
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -186,13 +177,11 @@ func getName(uid int) string {
 		return room.name
 	}
 
-	v := getPage(fmt.Sprintf(acUserInfo, uid))
-
-	if v.GetInt("result") != 0 {
-		return ""
+	v := getLiveInfo(uid)
+	if v.Exists("user", "name") {
+		return string(v.GetStringBytes("user", "name"))
 	}
-
-	return string(v.GetStringBytes("profile", "name"))
+	return ""
 }
 
 // 获取AcFun的logo
