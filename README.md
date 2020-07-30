@@ -25,10 +25,10 @@ live.json的内容可以手动修改，本程序会自动读取更改后的设�
     "UID": 23682490,    // 主播的uid
     "Name": "AC娘本体", // 主播的昵称
     "Notify": {
-            "NotifyOn": true,      // 主播开播通知
-            "NotifyOff": false,    // 主播下播通知，需自行手动修改设置
-            "NotifyRecord": true,  // 下载主播直播相关的通知
-            "NotifyDanmu": false   // 下载主播直播弹幕相关的通知，需自行手动修改设置
+        "NotifyOn": true,      // 主播开播通知
+        "NotifyOff": false,    // 主播下播通知，需自行手动修改设置
+        "NotifyRecord": true,  // 下载主播直播相关的通知
+        "NotifyDanmu": false   // 下载主播直播弹幕相关的通知，需自行手动修改设置
         },
     "Record": true,       // 是否下载直播视频
     "Danmu": true,        // 是否下载直播弹幕
