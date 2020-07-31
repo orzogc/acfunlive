@@ -34,6 +34,7 @@ type streamer struct {
 	Bitrate     int    // 下载直播视频的最高码率
 	SendQQ      int64  // 给这个QQ号发送消息
 	SendQQGroup int64  // 给这个QQ群发送消息
+	//isLive      bool   // 主播是否在直播
 }
 
 // 存放主播的设置数据

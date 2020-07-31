@@ -41,7 +41,7 @@ type controlMsg struct {
 type sMsg struct {
 	ch          chan controlMsg    // 控制信息
 	rec         record             // 下载信息
-	recording   bool               // 是否正在下载
+	isRecording bool               // 是否正在下载
 	modify      bool               // 是否被修改设置
 	danmuCancel context.CancelFunc // 用来停止下载弹幕
 }
@@ -133,7 +133,7 @@ func deleteMsg(uid int) {
 	_, oks := streamers.crt[uid]
 	m, okm := msgMap.msg[uid]
 	// 删除临时下载的msg
-	if !oks && okm && !m.recording && (m.danmuCancel == nil) {
+	if !oks && okm && !m.isRecording && (m.danmuCancel == nil) {
 		delete(msgMap.msg, uid)
 	}
 }
@@ -332,7 +332,7 @@ func main() {
 							m.ch <- msg
 						}
 						// 结束下载直播视频
-						if m.recording {
+						if m.isRecording {
 							m.rec.ch <- stopRecord
 							io.WriteString(m.rec.stdin, "q")
 						}

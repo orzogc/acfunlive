@@ -41,7 +41,7 @@ func listRecord() (recordings []streaming) {
 	msgMap.Lock()
 	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
-		if m.recording {
+		if m.isRecording {
 			s := streamer{UID: uid, Name: getName(uid)}
 			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			recordings = append(recordings, streaming(s))

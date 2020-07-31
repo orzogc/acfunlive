@@ -143,7 +143,7 @@ func startRec(uid int, danmu bool) bool {
 	s := streamer{UID: uid, Name: name, Notify: notify{NotifyRecord: true}}
 
 	msgMap.Lock()
-	if m, ok := msgMap.msg[s.UID]; ok && m.recording {
+	if m, ok := msgMap.msg[s.UID]; ok && m.isRecording {
 		lPrintWarn("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
 		msgMap.Unlock()
 		return false
@@ -175,7 +175,7 @@ func startRec(uid int, danmu bool) bool {
 // 停止下载指定主播的直播视频
 func stopRec(uid int) bool {
 	msgMap.Lock()
-	if m, ok := msgMap.msg[uid]; ok && m.recording {
+	if m, ok := msgMap.msg[uid]; ok && m.isRecording {
 		s := streamer{UID: uid, Name: getName(uid)}
 		lPrintln("开始停止下载" + s.longID() + "的直播视频")
 		m.rec.ch <- stopRecord
@@ -186,7 +186,7 @@ func stopRec(uid int) bool {
 			m.rec.cancel()
 		}()
 		// 需要设置recording为false
-		m.recording = false
+		m.isRecording = false
 	} else {
 		lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
 	}
@@ -201,7 +201,7 @@ func stopRec(uid int) bool {
 func (s streamer) quitRec() {
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok {
-		m.recording = false
+		m.isRecording = false
 	}
 	msgMap.Unlock()
 	deleteMsg(s.UID)
@@ -271,10 +271,10 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	rec := record{stdin: stdin, cancel: cancel, ch: ch}
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok {
-		m.recording = true
+		m.isRecording = true
 		m.rec = rec
 	} else {
-		msgMap.msg[s.UID] = &sMsg{recording: true, rec: rec}
+		msgMap.msg[s.UID] = &sMsg{isRecording: true, rec: rec}
 	}
 	msgMap.Unlock()
 

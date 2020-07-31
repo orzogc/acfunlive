@@ -73,7 +73,7 @@ func (s streamer) cycle() {
 					if s.Record {
 						msgMap.Lock()
 						// 直播短时间内重启的情况下，上一次的直播视频下载的退出可能会比较慢
-						if m := msgMap.msg[s.UID]; m.recording {
+						if m := msgMap.msg[s.UID]; m.isRecording {
 							// 如果设置被修改，不重启已有的下载
 							if !m.modify {
 								m.rec.ch <- stopRecord
@@ -97,18 +97,21 @@ func (s streamer) cycle() {
 				}
 			} else {
 				if isLive {
-					isLive = false
-					lPrintln(s.longID() + "已经下播")
-					if s.Notify.NotifyOff {
-						desktopNotify(s.Name + "已经下播")
-						s.sendCoolq(s.Name + "已经下播")
-					}
-					if s.Record {
-						msgMap.Lock()
-						if m := msgMap.msg[s.UID]; m.recording {
-							m.rec.ch <- liveOff
+					// 应付AcFun API可能出现的bug：主播没下播但API显示下播
+					if _, _, streamName, _ := s.getStreamURL(); streamName == "" {
+						isLive = false
+						lPrintln(s.longID() + "已经下播")
+						if s.Notify.NotifyOff {
+							desktopNotify(s.Name + "已经下播")
+							s.sendCoolq(s.Name + "已经下播")
 						}
-						msgMap.Unlock()
+						if s.Record {
+							msgMap.Lock()
+							if m := msgMap.msg[s.UID]; m.isRecording {
+								m.rec.ch <- liveOff
+							}
+							msgMap.Unlock()
+						}
 					}
 				}
 			}
