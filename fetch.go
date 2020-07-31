@@ -120,11 +120,6 @@ func (s streamer) getTitle() string {
 	if ok {
 		return room.title
 	}
-
-	v := getLiveInfo(s.UID)
-	if v.Exists("title") {
-		return string(v.GetStringBytes("title"))
-	}
 	return ""
 }
 
@@ -133,10 +128,20 @@ func (s streamer) isLiveOn() bool {
 	liveRooms.Lock()
 	_, ok := (*liveRooms.rooms)[s.UID]
 	liveRooms.Unlock()
-	if ok {
-		return ok
-	}
+	return ok
+}
 
+// 获取主播直播间的标题
+func (s streamer) getTitleByInfo() string {
+	v := getLiveInfo(s.UID)
+	if v.Exists("title") {
+		return string(v.GetStringBytes("title"))
+	}
+	return ""
+}
+
+// 查看主播是否在直播
+func (s streamer) isLiveOnByInfo() bool {
 	v := getLiveInfo(s.UID)
 	if v.Exists("user", "liveId") {
 		return true
@@ -364,6 +369,23 @@ func cycleFetch(ctx context.Context) {
 			return
 		default:
 			fetchAllRooms()
+			var notLive []streamer
+			streamers.Lock()
+			// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
+			for _, s := range streamers.crt {
+				if !s.isLiveOn() {
+					notLive = append(notLive, s)
+				}
+			}
+			streamers.Unlock()
+			for _, s := range notLive {
+				if s.isLiveOnByInfo() {
+					title := s.getTitleByInfo()
+					liveRooms.Lock()
+					(*liveRooms.rooms)[s.UID] = liveRoom{name: s.Name, title: title}
+					liveRooms.Unlock()
+				}
+			}
 			// 每10秒循环一次
 			time.Sleep(10 * time.Second)
 		}
