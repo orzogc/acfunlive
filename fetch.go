@@ -232,7 +232,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	}
 	deviceID := didCookie.Value
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 10 * time.Second}
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
 	req, err := http.NewRequest("POST", loginPage, strings.NewReader(form.Encode()))

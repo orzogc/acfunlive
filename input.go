@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
+	"sort"
 )
 
 // 正在直播的主播
@@ -32,6 +33,9 @@ func listLive() (streamings []streaming) {
 		}
 	}
 
+	sort.Slice(streamings, func(i, j int) bool {
+		return streamings[i].UID < streamings[j].UID
+	})
 	return streamings
 }
 
@@ -48,6 +52,9 @@ func listRecord() (recordings []streaming) {
 		}
 	}
 
+	sort.Slice(recordings, func(i, j int) bool {
+		return recordings[i].UID < recordings[j].UID
+	})
 	return recordings
 }
 
@@ -64,6 +71,9 @@ func listDanmu() (danmu []streaming) {
 		}
 	}
 
+	sort.Slice(danmu, func(i, j int) bool {
+		return danmu[i].UID < danmu[j].UID
+	})
 	return danmu
 }
 

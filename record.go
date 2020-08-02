@@ -259,8 +259,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, ffmpegFile,
-		"-rw_timeout", "10000000",
-		"-timeout", "10000000",
+		"-rw_timeout", "20000000",
+		"-timeout", "20000000",
 		"-i", liveURL,
 		"-c", "copy", recordFile)
 
@@ -293,6 +293,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	if err != nil {
 		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
+
+	time.Sleep(10 * time.Second)
 
 	if _, _, streamName, _ := s.getStreamURL(); streamName != "" {
 		select {
