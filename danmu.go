@@ -54,12 +54,8 @@ func addDanmu(uid int) bool {
 func delDanmu(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn || s.Record {
-			s.Danmu = false
-			sets(s)
-		} else {
-			deleteStreamer(uid)
-		}
+		s.Danmu = false
+		sets(s)
 		lPrintln("成功取消自动下载" + s.Name + "的直播弹幕")
 	} else {
 		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")

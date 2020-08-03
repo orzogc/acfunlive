@@ -116,6 +116,8 @@ web服务默认本地端口为51880
 
 `http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的主播的直播弹幕
 
+`http://localhost:51880/delconfig/23682490` 删除uid为23682490的主播的所有设置
+
 `http://localhost:51880/getdlurl/23682490` 查看uid为23682490的主播是否在直播，并输出其直播源
 
 `http://localhost:51880/addqq/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ12345，需要QQ机器人已经添加其为好友

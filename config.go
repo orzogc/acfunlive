@@ -34,7 +34,6 @@ type streamer struct {
 	Bitrate     int    // 下载直播视频的最高码率
 	SendQQ      int64  // 给这个QQ号发送消息
 	SendQQGroup int64  // 给这个QQ群发送消息
-	//isLive      bool   // 主播是否在直播
 }
 
 // 存放主播的设置数据
@@ -145,11 +144,16 @@ func saveLiveConfig() {
 }
 
 // 设置里删除指定uid的主播
-func deleteStreamer(uid int) {
+func deleteStreamer(uid int) bool {
+	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		delete(streamers.crt, uid)
 		lPrintln("删除" + s.Name + "的设置数据")
 	}
+	streamers.Unlock()
+
+	saveLiveConfig()
+	return true
 }
 
 // 循环判断设置文件是否被修改，是的话重新设置

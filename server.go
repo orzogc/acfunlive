@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -23,6 +24,7 @@ const webHelp = `/listlive ：列出正在直播的主播
 /delrecord/uid ：取消自动下载指定主播的直播视频
 /adddanmu/uid ：自动下载指定主播的直播弹幕
 /deldanmu/uid ：取消自动下载指定主播的直播弹幕
+/delconfig/uid：删除指定主播的所有设置
 /getdlurl/uid ：查看指定主播是否在直播，如在直播输出其直播源地址
 /addqq/uid/QQ号：设置将指定主播的开播提醒发送到指定QQ号
 /delqq/uid：取消设置将指定主播的开播提醒发送到QQ
@@ -105,7 +107,7 @@ func helpHandler(w http.ResponseWriter, r *http.Request) {
 // 打印web请求
 func printRequestURI(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lPrintln("处理web请求：" + r.RequestURI)
+		log.Println("处理web请求：" + r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
 }

@@ -116,13 +116,9 @@ func addRecord(uid int) bool {
 func delRecord(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn || s.Danmu {
-			s.Record = false
-			s.Notify.NotifyRecord = false
-			sets(s)
-		} else {
-			deleteStreamer(uid)
-		}
+		s.Record = false
+		s.Notify.NotifyRecord = false
+		sets(s)
 		lPrintln("成功取消自动下载" + s.Name + "的直播视频")
 	} else {
 		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")

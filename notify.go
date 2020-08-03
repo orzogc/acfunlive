@@ -56,12 +56,8 @@ func addNotify(uid int) bool {
 func delNotify(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Record || s.Danmu {
-			s.Notify.NotifyOn = false
-			sets(s)
-		} else {
-			deleteStreamer(uid)
-		}
+		s.Notify.NotifyOn = false
+		sets(s)
 		lPrintln("成功取消订阅" + s.Name + "的开播提醒")
 	} else {
 		lPrintWarn("没有订阅过uid为" + itoa(uid) + "的主播的开播提醒")

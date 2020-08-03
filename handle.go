@@ -24,6 +24,7 @@ addrecord uid：自动下载指定主播的直播视频
 delrecord uid：取消自动下载指定主播的直播视频
 adddanmu uid：自动下载指定主播的直播弹幕
 deldanmu uid：取消自动下载指定主播的直播弹幕
+delconfig uid：删除指定主播的所有设置
 getdlurl uid：查看指定主播是否在直播，如在直播输出其直播源地址
 addqq uid QQ号：设置将指定主播的开播提醒发送到指定QQ号
 delqq uid：取消设置将指定主播的开播提醒发送到QQ
@@ -51,6 +52,7 @@ var uidBoolDispatch = map[string]func(int) bool{
 	"delrecord":   delRecord,
 	"adddanmu":    addDanmu,
 	"deldanmu":    delDanmu,
+	"delconfig":   deleteStreamer,
 	"stoprecord":  stopRec,
 	"startdanmu":  startDanmu,
 	"stopdanmu":   stopDanmu,

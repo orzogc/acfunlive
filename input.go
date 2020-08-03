@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"log"
 	"os"
 	"sort"
 )
@@ -23,12 +24,12 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
-	lPrintln("正在直播的主播：")
+	log.Println("正在直播的主播：")
 	streamers.Lock()
 	defer streamers.Unlock()
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
-			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			streamings = append(streamings, streaming(s))
 		}
 	}
@@ -41,13 +42,13 @@ func listLive() (streamings []streaming) {
 
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
-	lPrintln("正在下载的直播视频：")
+	log.Println("正在下载的直播视频：")
 	msgMap.Lock()
 	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.isRecording {
 			s := streamer{UID: uid, Name: getName(uid)}
-			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			recordings = append(recordings, streaming(s))
 		}
 	}
@@ -60,13 +61,13 @@ func listRecord() (recordings []streaming) {
 
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
-	lPrintln("正在下载的直播弹幕：")
+	log.Println("正在下载的直播弹幕：")
 	msgMap.Lock()
 	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.danmuCancel != nil {
 			s := streamer{UID: uid, Name: getName(uid)}
-			lPrintln(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
 			danmu = append(danmu, streaming(s))
 		}
 	}
