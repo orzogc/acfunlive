@@ -41,7 +41,7 @@ help：输出本帮助信息`
 
 var boolDispatch = map[string]func() bool{
 	//"startweb":   startWeb,
-	"stopweb": stopWeb,
+	"stopweb": stopWebAPI,
 	//"startcoolq": startCoolq,
 }
 

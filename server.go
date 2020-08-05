@@ -40,7 +40,7 @@ const webHelp = `/listlive ：列出正在直播的主播
 /quit ：退出本程序，退出需要等待半分钟左右
 /help ：本帮助信息`
 
-var srv *http.Server
+var apiSrv *http.Server
 
 // 返回localhost地址和端口
 func address(port int) string {
@@ -112,14 +112,14 @@ func printRequestURI(next http.Handler) http.Handler {
 	})
 }
 
-// web服务
-func httpServer() {
+// web API服务器
+func apiServer() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in httpServer(), the error is:", err)
-			lPrintErr("web服务发生错误，尝试重启web服务")
+			lPrintErr("Recovering from panic in APIServer(), the error is:", err)
+			lPrintErr("web API服务器发生错误，尝试重启web API服务器")
 			time.Sleep(2 * time.Second)
-			go httpServer()
+			go apiServer()
 		}
 	}()
 
@@ -136,7 +136,7 @@ func httpServer() {
 	// 跨域处理
 	handler := cors.Default().Handler(r)
 
-	srv = &http.Server{
+	apiSrv = &http.Server{
 		Addr:         ":" + itoa(config.WebPort),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
@@ -144,39 +144,39 @@ func httpServer() {
 		Handler:      handler,
 	}
 
-	err := srv.ListenAndServe()
+	err := apiSrv.ListenAndServe()
 	if err != http.ErrServerClosed {
 		lPrintln(err)
 		panic(err)
 	}
 }
 
-// 启动web服务
-func startWeb() bool {
-	if *isWebServer {
-		lPrintWarn("已经启动过web服务")
+// 启动web API server
+func startWebAPI() bool {
+	if *isWebAPI {
+		lPrintWarn("已经启动过web API服务器")
 	} else {
-		*isWebServer = true
-		lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
-		go httpServer()
+		*isWebAPI = true
+		lPrintln("启动web API服务器，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
+		go apiServer()
 	}
 	return true
 }
 
-// 停止web服务
-func stopWeb() bool {
-	if *isWebServer {
-		*isWebServer = false
-		lPrintln("停止web服务")
+// 停止web API server
+func stopWebAPI() bool {
+	if *isWebAPI {
+		*isWebAPI = false
+		lPrintln("停止web API服务器")
 		ctx, cancel := context.WithCancel(mainCtx)
 		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			lPrintErr("web服务关闭错误：", err)
-			lPrintWarn("强行关闭web服务")
+		if err := apiSrv.Shutdown(ctx); err != nil {
+			lPrintErr("web API服务器关闭错误：", err)
+			lPrintWarn("强行关闭web API服务器")
 			cancel()
 		}
 	} else {
-		lPrintWarn("没有启动web服务")
+		lPrintWarn("没有启动web API服务器")
 	}
 	return true
 }

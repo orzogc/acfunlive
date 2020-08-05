@@ -5,6 +5,7 @@ acfunlive
 *.flv
 *.ass
 *.7z
+/webui
 
 # Binaries for programs and plugins
 *.exe

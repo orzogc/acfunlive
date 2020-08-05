@@ -62,7 +62,7 @@ var mainCtx context.Context
 var isListen *bool
 
 // 程序是否启动web服务
-var isWebServer *bool
+var isWebAPI *bool
 
 // 储存日志
 var logString strings.Builder
@@ -145,7 +145,7 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebServer = flag.Bool("web", false, "启动web服务，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
+	isWebAPI = flag.Bool("webapi", false, "启动web服务，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
 	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -169,7 +169,7 @@ func argsHandle() {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
-		if *isWebServer || *isCoolq {
+		if *isWebAPI || *isCoolq {
 			if *isListen != true {
 				lPrintErr("web和coolq参数需要和listen参数一起运行")
 				os.Exit(1)
@@ -217,8 +217,8 @@ func checkConfig() {
 	case config.Source != "hls" && config.Source != "flv":
 		lPrintErr(configFile + "里的Source必须是hls或flv")
 		os.Exit(1)
-	case config.WebPort < 1024 || config.WebPort > 65535:
-		lPrintErr(configFile + "里的WebPort必须大于1023且少于65536")
+	case config.WebPort < 1024 || config.WebPort > 65525:
+		lPrintErr(configFile + "里的WebPort必须大于1023且少于65526")
 		os.Exit(1)
 	}
 }
@@ -226,7 +226,7 @@ func checkConfig() {
 // 程序初始化
 func initialize() {
 	// 避免 initialization loop
-	boolDispatch["startweb"] = startWeb
+	boolDispatch["startweb"] = startWebAPI
 	boolDispatch["startcoolq"] = startCoolq
 
 	exePath, err := os.Executable()
@@ -295,9 +295,10 @@ func main() {
 		lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
 		go handleInput()
 
-		if *isWebServer {
+		if *isWebAPI {
 			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
-			go httpServer()
+			go apiServer()
+			go webUI()
 		}
 
 		if *isCoolq {
@@ -315,12 +316,7 @@ func main() {
 					go msg.s.cycle()
 				case quit:
 					// 停止web服务
-					if *isWebServer {
-						lPrintln("正在停止web服务")
-						if err := srv.Shutdown(ctx); err != nil {
-							lPrintErr("web服务关闭错误：", err)
-						}
-					}
+					stopWebAPI()
 					// 结束所有mainCtx的子ctx
 					cancel()
 					// 结束cycle()

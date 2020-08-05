@@ -47,7 +47,7 @@ var streamers struct {
 type configData struct {
 	Source  string    // 直播源，有hls和flv两种
 	Output  string    // 直播下载视频格式的后缀名
-	WebPort int       // web服务的本地端口
+	WebPort int       // web API的本地端口
 	Coolq   coolqData // 酷Q相关设置
 }
 

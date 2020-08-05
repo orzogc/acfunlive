@@ -8,7 +8,7 @@ AcFun直播通知和下载助手（命令行版本）
       * [live\.json](#livejson)
       * [config\.json](#configjson)
     * [命令行使用方法](#命令行使用方法)
-    * [web服务使用方法](#web服务使用方法)
+    * [web API](#web-api)
     * [酷Q使用方法](#酷Q使用方法)
 
 ### 运行依赖
@@ -48,7 +48,7 @@ config.json的内容手动修改后需要重新启动本程序以生效
 {
     "Source": "flv",  // 直播源，有hls和flv两种，默认是flv
     "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
-    "WebPort": 51880, // web服务的本地端口
+    "WebPort": 51880, // web API的本地端口
     "Coolq": {
         "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
         "AdminQQ": 12345,                      // 用来发送命令控制本程序的管理者QQ
@@ -63,7 +63,7 @@ config.json的内容手动修改后需要重新启动本程序以生效
 
 `acfunlive -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
 
-`acfunlive -listen -web` 运行监听程序并启动web服务，可以通过`http://localhost:51880`来查看状态和发送命令
+`acfunlive -listen -webapi` 运行监听程序并启动web API服务器，可以通过`http://localhost:51880`来查看状态和发送命令
 
 `acfunlive -listen -coolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 
@@ -91,60 +91,8 @@ config.json的内容手动修改后需要重新启动本程序以生效
 
 运行`acfunlive -h`查看详细设置说明
 
-### web服务使用方法
-web服务默认本地端口为51880
-
-`http://localhost:51880/listlive` 列出正在直播的主播
-
-`http://localhost:51880/listrecord` 列出正在下载的直播视频
-
-`http://localhost:51880/listdanmu` 列出正在下载的直播弹幕
-
-`http://localhost:51880/liststreamer` 列出设置了开播提醒或自动下载直播的主播
-
-`http://localhost:51880/startcoolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
-
-`http://localhost:51880/addnotify/23682490` 通知uid为23682490的主播的直播
-
-`http://localhost:51880/delnotify/23682490` 取消通知uid为23682490的主播的直播
-
-`http://localhost:51880/addrecord/23682490` uid为23682490的主播直播时自动下载其直播视频
-
-`http://localhost:51880/delrecord/23682490` 取消自动下载uid为23682490的主播的直播视频
-
-`http://localhost:51880/adddanmu/23682490` uid为23682490的主播直播时自动下载其直播弹幕
-
-`http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的主播的直播弹幕
-
-`http://localhost:51880/delconfig/23682490` 删除uid为23682490的主播的所有设置
-
-`http://localhost:51880/getdlurl/23682490` 查看uid为23682490的主播是否在直播，并输出其直播源
-
-`http://localhost:51880/addqq/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ12345，需要QQ机器人已经添加其为好友
-
-`http://localhost:51880/delqq/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ
-
-`http://localhost:51880/addqqgroup/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ群12345，需要QQ机器人已经加入该群
-
-`http://localhost:51880/delqqgroup/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ群
-
-`http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的主播的直播视频
-
-`http://localhost:51880/stoprecord/23682490` 取消下载uid为23682490的主播的直播视频
-
-`http://localhost:51880/startdanmu/23682490` 临时下载uid为23682490的主播的直播弹幕
-
-`http://localhost:51880/stopdanmu/23682490` 取消下载uid为23682490的主播的直播弹幕
-
-`http://localhost:51880/startrecdan/23682490` 临时下载uid为23682490的主播的直播视频和弹幕
-
-`http://localhost:51880/stoprecdan/23682490` 取消下载uid为23682490的主播的直播视频和弹幕
-
-`http://localhost:51880/log` 查看log
-
-`http://localhost:51880/quit` 退出本程序
-
-`http://localhost:51880/help` 显示帮助信息
+### web API
+具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)
 
 ### 酷Q使用方法
 本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
