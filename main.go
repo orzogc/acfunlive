@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/getlantern/systray"
 )
 
 // 运行程序所在文件夹
@@ -298,7 +300,7 @@ func main() {
 		if *isWebAPI {
 			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
 			go apiServer()
-			go webUI()
+			go startWebUI()
 		}
 
 		if *isCoolq {
@@ -308,6 +310,8 @@ func main() {
 
 		go cycleFetch(ctx)
 
+		go systray.Run(trayOnReady, trayOnExit)
+
 		for {
 			select {
 			case msg := <-mainCh:
@@ -315,8 +319,12 @@ func main() {
 				case startCycle:
 					go msg.s.cycle()
 				case quit:
-					// 停止web服务
-					stopWebAPI()
+					// 退出systray
+					systray.Quit()
+					// 停止web API服务器
+					if *isWebAPI {
+						stopWebAPI()
+					}
 					// 结束所有mainCtx的子ctx
 					cancel()
 					// 结束cycle()

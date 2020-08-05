@@ -91,8 +91,9 @@ func isConfigFileExist(filename string) bool {
 	if os.IsNotExist(err) {
 		return false
 	}
+	checkErr(err)
 	if info.IsDir() {
-		lPrintErr(filename + "不能是目录")
+		lPrintErr(fileLocation + " 不能是目录")
 		os.Exit(1)
 	}
 	return true
