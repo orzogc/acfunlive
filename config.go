@@ -12,17 +12,15 @@ import (
 	"time"
 )
 
-// 主播设置文件名字
-const liveFile = "live.json"
+const (
+	liveFile   = "live.json"   // 主播设置文件名字
+	configFile = "config.json" // 设置文件名字
+)
 
-// 设置文件名字
-const configFile = "config.json"
-
-// 主播设置文件位置
-var liveFileLocation string
-
-// 设置文件位置
-var configFileLocation string
+var (
+	liveFileLocation   string // 主播设置文件位置
+	configFileLocation string // 设置文件位置
+)
 
 // 主播的设置数据
 type streamer struct {

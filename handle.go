@@ -15,8 +15,10 @@ const handleErrMsg = "请输入正确的命令，输入 help 查看全部命令�
 const helpMsg = `listlive：列出正在直播的主播
 listrecord：列出正在下载的直播视频
 listdanmu：列出正在下载的直播弹幕
-startweb：启动web服务
-stopweb：停止web服务
+startwebapi：启动web API服务器
+stopwebapi：停止web API服务器
+startwebui：启动web UI服务器，需要先启动web API服务器
+stopwebui：停止web UI服务器
 startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 addnotify uid：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
 delnotify uid：取消订阅指定主播的开播提醒
@@ -41,7 +43,9 @@ help：输出本帮助信息`
 
 var boolDispatch = map[string]func() bool{
 	//"startweb":   startWeb,
-	"stopweb": stopWebAPI,
+	"stopwebapi": stopWebAPI,
+	"startwebui": startWebUI,
+	"stopwebui":  stopWebUI,
 	//"startcoolq": startCoolq,
 }
 

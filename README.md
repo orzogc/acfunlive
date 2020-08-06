@@ -65,6 +65,8 @@ config.json的内容手动修改后需要重新启动本程序以生效
 
 `acfunlive -listen -webapi` 运行监听程序并启动web API服务器，可以通过`http://localhost:51880`来查看状态和发送命令
 
+`acfunlive -listen -webapi -webui` 启动web UI服务器，可以通过`http://localhost:51890`访问web UI界面
+
 `acfunlive -listen -coolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 
 `acfunlive -listlive` 列出正在直播的主播

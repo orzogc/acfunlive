@@ -24,6 +24,8 @@ func webUI(dir string) {
 		}
 	}()
 
+	lPrintln("启动web UI服务器，现在可以通过 " + address(config.WebPort+10) + " 来访问UI界面")
+
 	uiSrv = &http.Server{
 		Addr:         ":" + itoa(config.WebPort+10),
 		WriteTimeout: 15 * time.Second,
@@ -38,7 +40,8 @@ func webUI(dir string) {
 	}
 }
 
-func startWebUI() {
+// 启动web UI
+func startUI() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in startWebUI(), the error is:", err)
@@ -72,13 +75,31 @@ func startWebUI() {
 	webUI(dir)
 }
 
-func stopWebUI() {
-	lPrintln("停止web API服务器")
-	ctx, cancel := context.WithCancel(mainCtx)
-	defer cancel()
-	if err := uiSrv.Shutdown(ctx); err != nil {
-		lPrintErr("web UI服务器关闭错误：", err)
-		lPrintWarn("强行关闭web UI服务器")
-		cancel()
+// 启动web UI server
+func startWebUI() bool {
+	if *isWebUI {
+		lPrintWarn("已经启动过web UI服务器")
+	} else {
+		*isWebUI = true
+		startUI()
 	}
+	return true
+}
+
+// 停止web UI server
+func stopWebUI() bool {
+	if *isWebUI {
+		*isWebUI = false
+		lPrintln("停止web UI服务器")
+		ctx, cancel := context.WithCancel(mainCtx)
+		defer cancel()
+		if err := uiSrv.Shutdown(ctx); err != nil {
+			lPrintErr("web UI服务器关闭错误：", err)
+			lPrintWarn("强行关闭web UI服务器")
+			cancel()
+		}
+	} else {
+		lPrintWarn("没有启动web UI服务器")
+	}
+	return true
 }

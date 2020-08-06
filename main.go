@@ -19,9 +19,6 @@ import (
 	"github.com/getlantern/systray"
 )
 
-// 运行程序所在文件夹
-var exeDir string
-
 type control int
 
 // 控制信息
@@ -54,23 +51,19 @@ var msgMap struct {
 	msg map[int]*sMsg
 }
 
-// main()的管道
-var mainCh chan controlMsg
-
-// main()的ctx
-var mainCtx context.Context
-
-// 程序是否处于监听状态
-var isListen *bool
-
-// 程序是否启动web服务
-var isWebAPI *bool
-
-// 储存日志
-var logString strings.Builder
-
-// 可以同步输出的logger
-var logger = log.New(os.Stdout, "", log.LstdFlags)
+var (
+	exeDir    string                                  // 运行程序所在文件夹
+	mainCh    chan controlMsg                         // main()的管道
+	mainCtx   context.Context                         // main()的ctx
+	isListen  *bool                                   // 程序是否处于监听状态
+	isWebAPI  *bool                                   // 程序是否启动web API服务器
+	isWebUI   *bool                                   // 程序是否启动web UI服务器
+	isNoGUI   *bool                                   // 程序是否启动GUI界面
+	logString strings.Builder                         // 储存日志
+	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
+	itoa      = strconv.Itoa                          // 将int转换为字符串
+	atoi      = strconv.Atoi                          // 将字符串转换为int
+)
 
 // 检查错误
 func checkErr(err error) {
@@ -110,12 +103,6 @@ func lPrintWarn(msg ...interface{}) {
 	lPrintln(msg...)
 }
 
-// 将int转换为字符串
-var itoa = strconv.Itoa
-
-// 将字符串转换为int
-var atoi = strconv.Atoi
-
 // 将UID转换成字符串
 func (s streamer) itoa() string {
 	return itoa(s.UID)
@@ -147,8 +134,10 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebAPI = flag.Bool("webapi", false, "启动web服务，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
-	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q")
+	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
+	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面，需要webapi参数")
+	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
+	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -162,7 +151,7 @@ func argsHandle() {
 	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
 
-	if flag.NArg() != 0 || flag.NFlag() == 0 {
+	if flag.NArg() != 0 {
 		lPrintErr("请输入正确的参数")
 		fmt.Println(usageStr)
 		flag.PrintDefaults()
@@ -171,9 +160,20 @@ func argsHandle() {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
+		if !*isNoGUI {
+			*isListen = true
+			*isWebAPI = true
+			*isWebUI = true
+		}
+		if *isWebUI {
+			if !*isWebAPI {
+				lPrintErr("webui参数需要和webapi参数一起运行")
+				os.Exit(1)
+			}
+		}
 		if *isWebAPI || *isCoolq {
-			if *isListen != true {
-				lPrintErr("web和coolq参数需要和listen参数一起运行")
+			if !*isListen {
+				lPrintErr("webapi和coolq参数需要和listen参数一起运行")
 				os.Exit(1)
 			}
 		}
@@ -228,7 +228,7 @@ func checkConfig() {
 // 程序初始化
 func initialize() {
 	// 避免 initialization loop
-	boolDispatch["startweb"] = startWebAPI
+	boolDispatch["startwebapi"] = startWebAPI
 	boolDispatch["startcoolq"] = startCoolq
 
 	exePath, err := os.Executable()
@@ -300,7 +300,10 @@ func main() {
 		if *isWebAPI {
 			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
 			go apiServer()
-			go startWebUI()
+		}
+
+		if *isWebUI {
+			go startUI()
 		}
 
 		if *isCoolq {
@@ -310,7 +313,9 @@ func main() {
 
 		go cycleFetch(ctx)
 
-		go systray.Run(trayOnReady, trayOnExit)
+		if !*isNoGUI {
+			go systray.Run(trayOnReady, trayOnExit)
+		}
 
 		for {
 			select {
@@ -320,7 +325,13 @@ func main() {
 					go msg.s.cycle()
 				case quit:
 					// 退出systray
-					systray.Quit()
+					if !*isNoGUI {
+						systray.Quit()
+					}
+					// 停止web UI服务器
+					if *isWebUI {
+						stopWebUI()
+					}
 					// 停止web API服务器
 					if *isWebAPI {
 						stopWebAPI()

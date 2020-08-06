@@ -7,6 +7,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
+// 启动systray
 func trayOnReady() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -37,6 +38,7 @@ func trayOnReady() {
 	}
 }
 
+// 退出systray
 func trayOnExit() {
 	lPrintln("退出systray")
 }

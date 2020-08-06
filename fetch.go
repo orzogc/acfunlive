@@ -17,9 +17,6 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-const livePage = "https://live.acfun.cn/live/"
-const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
-
 //const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 //const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
@@ -40,12 +37,13 @@ var liveRooms struct {
 
 // 获取主播的直播链接
 func getURL(uid int) string {
+	const livePage = "https://live.acfun.cn/live/"
 	return livePage + itoa(uid)
 }
 
 // 获取主播的直播链接
 func (s streamer) getURL() string {
-	return livePage + s.itoa()
+	return getURL(s.UID)
 }
 
 // 获取全部AcFun直播间
@@ -159,6 +157,8 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 			v = getLiveInfo(uid)
 		}
 	}()
+
+	const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 
 	resp, err := http.Get(fmt.Sprintf(acLiveInfo, uid))
 	checkErr(err)
