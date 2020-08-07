@@ -23,11 +23,7 @@ build: build-go build-ui
 
 build-go:
 	$(MKDIR) $(BINARY)
-ifeq ($(OS),Windows_NT)
-	$(GOBUILD) -o $(BINARY) $(LDFLAGS)
-else
 	$(GOBUILD) -o $(BINARY)
-endif
 
 build-ui:
 	$(CD) $(UIDIR) && $(YARNGENERATE)

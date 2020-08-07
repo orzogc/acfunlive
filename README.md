@@ -31,6 +31,7 @@ AcFun直播通知和下载助手（命令行版本）
 # 更新repo需使用 git submodule update --init --recursive
 git clone --recursive https://github.com/orzogc/acfunlive.git
 cd acfunlive
+# 编译Windows版本运行 make build-windows
 make
 ```
 编译好的文件在bin文件夹下
