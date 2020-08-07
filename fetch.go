@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/orzogc/acfundanmu"
 	"github.com/valyala/fastjson"
 )
@@ -138,7 +139,7 @@ func (s streamer) getTitleByInfo() string {
 	return ""
 }
 
-// 查看主播是否在直播
+// 通过用户直播相关信息查看主播是否在直播
 func (s streamer) isLiveOnByInfo() bool {
 	v := getLiveInfo(s.UID)
 	if v.Exists("user", "liveId") {
@@ -171,6 +172,37 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 	checkErr(err)
 
 	return v
+}
+
+// 通过wap版网页查看主播是否在直播
+func (s streamer) isLiveOnByPage() (isLive bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in isLiveOnByPage(), the error is:", err)
+			lPrintErr("获取" + s.longID() + "的直播页面时出错，尝试重新运行")
+			time.Sleep(2 * time.Second)
+			isLive = s.isLiveOnByPage()
+		}
+	}()
+
+	const acLivePage = "https://m.acfun.cn/live/detail/"
+	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest(http.MethodGet, acLivePage+itoa(s.UID), nil)
+	checkErr(err)
+
+	req.Header.Set("User-Agent", userAgent)
+	resp, err := client.Do(req)
+	checkErr(err)
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	checkErr(err)
+	if doc.Find("p.closed-tip").Text() == "直播已结束" {
+		return false
+	}
+	return true
 }
 
 // 根据uid获取主播的名字
@@ -386,6 +418,7 @@ func cycleFetch(ctx context.Context) {
 					liveRooms.Unlock()
 				}
 			}
+
 			// 每10秒循环一次
 			time.Sleep(10 * time.Second)
 		}

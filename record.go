@@ -223,10 +223,15 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	// 获取直播源和对应的弹幕设置
 	liveURL := s.getLiveURL()
 	if liveURL == "" {
-		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
-		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
-		s.quitRec()
-		return
+		// 应付AcFun API的bug
+		time.Sleep(10 * time.Second)
+		liveURL = s.getLiveURL()
+		if liveURL == "" {
+			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
+			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
+			s.quitRec()
+			return
+		}
 	}
 
 	filename := getTime() + " " + s.Name + " " + s.getTitle()
