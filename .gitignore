@@ -6,6 +6,7 @@ acfunlive
 *.ass
 *.7z
 /webui
+/bin
 
 # Binaries for programs and plugins
 *.exe
