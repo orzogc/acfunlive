@@ -16,6 +16,8 @@ func trayOnReady() {
 		}
 	}()
 
+	lPrintln("启动systray")
+
 	icon, err := ioutil.ReadFile(logoFileLocation)
 	checkErr(err)
 	systray.SetTemplateIcon(icon, icon)

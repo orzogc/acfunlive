@@ -296,6 +296,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	form = url.Values{}
 	// authorId就是主播的uid
 	form.Set("authorId", s.itoa())
+	form.Set("pullStreamType", "FLV")
 	resp, err = http.PostForm(streamURL, form)
 	checkErr(err)
 	defer resp.Body.Close()
