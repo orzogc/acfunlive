@@ -2,22 +2,50 @@ GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOGET=$(GOCMD) get -d
+GITREPO=github.com/orzogc/acfunlive
+UIDIR=acfunlive-ui
 WINDOWSENV=GOOS=windows GOARCH=amd64
 LDFLAGS=-ldflags -H=windowsgui
+YARNINSTALL=yarn install
+YARNGENERATE=yarn generate
+NODEMODULES=node_modules
+NUXTDIR=.nuxt
+DISTDIR=dist
 MKDIR=mkdir -p
 RM=rm -rf
+CP=cp -rf
+CD=cd
 BINARY=bin
+WEBUIDIR=webui
 
-all: build
+all: deps build
+build: build-go build-ui
 
-build:
+build-go:
 	$(MKDIR) $(BINARY)
 ifeq ($(OS),Windows_NT)
-	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(LDFLAGS)
+	$(GOBUILD) -o $(BINARY) $(LDFLAGS)
 else
 	$(GOBUILD) -o $(BINARY)
 endif
 
+build-ui:
+	$(CD) $(UIDIR) && $(YARNGENERATE)
+	$(CP) $(UIDIR)/$(DISTDIR)/. $(BINARY)/$(WEBUIDIR)
+
+deps:
+	$(GOGET) $(GITREPO)
+	$(CD) $(UIDIR) && $(YARNINSTALL)
+
 clean:
 	$(GOCLEAN)
 	$(RM) $(BINARY)
+	$(RM) $(UIDIR)/$(NODEMODULES)
+	$(RM) $(UIDIR)/$(NUXTDIR)
+	$(RM) $(UIDIR)/$(DISTDIR)
+
+build-go-windows:
+	$(MKDIR) $(BINARY)
+	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(LDFLAGS)
+
+build-windows: deps build-go-windows build-ui
