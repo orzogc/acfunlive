@@ -79,7 +79,7 @@ config.json的内容手动修改后需要重新启动本程序以生效
 {
     "Source": "flv",  // 直播源，有hls和flv两种，默认是flv
     "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
-    "WebPort": 51880, // web API的本地端口
+    "WebPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
     "Coolq": {
         "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
         "AdminQQ": 12345,                      // 用来发送命令控制本程序的管理者QQ
@@ -90,7 +90,7 @@ config.json的内容手动修改后需要重新启动本程序以生效
 ```
 
 ### 使用方法
-直接运行即可，程序会出现在系统托盘那里，如果要使用命令行模式，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/cli.md)
+直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面，如果要使用命令行模式，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/cli.md)
 
 ### web API
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)

@@ -1,7 +1,7 @@
 # 命令行使用方法
 命令行模式需要运行`acfunlive -nogui -listen`，下载的视频和弹幕默认保存在本程序所在文件夹内
 
-`acfunlive` 启动web UI服务器，可以通过`http://localhost:51890`访问web UI界面
+`acfunlive -nogui -webapi -webui` 启动web UI服务器，可以通过`http://localhost:51890`访问web UI界面
 
 `acfunlive -nogui -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
 
