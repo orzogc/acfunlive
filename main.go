@@ -58,7 +58,7 @@ var (
 	isListen  *bool                                   // 程序是否处于监听状态
 	isWebAPI  *bool                                   // 程序是否启动web API服务器
 	isWebUI   *bool                                   // 程序是否启动web UI服务器
-	isNoGUI   *bool                                   // 程序是否启动GUI界面
+	isNoGUI   = new(bool)                             // 程序是否启动GUI界面
 	logString strings.Builder                         // 储存日志
 	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
 	itoa      = strconv.Itoa                          // 将int转换为字符串
@@ -82,8 +82,11 @@ func getTime() string {
 
 // 打印带时间戳的log信息
 func lPrintln(msg ...interface{}) {
-	logger.Println(msg...)
+	if *isNoGUI {
+		logger.Println(msg...)
+	}
 	// 同时输出日志到web服务
+	fmt.Fprint(&logString, getTime()+" ")
 	fmt.Fprintln(&logString, msg...)
 }
 
@@ -153,12 +156,16 @@ func argsHandle() {
 
 	if flag.NArg() != 0 {
 		lPrintErr("请输入正确的参数")
-		fmt.Println(usageStr)
-		flag.PrintDefaults()
-	} else {
-		if *shortHelp || *longHelp {
+		if *isNoGUI {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
+		}
+	} else {
+		if *shortHelp || *longHelp {
+			if *isNoGUI {
+				fmt.Println(usageStr)
+				flag.PrintDefaults()
+			}
 		}
 		if !*isNoGUI {
 			*isListen = true
@@ -277,7 +284,11 @@ func main() {
 
 	if *isListen {
 		if len(streamers.crt) == 0 {
-			lPrintWarn("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
+			if *isNoGUI {
+				lPrintWarn("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
+			} else {
+				lPrintWarn("请在web UI界面订阅指定主播的开播提醒或自动下载")
+			}
 		}
 
 		lPrintln("本程序开始监听主播的直播状态")
@@ -294,8 +305,11 @@ func main() {
 
 		go cycleConfig(ctx)
 
-		lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
-		go handleInput()
+		// 启动GUI时不需要处理命令输入
+		if *isNoGUI {
+			lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
+			go handleInput()
+		}
 
 		if *isWebAPI {
 			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")

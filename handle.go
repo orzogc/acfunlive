@@ -151,7 +151,9 @@ func handleAllCmd(text string) string {
 	case 1:
 		switch cmd[0] {
 		case "help":
-			fmt.Println(helpMsg)
+			if *isNoGUI {
+				fmt.Println(helpMsg)
+			}
 			return helpMsg
 		default:
 			return handleCmd(cmd[0])

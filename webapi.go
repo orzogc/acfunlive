@@ -107,7 +107,9 @@ func helpHandler(w http.ResponseWriter, r *http.Request) {
 // 打印web请求
 func printRequestURI(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("处理web请求：" + r.RequestURI)
+		if *isNoGUI {
+			log.Println("处理web请求：" + r.RequestURI)
+		}
 		next.ServeHTTP(w, r)
 	})
 }

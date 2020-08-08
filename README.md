@@ -90,7 +90,7 @@ config.json的内容手动修改后需要重新启动本程序以生效
 ```
 
 ### 使用方法
-直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面，如果要使用命令行模式，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/cli.md)
+直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面，如果要使用命令行模式，需要加上`-nogui`参数，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/cli.md)
 
 ### web API
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)

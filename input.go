@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"time"
 )
 
 // 正在直播的主播
@@ -24,12 +25,16 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
-	log.Println("正在直播的主播：")
+	if *isNoGUI {
+		log.Println("正在直播的主播：")
+	}
 	streamers.Lock()
 	defer streamers.Unlock()
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
-			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			if *isNoGUI {
+				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			}
 			streamings = append(streamings, streaming(s))
 		}
 	}
@@ -42,13 +47,17 @@ func listLive() (streamings []streaming) {
 
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
-	log.Println("正在下载的直播视频：")
+	if *isNoGUI {
+		log.Println("正在下载的直播视频：")
+	}
 	msgMap.Lock()
 	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.isRecording {
 			s := streamer{UID: uid, Name: getName(uid)}
-			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			if *isNoGUI {
+				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			}
 			recordings = append(recordings, streaming(s))
 		}
 	}
@@ -61,13 +70,17 @@ func listRecord() (recordings []streaming) {
 
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
-	log.Println("正在下载的直播弹幕：")
+	if *isNoGUI {
+		log.Println("正在下载的直播弹幕：")
+	}
 	msgMap.Lock()
 	defer msgMap.Unlock()
 	for uid, m := range msgMap.msg {
 		if m.danmuCancel != nil {
 			s := streamer{UID: uid, Name: getName(uid)}
-			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			if *isNoGUI {
+				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+			}
 			danmu = append(danmu, streaming(s))
 		}
 	}
@@ -91,6 +104,7 @@ func handleInput() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in handleInput(), the error is:", err)
 			lPrintErr("输入处理发生错误，尝试重启输入处理")
+			time.Sleep(2 * time.Second)
 			go handleInput()
 		}
 	}()
