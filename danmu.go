@@ -77,17 +77,22 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		}
 	}()
 
-	_, _, streamName, cfg := s.getStreamURL()
-	if streamName == "" {
-		// 应付AcFun API的bug
-		time.Sleep(10 * time.Second)
+	// 获取直播源和对应的弹幕设置
+	var streamName string
+	var cfg acfundanmu.SubConfig
+	// 应付AcFun API可能出现的bug
+	for retry := 0; retry < 3; retry++ {
 		_, _, streamName, cfg = s.getStreamURL()
-		if streamName == "" {
+		if streamName != "" {
+			break
+		}
+		if retry == 2 {
 			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
 			s.quitDanmu()
 			return
 		}
+		time.Sleep(10 * time.Second)
 	}
 
 	assFile := transFilename(filename)
