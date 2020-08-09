@@ -40,8 +40,14 @@ clean:
 	$(RM) $(UIDIR)/$(NUXTDIR)
 	$(RM) $(UIDIR)/$(DISTDIR)
 
-build-go-windows:
+build-windows-gui: deps build-go-windows-gui build-ui
+
+build-go-windows-gui:
 	$(MKDIR) $(BINARY)
 	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(LDFLAGS)
 
-build-windows: deps build-go-windows build-ui
+build-windows-cli: deps build-go-windows-cli build-ui
+
+build-go-windows-cli:
+	$(MKDIR) $(BINARY)
+	$(WINDOWSENV) $(GOBUILD) -o $(BINARY)
