@@ -96,7 +96,9 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 
 // 打印日志
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, logString.String())
+	logString.Lock()
+	fmt.Fprint(w, logString.str.String())
+	logString.Unlock()
 }
 
 // 打印帮助

@@ -139,13 +139,13 @@ func initCoolq() {
 }
 
 // 发送消息到指定的QQ
-func sendQQ(qq int64, text string) {
+func coolqSendQQ(qq int64, text string) {
 	s := bot.NewMessage(qq, "private").Text(text).Send()
 	checkErr(s.Err)
 }
 
 // 发送消息到指定的QQ群
-func sendQQGroup(qqGroup int64, text string) {
+func coolqSendQQGroup(qqGroup int64, text string) {
 	s := bot.NewMessage(qqGroup, "group").At("all").Text(text).Send()
 	checkErr(s.Err)
 }
@@ -161,10 +161,10 @@ func (s streamer) sendCoolq(text string) {
 
 	if *isCoolq && bot != nil {
 		if s.SendQQ != 0 {
-			sendQQ(s.SendQQ, text)
+			coolqSendQQ(s.SendQQ, text)
 		}
 		if s.SendQQGroup != 0 {
-			sendQQGroup(s.SendQQGroup, text)
+			coolqSendQQGroup(s.SendQQGroup, text)
 		}
 	}
 }

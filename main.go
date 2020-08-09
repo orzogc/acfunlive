@@ -51,18 +51,23 @@ var msgMap struct {
 	msg map[int]*sMsg
 }
 
+// 储存日志
+var logString struct {
+	sync.Mutex
+	str strings.Builder
+}
+
 var (
-	exeDir    string                                  // 运行程序所在文件夹
-	mainCh    chan controlMsg                         // main()的管道
-	mainCtx   context.Context                         // main()的ctx
-	isListen  *bool                                   // 程序是否处于监听状态
-	isWebAPI  *bool                                   // 程序是否启动web API服务器
-	isWebUI   *bool                                   // 程序是否启动web UI服务器
-	isNoGUI   = new(bool)                             // 程序是否启动GUI界面
-	logString strings.Builder                         // 储存日志
-	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
-	itoa      = strconv.Itoa                          // 将int转换为字符串
-	atoi      = strconv.Atoi                          // 将字符串转换为int
+	exeDir   string                                  // 运行程序所在文件夹
+	mainCh   chan controlMsg                         // main()的管道
+	mainCtx  context.Context                         // main()的ctx
+	isListen *bool                                   // 程序是否处于监听状态
+	isWebAPI *bool                                   // 程序是否启动web API服务器
+	isWebUI  *bool                                   // 程序是否启动web UI服务器
+	isNoGUI  = new(bool)                             // 程序是否启动GUI界面
+	logger   = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
+	itoa     = strconv.Itoa                          // 将int转换为字符串
+	atoi     = strconv.Atoi                          // 将字符串转换为int
 )
 
 // 检查错误
@@ -86,8 +91,12 @@ func lPrintln(msg ...interface{}) {
 		logger.Println(msg...)
 	}
 	// 同时输出日志到web服务
-	fmt.Fprint(&logString, getTime()+" ")
-	fmt.Fprintln(&logString, msg...)
+	logString.Lock()
+	m := make([]interface{}, 1)
+	m[0] = getTime()
+	msg = append(m, msg...)
+	fmt.Fprintln(&logString.str, msg...)
+	logString.Unlock()
 }
 
 // 打印错误信息
@@ -100,9 +109,9 @@ func lPrintErr(msg ...interface{}) {
 
 // 打印警告信息
 func lPrintWarn(msg ...interface{}) {
-	e := make([]interface{}, 1)
-	e[0] = "[WARN]"
-	msg = append(e, msg...)
+	w := make([]interface{}, 1)
+	w[0] = "[WARN]"
+	msg = append(w, msg...)
 	lPrintln(msg...)
 }
 
@@ -330,6 +339,8 @@ func main() {
 		if !*isNoGUI {
 			go systray.Run(trayOnReady, trayOnExit)
 		}
+
+		go initMirai()
 
 		for {
 			select {
