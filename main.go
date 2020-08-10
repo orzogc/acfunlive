@@ -286,6 +286,7 @@ func initialize() {
 	}
 
 	fetchAllRooms()
+	liveRooms.rooms = liveRooms.newRooms
 }
 
 func main() {

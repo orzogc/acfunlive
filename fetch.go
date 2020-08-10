@@ -32,8 +32,9 @@ type liveRoom struct {
 
 // liveRoom的map
 var liveRooms struct {
-	sync.Mutex
-	rooms *map[int]liveRoom
+	sync.Mutex                   // rooms的锁
+	rooms      *map[int]liveRoom // 现在的liveRoom
+	newRooms   *map[int]liveRoom // 新的liveRoom
 }
 
 // 获取主播的直播链接
@@ -59,9 +60,7 @@ func fetchAllRooms() {
 		}
 	}
 
-	liveRooms.Lock()
-	defer liveRooms.Unlock()
-	liveRooms.rooms = &allRooms
+	liveRooms.newRooms = &allRooms
 }
 
 // 获取指定页数的AcFun直播间
@@ -130,7 +129,7 @@ func (s streamer) isLiveOn() bool {
 	return ok
 }
 
-// 获取主播直播间的标题
+// 通过用户直播相关信息获取主播直播间的标题
 func (s streamer) getTitleByInfo() string {
 	v := getLiveInfo(s.UID)
 	if v.Exists("title") {
@@ -251,6 +250,8 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
+	client := &http.Client{Timeout: 10 * time.Second}
+
 	resp, err := http.Get(s.getURL())
 	checkErr(err)
 	defer resp.Body.Close()
@@ -264,10 +265,9 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	}
 	deviceID := didCookie.Value
 
-	client := &http.Client{Timeout: 10 * time.Second}
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
-	req, err := http.NewRequest("POST", loginPage, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
 	checkErr(err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -297,7 +297,11 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	// authorId就是主播的uid
 	form.Set("authorId", s.itoa())
 	form.Set("pullStreamType", "FLV")
-	resp, err = http.PostForm(streamURL, form)
+	req, err = http.NewRequest(http.MethodPost, streamURL, strings.NewReader(form.Encode()))
+	checkErr(err)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Referer", s.getURL())
+	resp, err = client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
@@ -406,7 +410,7 @@ func cycleFetch(ctx context.Context) {
 			streamers.Lock()
 			// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
 			for _, s := range streamers.crt {
-				if !s.isLiveOn() {
+				if _, ok := (*liveRooms.newRooms)[s.UID]; !ok {
 					notLive = append(notLive, s)
 				}
 			}
@@ -414,11 +418,13 @@ func cycleFetch(ctx context.Context) {
 			for _, s := range notLive {
 				if s.isLiveOnByInfo() {
 					title := s.getTitleByInfo()
-					liveRooms.Lock()
-					(*liveRooms.rooms)[s.UID] = liveRoom{name: s.Name, title: title}
-					liveRooms.Unlock()
+					(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
 				}
 			}
+
+			liveRooms.Lock()
+			liveRooms.rooms = liveRooms.newRooms
+			liveRooms.Unlock()
 
 			// 每10秒循环一次
 			time.Sleep(10 * time.Second)
