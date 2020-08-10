@@ -9,11 +9,16 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 	"github.com/orzogc/acfundanmu"
 	"github.com/valyala/fastjson"
 )
@@ -21,6 +26,16 @@ import (
 //const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 //const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+
+// 直播源相关信息
+type liveInfo struct {
+	hlsURL     string
+	flvURL     string
+	streamName string
+	cfg        acfundanmu.SubConfig
+	loginBody  []byte
+	apiBody    []byte
+}
 
 // 直播间的数据结构
 type liveRoom struct {
@@ -237,6 +252,7 @@ func fetchAcLogo() {
 	checkErr(err)
 }
 
+/*
 // 获取AcFun的直播源，分为hls和flv两种
 func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName string, cfg acfundanmu.SubConfig) {
 	defer func() {
@@ -349,14 +365,157 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	return hlsURL, flvURL, streamName, cfg
 }
+*/
+
+// 利用chrome/chromium获取视频源
+func (s streamer) chromeGetAPI() (loginBody []byte, apiBody []byte) {
+	const login = "id.app.acfun.cn/rest/app/visitor/login"
+	const api = "api.kuaishouzt.com/rest/zt/live/web/startPlay"
+	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36"
+
+	tempDir, err := ioutil.TempDir(exeDir, "chrometemp")
+	checkErr(err)
+	defer os.RemoveAll(tempDir)
+
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Headless,
+		chromedp.DisableGPU,
+		chromedp.NoDefaultBrowserCheck,
+		chromedp.UserAgent(userAgent),
+		chromedp.UserDataDir(tempDir),
+	)
+
+	if runtime.GOOS == "windows" {
+		chromeDir := filepath.Join(exeDir, "chromium", "chrome.exe")
+		opts = append(opts, chromedp.ExecPath(chromeDir))
+	}
+
+	allocCtx, cancel := chromedp.NewExecAllocator(mainCtx, opts...)
+	defer cancel()
+	taskCtx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	taskCtx, cancel = context.WithTimeout(taskCtx, 10*time.Second)
+	defer cancel()
+
+	err = chromedp.Run(taskCtx)
+	checkErr(err)
+
+	chromedp.ListenTarget(taskCtx, func(ev interface{}) {
+		if er, ok := ev.(*network.EventResponseReceived); ok {
+			urlStr := er.Response.URL
+			if strings.Contains(urlStr, login) {
+				go func() {
+					c := chromedp.FromContext(taskCtx)
+					rbp := network.GetResponseBody(er.RequestID)
+					var err error
+					loginBody, err = rbp.Do(cdp.WithExecutor(taskCtx, c.Target))
+					if err != nil {
+						loginBody = nil
+					}
+				}()
+			}
+			if strings.Contains(urlStr, api) {
+				go func() {
+					c := chromedp.FromContext(taskCtx)
+					rbp := network.GetResponseBody(er.RequestID)
+					var err error
+					apiBody, err = rbp.Do(cdp.WithExecutor(taskCtx, c.Target))
+					if err != nil {
+						apiBody = nil
+					}
+				}()
+			}
+		}
+	})
+
+	chromedp.Run(taskCtx,
+		network.Enable(),
+		chromedp.Navigate(s.getURL()),
+		chromedp.WaitVisible("body", chromedp.BySearch),
+	)
+
+	return loginBody, apiBody
+}
+
+// 获取AcFun的直播源相关信息
+func (s streamer) getLiveInfo() (source liveInfo) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in getLiveInfo(), the error is:", err)
+			lPrintErr("获取" + s.longID() + "的直播源时出错，尝试重新运行")
+			time.Sleep(2 * time.Second)
+			source = s.getLiveInfo()
+		}
+	}()
+
+	loginBody, apiBody := s.chromeGetAPI()
+	if loginBody == nil || apiBody == nil {
+		return source
+	}
+
+	var p fastjson.Parser
+	v, err := p.ParseBytes(apiBody)
+	checkErr(err)
+	if v.GetInt("result") != 1 {
+		return source
+	}
+	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
+	v, err = p.ParseBytes(videoPlayRes)
+	checkErr(err)
+	streamName := string(v.GetStringBytes("streamName"))
+
+	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
+
+	// 选择s.Bitrate下码率最高的直播源
+	index := 0
+	if s.Bitrate == 0 {
+		index = len(representation) - 1
+	} else {
+		for i, r := range representation {
+			if s.Bitrate >= r.GetInt("bitrate") {
+				index = i
+			} else {
+				break
+			}
+		}
+	}
+
+	flvURL := string(representation[index].GetStringBytes("url"))
+
+	bitrate := representation[index].GetInt("bitrate")
+	var cfg acfundanmu.SubConfig
+	switch {
+	case bitrate >= 4000:
+		cfg = subConfigs[1080]
+	case len(representation) >= 2 && bitrate >= 2000:
+		cfg = subConfigs[720]
+	case bitrate == 0:
+		cfg = subConfigs[0]
+	default:
+		cfg = subConfigs[540]
+	}
+
+	i := strings.Index(flvURL, "flv?")
+	// 这是flv对应的hls视频源
+	hlsURL := strings.ReplaceAll(flvURL[0:i], "pull.etoote.com", "hlspull.etoote.com") + "m3u8"
+
+	return liveInfo{
+		hlsURL:     hlsURL,
+		flvURL:     flvURL,
+		streamName: streamName,
+		cfg:        cfg,
+		loginBody:  loginBody,
+		apiBody:    apiBody,
+	}
+}
 
 // 根据config.Source获取直播源
-func (s streamer) getLiveURL() (liveURL string) {
+func (s streamer) getLiveURL(source liveInfo) (liveURL string) {
 	switch config.Source {
 	case "hls":
-		liveURL, _, _, _ = s.getStreamURL()
+		liveURL = source.hlsURL
 	case "flv":
-		_, liveURL, _, _ = s.getStreamURL()
+		liveURL = source.flvURL
 	default:
 		lPrintErr(configFile + "里的Source必须是hls或flv")
 		return ""
@@ -380,14 +539,14 @@ func printStreamURL(uid int) (string, string) {
 
 	if s.isLiveOn() {
 		title := s.getTitle()
-		hlsURL, flvURL, _, _ := s.getStreamURL()
+		source := s.getLiveInfo()
 		lPrintln(s.longID() + "正在直播：" + title)
-		if flvURL == "" {
+		if source.flvURL == "" {
 			lPrintErr("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {
-			lPrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + hlsURL + "\n" + flvURL)
+			lPrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + source.hlsURL + "\n" + source.flvURL)
 		}
-		return hlsURL, flvURL
+		return source.hlsURL, source.flvURL
 	}
 
 	lPrintln(s.longID() + "不在直播")

@@ -221,10 +221,12 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 	}
 
 	// 获取直播源
+	var source liveInfo
 	var liveURL string
 	// 应付AcFun API可能出现的bug
 	for retry := 0; retry < 3; retry++ {
-		liveURL = s.getLiveURL()
+		source = s.getLiveInfo()
+		liveURL = s.getLiveURL(source)
 		if liveURL != "" {
 			break
 		}
@@ -290,7 +292,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 
 	// 下载弹幕
 	if danmu {
-		go s.initDanmu(ctx, filename)
+		go s.initDanmu(ctx, filename, source)
 	}
 
 	err = cmd.Run()
@@ -300,7 +302,8 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 
 	time.Sleep(10 * time.Second)
 
-	if _, _, streamName, _ := s.getStreamURL(); streamName != "" {
+	source = s.getLiveInfo()
+	if source.streamName != "" {
 		select {
 		case msg := <-ch:
 			switch msg {
