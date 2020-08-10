@@ -32,8 +32,9 @@ type liveRoom struct {
 
 // liveRoom的map
 var liveRooms struct {
-	sync.Mutex
-	rooms *map[int]liveRoom
+	sync.Mutex                   // rooms的锁
+	rooms      *map[int]liveRoom // 现在的liveRoom
+	newRooms   *map[int]liveRoom // 新的liveRoom
 }
 
 // 获取主播的直播链接
@@ -59,9 +60,7 @@ func fetchAllRooms() {
 		}
 	}
 
-	liveRooms.Lock()
-	defer liveRooms.Unlock()
-	liveRooms.rooms = &allRooms
+	liveRooms.newRooms = &allRooms
 }
 
 // 获取指定页数的AcFun直播间
@@ -130,7 +129,7 @@ func (s streamer) isLiveOn() bool {
 	return ok
 }
 
-// 获取主播直播间的标题
+// 通过用户直播相关信息获取主播直播间的标题
 func (s streamer) getTitleByInfo() string {
 	v := getLiveInfo(s.UID)
 	if v.Exists("title") {
@@ -411,7 +410,7 @@ func cycleFetch(ctx context.Context) {
 			streamers.Lock()
 			// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
 			for _, s := range streamers.crt {
-				if !s.isLiveOn() {
+				if _, ok := (*liveRooms.newRooms)[s.UID]; !ok {
 					notLive = append(notLive, s)
 				}
 			}
@@ -419,11 +418,13 @@ func cycleFetch(ctx context.Context) {
 			for _, s := range notLive {
 				if s.isLiveOnByInfo() {
 					title := s.getTitleByInfo()
-					liveRooms.Lock()
-					(*liveRooms.rooms)[s.UID] = liveRoom{name: s.Name, title: title}
-					liveRooms.Unlock()
+					(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
 				}
 			}
+
+			liveRooms.Lock()
+			liveRooms.rooms = liveRooms.newRooms
+			liveRooms.Unlock()
 
 			// 每10秒循环一次
 			time.Sleep(10 * time.Second)
