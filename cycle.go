@@ -98,7 +98,7 @@ func (s streamer) cycle() {
 			} else {
 				if isLive {
 					// 应付AcFun API可能出现的bug：主播没下播但API显示下播
-					if source := s.getLiveInfo(); source.streamName == "" && !s.isLiveOnByPage() {
+					if _, _, streamName, _ := s.getStreamURL(); streamName == "" && !s.isLiveOnByPage() {
 						isLive = false
 						lPrintln(s.longID() + "已经下播")
 						if s.Notify.NotifyOff {
