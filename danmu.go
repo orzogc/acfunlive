@@ -77,6 +77,8 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		}
 	}()
 
+	startTime := time.Now().UnixNano()
+
 	// 获取直播源和对应的弹幕设置
 	var streamName string
 	var cfg acfundanmu.SubConfig
@@ -114,7 +116,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	}
 	dq := acfundanmu.Start(ctx, s.UID)
 	cfg.Title = filename
-	cfg.StartTime = time.Now().UnixNano()
+	cfg.StartTime = startTime
 	dq.WriteASS(ctx, cfg, assFile, true)
 
 	for {
@@ -130,6 +132,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
 				dq = acfundanmu.Start(ctx, s.UID)
 				dq.WriteASS(ctx, cfg, assFile, false)
+				time.Sleep(10 * time.Second)
 			} else {
 				isDone = true
 			}
