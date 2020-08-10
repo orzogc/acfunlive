@@ -251,6 +251,8 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
+	client := &http.Client{Timeout: 10 * time.Second}
+
 	resp, err := http.Get(s.getURL())
 	checkErr(err)
 	defer resp.Body.Close()
@@ -264,10 +266,9 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	}
 	deviceID := didCookie.Value
 
-	client := &http.Client{Timeout: 10 * time.Second}
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
-	req, err := http.NewRequest("POST", loginPage, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
 	checkErr(err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -297,7 +298,11 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	// authorId就是主播的uid
 	form.Set("authorId", s.itoa())
 	form.Set("pullStreamType", "FLV")
-	resp, err = http.PostForm(streamURL, form)
+	req, err = http.NewRequest(http.MethodPost, streamURL, strings.NewReader(form.Encode()))
+	checkErr(err)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Referer", s.getURL())
+	resp, err = client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err = ioutil.ReadAll(resp.Body)
