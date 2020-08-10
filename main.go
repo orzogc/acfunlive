@@ -92,9 +92,7 @@ func lPrintln(msg ...interface{}) {
 	}
 	// 同时输出日志到web服务
 	logString.Lock()
-	m := make([]interface{}, 1)
-	m[0] = getTime()
-	msg = append(m, msg...)
+	fmt.Fprint(&logString.str, getTime()+" ")
 	fmt.Fprintln(&logString.str, msg...)
 	logString.Unlock()
 }
@@ -149,6 +147,7 @@ func argsHandle() {
 	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
 	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面，需要webapi参数")
 	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
+	isMirai = flag.Bool("mirai", false, "")
 	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -238,6 +237,9 @@ func checkConfig() {
 	case config.WebPort < 1024 || config.WebPort > 65525:
 		lPrintErr(configFile + "里的WebPort必须大于1023且少于65526")
 		os.Exit(1)
+	case config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 || config.Coolq.AdminQQ < 0:
+		lPrintErr(configFile + "里的QQ号必须大于等于0")
+		os.Exit(1)
 	}
 }
 
@@ -304,6 +306,15 @@ func main() {
 
 		mainCh = make(chan controlMsg, 20)
 
+		if *isMirai {
+			initMirai()
+		}
+
+		if *isCoolq {
+			lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
+			initCoolq()
+		}
+
 		for _, s := range streamers.crt {
 			go s.cycle()
 		}
@@ -329,18 +340,11 @@ func main() {
 			go startUI()
 		}
 
-		if *isCoolq {
-			lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
-			initCoolq()
-		}
-
 		go cycleFetch(ctx)
 
 		if !*isNoGUI {
 			go systray.Run(trayOnReady, trayOnExit)
 		}
-
-		go initMirai()
 
 		for {
 			select {

@@ -46,6 +46,7 @@ type configData struct {
 	Source  string    // 直播源，有hls和flv两种
 	Output  string    // 直播下载视频格式的后缀名
 	WebPort int       // web API的本地端口
+	Mirai   miraiData // Mirai相关设置
 	Coolq   coolqData // 酷Q相关设置
 }
 
@@ -54,6 +55,11 @@ var config = configData{
 	Source:  "flv",
 	Output:  "mp4",
 	WebPort: 51880,
+	Mirai: miraiData{
+		AdminQQ:       0,
+		BotQQ:         0,
+		BotQQPassword: "",
+	},
 	Coolq: coolqData{
 		CqhttpWSAddr: "ws://localhost:6700",
 		AdminQQ:      0,

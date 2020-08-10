@@ -10,11 +10,21 @@ import (
 	asciiart "github.com/yinghau76/go-ascii-art"
 )
 
-var cli *client.QQClient
+// 是否通过Mirai连接QQ
+var isMirai *bool
+
+var miraiClient *client.QQClient = nil
+
+// Mirai相关设置数据
+type miraiData struct {
+	AdminQQ       int64  // 管理者的QQ，通过这个QQ发送命令
+	BotQQ         int64  // bot的QQ号
+	BotQQPassword string // bot的QQ密码
+}
 
 func initMirai() {
-	cli = client.NewClient()
-	resp, err := cli.Login()
+	miraiClient = client.NewClient(config.Mirai.BotQQ, config.Mirai.BotQQPassword)
+	resp, err := miraiClient.Login()
 	checkErr(err)
 
 	if !resp.Success {
@@ -35,26 +45,65 @@ func initMirai() {
 		}
 	}
 
-	lPrintln("QQ登陆 " + cli.Nickname + "（" + fmt.Sprint(cli.Uin) + "）" + " 成功")
+	lPrintln(fmt.Sprintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin))
 	lPrintln("开始加载QQ好友列表")
-	err = cli.ReloadFriendList()
+	err = miraiClient.ReloadFriendList()
 	checkErr(err)
-	lPrintln("共加载", len(cli.FriendList), "个QQ好友")
+	lPrintln("共加载", len(miraiClient.FriendList), "个QQ好友")
 	lPrintln("开始加载QQ群列表")
-	err = cli.ReloadGroupList()
+	err = miraiClient.ReloadGroupList()
 	checkErr(err)
-	lPrintln("共加载", len(cli.GroupList), "个QQ群")
+	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
+
+	miraiClient.OnPrivateMessage(privateMsgEvent)
 }
 
+func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
+	if m.Sender.Uin == config.Mirai.AdminQQ {
+		for _, e := range m.Elements {
+			switch e.Type() {
+			case message.Text:
+				text := e.(*message.TextElement).Content
+				lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", m.Sender.Uin, text))
+				if s := handleAllCmd(text); text != "" {
+					miraiSendQQ(m.Sender.Uin, s)
+				} else {
+					miraiSendQQ(m.Sender.Uin, handleErrMsg)
+				}
+			}
+		}
+	}
+}
+
+// 发送消息到指定的QQ
 func miraiSendQQ(qq int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(&message.TextElement{Content: text})
-	cli.SendPrivateMessage(qq, msg)
+	miraiClient.SendPrivateMessage(qq, msg)
 }
 
+// 发送消息到指定的QQ群
 func miraiSendQQGroup(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(&message.TextElement{Content: text})
-	cli.SendGroupMessage(qqGroup, msg)
+	miraiClient.SendGroupMessage(qqGroup, msg)
+}
+
+func (s streamer) sendMirai(text string) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in sendMirai(), the error is:", err)
+			lPrintErr("发送" + s.longID() + "的消息（" + text + "）到指定的QQ（" + itoa(int(s.SendQQ)) + "）/QQ群（" + itoa(int(s.SendQQGroup)) + "）时发生错误，取消发送")
+		}
+	}()
+
+	if *isMirai && miraiClient != nil {
+		if s.SendQQ > 0 {
+			miraiSendQQ(s.SendQQ, text)
+		}
+		if s.SendQQGroup > 0 {
+			miraiSendQQGroup(s.SendQQGroup, text)
+		}
+	}
 }

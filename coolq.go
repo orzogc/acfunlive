@@ -12,7 +12,7 @@ import (
 // 是否连接酷Q
 var isCoolq *bool
 
-var bot *qqbotapi.BotAPI = nil
+var coolqBot *qqbotapi.BotAPI = nil
 
 // 酷Q相关设置数据
 type coolqData struct {
@@ -120,19 +120,19 @@ func initCoolq() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in initCoolq(), the error is:", err)
 			lPrintErr("连接酷Q出现问题，请确定已启动酷Q")
-			bot = nil
+			coolqBot = nil
 			*isCoolq = false
 		}
 	}()
 
-	if bot != nil {
+	if coolqBot != nil {
 		lPrintWarn("已经建立过对酷Q的连接")
 		return
 	}
 
 	newBot, err := qqbotapi.NewBotAPI(config.Coolq.AccessToken, config.Coolq.CqhttpWSAddr, config.Coolq.Secret)
 	checkErr(err)
-	bot = newBot
+	coolqBot = newBot
 	lPrintln("成功通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
 
 	go getCoolqMsg()
@@ -140,13 +140,13 @@ func initCoolq() {
 
 // 发送消息到指定的QQ
 func coolqSendQQ(qq int64, text string) {
-	s := bot.NewMessage(qq, "private").Text(text).Send()
+	s := coolqBot.NewMessage(qq, "private").Text(text).Send()
 	checkErr(s.Err)
 }
 
 // 发送消息到指定的QQ群
 func coolqSendQQGroup(qqGroup int64, text string) {
-	s := bot.NewMessage(qqGroup, "group").At("all").Text(text).Send()
+	s := coolqBot.NewMessage(qqGroup, "group").At("all").Text(text).Send()
 	checkErr(s.Err)
 }
 
@@ -159,11 +159,11 @@ func (s streamer) sendCoolq(text string) {
 		}
 	}()
 
-	if *isCoolq && bot != nil {
-		if s.SendQQ != 0 {
+	if *isCoolq && coolqBot != nil {
+		if s.SendQQ > 0 {
 			coolqSendQQ(s.SendQQ, text)
 		}
-		if s.SendQQGroup != 0 {
+		if s.SendQQGroup > 0 {
 			coolqSendQQGroup(s.SendQQGroup, text)
 		}
 	}
@@ -181,7 +181,7 @@ func getCoolqMsg() {
 	}()
 
 	u := qqbotapi.NewUpdate(0)
-	updates, err := bot.GetUpdatesChan(u)
+	updates, err := coolqBot.GetUpdatesChan(u)
 	checkErr(err)
 
 	for update := range updates {
@@ -199,19 +199,19 @@ func handleCoolqMsg(msg *qqbotapi.Message) {
 		if msg.Chat.Type == "private" {
 			lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", msg.From.ID, msg.Text))
 			if s := handleAllCmd(msg.Text); s != "" {
-				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
+				coolqBot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 			} else {
-				bot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
+				coolqBot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
 			}
 		} else {
-			if bot.IsMessageToMe(*msg) {
+			if coolqBot.IsMessageToMe(*msg) {
 				i := strings.Index(msg.Text, "]")
 				text := msg.Text[i+1:]
 				lPrintln(fmt.Sprintf("处理来自QQ群%d里QQ%d的命令：%s", msg.Chat.ID, msg.From.ID, text))
 				if s := handleAllCmd(text); s != "" {
-					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
+					coolqBot.SendMessage(msg.Chat.ID, msg.Chat.Type, s)
 				} else {
-					bot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
+					coolqBot.SendMessage(msg.Chat.ID, msg.Chat.Type, handleErrMsg)
 				}
 			}
 		}
