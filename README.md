@@ -51,7 +51,7 @@ yarn generate
 
 ### 配置文件详解
 #### live.json
-live.json的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
+`live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
 {
     "UID": 23682490,    // 主播的uid
@@ -75,7 +75,7 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 | 码率 | 1000/2000 | 2000/3000 | 4000 | 5000 | 6000 | 7000 | 8000 |
 
 #### config.json
-config.json的内容手动修改后需要重新启动本程序以生效
+`config.json`的内容手动修改后需要重新启动本程序以生效
 ```
 {
     "Source": "flv",  // 直播源，有hls和flv两种，默认是flv
@@ -104,14 +104,14 @@ gui版本直接运行即可，程序会出现在系统托盘那里，可以通�
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)
 
 ### Mirai使用方法
-命令行模式启动时加上`-mirai`参数，需要机器人QQ号和密码。
+命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
 
 目前登陆机器人QQ暂不支持验证码登陆，如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动Mirai。
 
-config.json里Mirai的AdminQQ为自己的QQ号时，添加QQ机器人为好友，可以发送命令给机器人控制本程序，具体命令参考命令行模式运行时的命令。
+`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友后可以发送命令给机器人控制本程序，具体命令参考命令行模式运行时的命令。
 
 ### 酷Q使用方法
-**酷Q官方已经停止维护**
+**酷Q官方已经停止维护，本项目也不会有后续维护**
 
 本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 
@@ -121,4 +121,4 @@ CQHTTP插件必须启用WebSocket服务端，也就是其配置里的use_ws必�
 
 目前群通知@全体成员 需要酷Q Pro。
 
-config.json里Coolq的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。
+`config.json`里Coolq对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。

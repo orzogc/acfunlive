@@ -124,7 +124,7 @@ func handleMiraiMsg(Elements []message.IMessageElement, qq int64) {
 		for _, ele := range Elements {
 			if e, ok := ele.(*message.TextElement); ok {
 				text := e.Content
-				lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", qq, text))
+				lPrintln(fmt.Sprintf("处理来自 QQ %d 的命令：%s", qq, text))
 				if s := handleAllCmd(text); s != "" {
 					miraiSendQQ(qq, s)
 				} else {
