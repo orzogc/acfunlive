@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"time"
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
@@ -22,7 +23,33 @@ type miraiData struct {
 	BotQQPassword string // bot的QQ密码
 }
 
-func initMirai() {
+// 启动Mirai
+func startMirai() bool {
+	if *isMirai {
+		lPrintWarn("已经启动过Mirai")
+	} else {
+		*isMirai = true
+		lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
+		if !initMirai() {
+			lPrintErr("启动Mirai失败，请重新启动Mirai")
+			*isMirai = false
+			return false
+		}
+	}
+	return true
+}
+
+// 初始化Mirai
+func initMirai() bool {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in initMirai(), the error is:", err)
+			lPrintErr("初始化Mirai出现错误，停止启动Mirai")
+			miraiClient = nil
+			*isMirai = false
+		}
+	}()
+
 	miraiClient = client.NewClient(config.Mirai.BotQQ, config.Mirai.BotQQPassword)
 	resp, err := miraiClient.Login()
 	checkErr(err)
@@ -32,16 +59,16 @@ func initMirai() {
 		case client.NeedCaptcha:
 			img, format, err := image.Decode(bytes.NewReader(resp.CaptchaImage))
 			checkErr(err)
-			lPrintln("qq image format:", format)
+			lPrintln("QQ image format:", format)
 			lPrintln("验证码图片：\n" + asciiart.New("image", img).Art)
-			lPrintln("目前暂不支持验证码登陆")
-			return
+			lPrintWarn("目前暂不支持验证码登陆")
+			return false
 		case client.UnsafeDeviceError:
 			lPrintWarn("账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启Mirai")
-			return
+			return false
 		case client.OtherLoginError, client.UnknownLoginError:
 			lPrintErr("登陆失败：" + resp.ErrorMessage)
-			return
+			return false
 		}
 	}
 
@@ -55,20 +82,53 @@ func initMirai() {
 	checkErr(err)
 	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
 
-	miraiClient.OnPrivateMessage(privateMsgEvent)
+	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
+		lPrintWarn("Bot已离线，尝试重连")
+		time.Sleep(10 * time.Second)
+		resp, err := miraiClient.Login()
+		checkErr(err)
+
+		if !resp.Success {
+			switch resp.Error {
+			case client.NeedCaptcha:
+				lPrintErr("重连失败：需要验证码")
+			case client.UnsafeDeviceError:
+				lPrintErr("重连失败：设备锁")
+			case client.OtherLoginError, client.UnknownLoginError:
+				lPrintErr("重连失败：" + resp.ErrorMessage)
+			}
+		}
+	})
+
+	if config.Mirai.AdminQQ > 0 {
+		miraiClient.OnPrivateMessage(privateMsgEvent)
+		miraiClient.OnTempMessage(tempMsgEvent)
+	}
+
+	return true
 }
 
+// 处理私人信息事件
 func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
-	if m.Sender.Uin == config.Mirai.AdminQQ {
-		for _, e := range m.Elements {
-			switch e.Type() {
-			case message.Text:
-				text := e.(*message.TextElement).Content
-				lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", m.Sender.Uin, text))
-				if s := handleAllCmd(text); text != "" {
-					miraiSendQQ(m.Sender.Uin, s)
+	handleMiraiMsg(m.Elements, m.Sender.Uin)
+}
+
+// 处理临时信息事件
+func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
+	handleMiraiMsg(m.Elements, m.Sender.Uin)
+}
+
+// 处理QQ bot接受到的信息
+func handleMiraiMsg(Elements []message.IMessageElement, qq int64) {
+	if qq == config.Mirai.AdminQQ {
+		for _, ele := range Elements {
+			if e, ok := ele.(*message.TextElement); ok {
+				text := e.Content
+				lPrintln(fmt.Sprintf("处理来自QQ%d的命令：%s", qq, text))
+				if s := handleAllCmd(text); s != "" {
+					miraiSendQQ(qq, s)
 				} else {
-					miraiSendQQ(m.Sender.Uin, handleErrMsg)
+					miraiSendQQ(qq, handleErrMsg)
 				}
 			}
 		}
@@ -90,11 +150,12 @@ func miraiSendQQGroup(qqGroup int64, text string) {
 	miraiClient.SendGroupMessage(qqGroup, msg)
 }
 
+// 发送消息
 func (s streamer) sendMirai(text string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in sendMirai(), the error is:", err)
-			lPrintErr("发送" + s.longID() + "的消息（" + text + "）到指定的QQ（" + itoa(int(s.SendQQ)) + "）/QQ群（" + itoa(int(s.SendQQGroup)) + "）时发生错误，取消发送")
+			lPrintErr(fmt.Sprintf("发送%s的消息（%s）到指定的QQ（%d）/QQ群（%d）时发生错误，取消发送", s.longID(), text, s.SendQQ, s.SendQQGroup))
 		}
 	}()
 

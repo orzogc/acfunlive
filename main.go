@@ -92,9 +92,9 @@ func lPrintln(msg ...interface{}) {
 	}
 	// 同时输出日志到web服务
 	logString.Lock()
+	defer logString.Unlock()
 	fmt.Fprint(&logString.str, getTime()+" ")
 	fmt.Fprintln(&logString.str, msg...)
-	logString.Unlock()
 }
 
 // 打印错误信息
@@ -147,7 +147,7 @@ func argsHandle() {
 	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
 	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面，需要webapi参数")
 	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
-	isMirai = flag.Bool("mirai", false, "")
+	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群，需要listen参数")
 	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -247,6 +247,7 @@ func checkConfig() {
 func initialize() {
 	// 避免 initialization loop
 	boolDispatch["startwebapi"] = startWebAPI
+	boolDispatch["startmirai"] = startMirai
 	boolDispatch["startcoolq"] = startCoolq
 
 	exePath, err := os.Executable()
@@ -308,7 +309,11 @@ func main() {
 		mainCh = make(chan controlMsg, 20)
 
 		if *isMirai {
-			initMirai()
+			lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
+			if !initMirai() {
+				lPrintErr("启动Mirai失败，请重新启动Mirai")
+				*isMirai = false
+			}
 		}
 
 		if *isCoolq {
@@ -328,7 +333,7 @@ func main() {
 
 		// 启动GUI时不需要处理命令输入
 		if *isNoGUI {
-			lPrintln("现在可以输入命令修改设置，输入 help 查看全部命令的解释")
+			lPrintln("现在可以输入命令控制本程序，输入 help 查看全部命令的解释")
 			go handleInput()
 		}
 

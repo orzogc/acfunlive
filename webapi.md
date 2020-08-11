@@ -9,6 +9,8 @@ web API默认本地端口为51880
 
 `http://localhost:51880/liststreamer` 列出设置了开播提醒或自动下载直播的主播
 
+`http://localhost:51880/startmirai` 利用Mirai发送直播通知到指定QQ或QQ群
+
 `http://localhost:51880/startcoolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 
 `http://localhost:51880/addnotify/23682490` 通知uid为23682490的主播的直播

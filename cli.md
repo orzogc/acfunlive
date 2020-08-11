@@ -7,6 +7,8 @@
 
 `acfunlive -nogui -listen -webapi` 运行监听程序并启动web API服务器，可以通过`http://localhost:51880`来查看状态和发送命令
 
+`acfunlive -nogui -listen -mirai` 利用Mirai发送直播通知到指定QQ或QQ群
+
 `acfunlive -nogui -listen -coolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 
 `acfunlive -nogui -listlive` 列出正在直播的主播

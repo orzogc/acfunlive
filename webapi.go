@@ -17,6 +17,7 @@ const webHelp = `/listlive ：列出正在直播的主播
 /listrecord ：列出正在下载的直播视频
 /listdanmu：列出正在下载的直播弹幕
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
+/startmirai：利用Mirai发送直播通知到指定QQ或QQ群
 /startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 /addnotify/uid ：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
 /delnotify/uid ：取消订阅指定主播的开播提醒
@@ -97,8 +98,8 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 // 打印日志
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	logString.Lock()
+	defer logString.Unlock()
 	fmt.Fprint(w, logString.str.String())
-	logString.Unlock()
 }
 
 // 打印帮助

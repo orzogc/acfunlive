@@ -125,6 +125,6 @@ func (s streamer) cycle() {
 			msgMap.Unlock()
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Second)
 	}
 }
