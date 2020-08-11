@@ -311,7 +311,7 @@ func main() {
 		if *isMirai {
 			lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
 			if !initMirai() {
-				lPrintErr("启动Mirai失败，请重新启动Mirai")
+				lPrintErr("启动Mirai失败，请重新启动本程序")
 				*isMirai = false
 			}
 		}

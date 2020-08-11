@@ -1,15 +1,19 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
-	"image"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Mrs4s/MiraiGo/client"
 	"github.com/Mrs4s/MiraiGo/message"
-	asciiart "github.com/yinghau76/go-ascii-art"
 )
+
+const qqCaptchaImage = "qqcaptcha.jpg"
 
 // 是否通过Mirai连接QQ
 var isMirai *bool
@@ -31,7 +35,7 @@ func startMirai() bool {
 		*isMirai = true
 		lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
 		if !initMirai() {
-			lPrintErr("启动Mirai失败，请重新启动Mirai")
+			lPrintErr("启动Mirai失败，请重新启动本程序")
 			*isMirai = false
 			return false
 		}
@@ -54,22 +58,29 @@ func initMirai() bool {
 	resp, err := miraiClient.Login()
 	checkErr(err)
 
-	if !resp.Success {
-		switch resp.Error {
-		case client.NeedCaptcha:
-			img, format, err := image.Decode(bytes.NewReader(resp.CaptchaImage))
-			checkErr(err)
-			lPrintln("QQ image format:", format)
-			lPrintln("验证码图片：\n" + asciiart.New("image", img).Art)
-			lPrintWarn("目前暂不支持验证码登陆")
-			return false
-		case client.UnsafeDeviceError:
-			lPrintWarn("账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启Mirai")
-			return false
-		case client.OtherLoginError, client.UnknownLoginError:
-			lPrintErr("登陆失败：" + resp.ErrorMessage)
-			return false
+	for {
+		if !resp.Success {
+			switch resp.Error {
+			case client.NeedCaptcha:
+				imageFile := filepath.Join(exeDir, qqCaptchaImage)
+				ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
+				lPrintln("QQ验证码图片保存在：" + imageFile)
+				lPrintln("请输入验证码，按回车提交：")
+				console := bufio.NewReader(os.Stdin)
+				captcha, err := console.ReadString('\n')
+				checkErr(err)
+				resp, err = miraiClient.SubmitCaptcha(strings.ReplaceAll(captcha, "\n", ""), resp.CaptchaSign)
+				checkErr(err)
+				continue
+			case client.UnsafeDeviceError:
+				lPrintWarn("账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
+				return false
+			case client.OtherLoginError, client.UnknownLoginError:
+				lPrintErr("登陆失败：" + resp.ErrorMessage)
+				return false
+			}
 		}
+		break
 	}
 
 	lPrintln(fmt.Sprintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin))
@@ -91,11 +102,11 @@ func initMirai() bool {
 		if !resp.Success {
 			switch resp.Error {
 			case client.NeedCaptcha:
-				lPrintErr("重连失败：需要验证码")
+				lPrintErr("重连失败：需要验证码，请重启本程序")
 			case client.UnsafeDeviceError:
-				lPrintErr("重连失败：设备锁")
+				lPrintErr("重连失败：设备锁，请重启本程序")
 			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErr("重连失败：" + resp.ErrorMessage)
+				lPrintErr("重连失败：" + resp.ErrorMessage + "，请重启本程序")
 			}
 		}
 	})
@@ -138,7 +149,7 @@ func handleMiraiMsg(Elements []message.IMessageElement, qq int64) {
 // 发送消息到指定的QQ
 func miraiSendQQ(qq int64, text string) {
 	msg := message.NewSendingMessage()
-	msg.Append(&message.TextElement{Content: text})
+	msg.Append(message.NewText(text))
 	miraiClient.SendPrivateMessage(qq, msg)
 }
 
@@ -146,7 +157,7 @@ func miraiSendQQ(qq int64, text string) {
 func miraiSendQQGroup(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
-	msg.Append(&message.TextElement{Content: text})
+	msg.Append(message.NewText(text))
 	miraiClient.SendGroupMessage(qqGroup, msg)
 }
 
