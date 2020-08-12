@@ -66,7 +66,7 @@ yarn generate
     "Danmu": true,        // 是否下载直播弹幕
     "Bitrate": 0,         // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
     "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）
-    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群，最好是管理员）
+    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群，最好是管理员，会@全体成员）
 }
 ```
 Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：
@@ -104,14 +104,16 @@ gui版本直接运行即可，程序会出现在系统托盘那里，可以通�
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)
 
 ### Mirai使用方法
+**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) ，由于MiraiGo还不太稳定，有时候会漏发消息，私聊也无法发送过长的消息。**
+
 命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
 
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
-`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友后可以发送命令给机器人控制本程序，具体命令参考命令行模式运行时的命令。
+`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），具体命令参考命令行模式运行时的命令。
 
 ### 酷Q使用方法
-**酷Q官方已经停止维护，本项目也不会有后续维护**
+**酷Q官方已经停止维护，本项目也不会有后续维护。**
 
 本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
 

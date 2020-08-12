@@ -32,6 +32,10 @@ func startMirai() bool {
 	if *isMirai {
 		lPrintWarn("已经启动过Mirai")
 	} else {
+		if config.Mirai.BotQQ <= 0 || config.Mirai.BotQQPassword == "" {
+			lPrintErr("请先在" + configFile + "里设置好Mirai相关配置")
+			return false
+		}
 		*isMirai = true
 		lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
 		if !initMirai() {
@@ -73,10 +77,10 @@ func initMirai() bool {
 				checkErr(err)
 				continue
 			case client.UnsafeDeviceError:
-				lPrintWarn("账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
+				lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
 				return false
 			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErr("登陆失败：" + resp.ErrorMessage)
+				lPrintErr("QQ登陆失败：" + resp.ErrorMessage)
 				return false
 			}
 		}
@@ -94,7 +98,7 @@ func initMirai() bool {
 	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
 
 	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
-		lPrintWarn("Bot已离线，尝试重连")
+		lPrintWarn("QQ Bot已离线，尝试重连")
 		time.Sleep(10 * time.Second)
 		resp, err := miraiClient.Login()
 		checkErr(err)
@@ -102,11 +106,12 @@ func initMirai() bool {
 		if !resp.Success {
 			switch resp.Error {
 			case client.NeedCaptcha:
-				lPrintErr("重连失败：需要验证码，请重启本程序")
+				lPrintErr("QQ重连失败：需要验证码，请重启本程序")
 			case client.UnsafeDeviceError:
-				lPrintErr("重连失败：设备锁，请重启本程序")
+				lPrintErr("QQ重连失败：设备锁")
+				lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
 			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErr("重连失败：" + resp.ErrorMessage + "，请重启本程序")
+				lPrintErr("QQ重连失败：" + resp.ErrorMessage + "，请重启本程序")
 			}
 		}
 	})
@@ -114,6 +119,7 @@ func initMirai() bool {
 	if config.Mirai.AdminQQ > 0 {
 		miraiClient.OnPrivateMessage(privateMsgEvent)
 		miraiClient.OnTempMessage(tempMsgEvent)
+		miraiClient.OnGroupMessage(groupMsgEvent)
 	}
 
 	return true
@@ -121,16 +127,16 @@ func initMirai() bool {
 
 // 处理私人信息事件
 func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
-	handleMiraiMsg(m.Elements, m.Sender.Uin)
+	handlePrivateMsg(m.Elements, m.Sender.Uin)
 }
 
 // 处理临时信息事件
 func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
-	handleMiraiMsg(m.Elements, m.Sender.Uin)
+	handlePrivateMsg(m.Elements, m.Sender.Uin)
 }
 
 // 处理QQ bot接受到的信息
-func handleMiraiMsg(Elements []message.IMessageElement, qq int64) {
+func handlePrivateMsg(Elements []message.IMessageElement, qq int64) {
 	if qq == config.Mirai.AdminQQ {
 		for _, ele := range Elements {
 			if e, ok := ele.(*message.TextElement); ok {
@@ -146,6 +152,33 @@ func handleMiraiMsg(Elements []message.IMessageElement, qq int64) {
 	}
 }
 
+// 处理群信息事件
+func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
+	if m.Sender.Uin == config.Mirai.AdminQQ {
+		var isAt bool
+		var text []string
+		for _, ele := range m.Elements {
+			switch e := ele.(type) {
+			case *message.AtElement:
+				if e.Target == config.Mirai.BotQQ {
+					isAt = true
+				}
+			case *message.TextElement:
+				text = append(text, e.Content)
+			}
+		}
+		if isAt {
+			cmd := strings.Join(text, "")
+			lPrintln(fmt.Sprintf("处理来自QQ群 %d 里QQ %d 的命令：%s", m.GroupCode, m.Sender.Uin, cmd))
+			if s := handleAllCmd(cmd); s != "" {
+				miraiSendQQGroup(m.GroupCode, s)
+			} else {
+				miraiSendQQGroup(m.GroupCode, handleErrMsg)
+			}
+		}
+	}
+}
+
 // 发送消息到指定的QQ
 func miraiSendQQ(qq int64, text string) {
 	msg := message.NewSendingMessage()
@@ -155,6 +188,13 @@ func miraiSendQQ(qq int64, text string) {
 
 // 发送消息到指定的QQ群
 func miraiSendQQGroup(qqGroup int64, text string) {
+	msg := message.NewSendingMessage()
+	msg.Append(message.NewText(text))
+	miraiClient.SendGroupMessage(qqGroup, msg)
+}
+
+// 发送消息到指定的QQ群，并@全体成员
+func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))
@@ -175,7 +215,7 @@ func (s streamer) sendMirai(text string) {
 			miraiSendQQ(s.SendQQ, text)
 		}
 		if s.SendQQGroup > 0 {
-			miraiSendQQGroup(s.SendQQGroup, text)
+			miraiSendQQGroupAtAll(s.SendQQGroup, text)
 		}
 	}
 }
