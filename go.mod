@@ -3,10 +3,11 @@ module github.com/orzogc/acfunlive
 go 1.14
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20200812011522-ee1117893fad
+	github.com/Mrs4s/MiraiGo v0.0.0-20200812110504-e593fe14fae0
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/catsworld/qq-bot-api v0.0.0-20191230111849-48d158a4fd65
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 // indirect
 	github.com/getlantern/systray v1.0.4

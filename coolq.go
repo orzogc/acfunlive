@@ -9,10 +9,10 @@ import (
 	qqbotapi "github.com/catsworld/qq-bot-api"
 )
 
-// 是否连接酷Q
-var isCoolq *bool
-
-var coolqBot *qqbotapi.BotAPI = nil
+var (
+	isCoolq  *bool // 是否连接酷Q
+	coolqBot *qqbotapi.BotAPI
+)
 
 // 酷Q相关设置数据
 type coolqData struct {

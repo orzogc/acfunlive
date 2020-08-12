@@ -15,10 +15,10 @@ import (
 
 const qqCaptchaImage = "qqcaptcha.jpg"
 
-// 是否通过Mirai连接QQ
-var isMirai *bool
-
-var miraiClient *client.QQClient = nil
+var (
+	isMirai     *bool // 是否通过Mirai连接QQ
+	miraiClient *client.QQClient
+)
 
 // Mirai相关设置数据
 type miraiData struct {
@@ -190,7 +190,9 @@ func miraiSendQQ(qq int64, text string) {
 func miraiSendQQGroup(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
-	miraiClient.SendGroupMessage(qqGroup, msg)
+	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
+		lPrintErr("消息字数过多，发送失败")
+	}
 }
 
 // 发送消息到指定的QQ群，并@全体成员
@@ -198,7 +200,9 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))
-	miraiClient.SendGroupMessage(qqGroup, msg)
+	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
+		lPrintErr("消息字数过多，发送失败")
+	}
 }
 
 // 发送消息

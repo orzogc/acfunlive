@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
-	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 const (
@@ -161,79 +162,101 @@ func deleteStreamer(uid int) bool {
 	return true
 }
 
-// 循环判断设置文件是否被修改，是的话重新设置
+// 监控config.json是否被修改，是的话重新设置
 func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in cycleConfig(), the error is:", err)
-			lPrintErr("循环读取设置文件" + liveFile + "时出错，请重启本程序")
+			lPrintErr("监控设置文件" + liveFile + "时出错，请重启本程序")
 		}
 	}()
 
-	modTime := time.Now()
+	lPrintln("开始监控设置文件" + liveFile)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			info, err := os.Stat(liveFileLocation)
-			checkErr(err)
+	watcher, err := fsnotify.NewWatcher()
+	checkErr(err)
+	defer watcher.Close()
 
-			streamers.Lock()
-			if info.ModTime().After(modTime) {
-				lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
-				modTime = info.ModTime()
-				loadLiveConfig()
-
-				for uid, s := range streamers.crt {
-					if olds, ok := streamers.old[uid]; ok {
-						if s != olds {
-							// olds的设置被修改
-							lPrintln(s.longID() + "的设置被修改，重新设置")
-							restart := controlMsg{s: s, c: startCycle}
-							msgMap.Lock()
-							m := msgMap.msg[s.UID]
-							m.modify = true
-							m.ch <- restart
-							msgMap.Unlock()
-						}
-					} else {
-						// s为新增的主播
-						lPrintln("新增" + s.longID() + "的设置")
-						start := controlMsg{s: s, c: startCycle}
-						msgMap.Lock()
-						if m, ok := msgMap.msg[s.UID]; ok {
-							m.modify = true
-						} else {
-							msgMap.msg[s.UID] = &sMsg{modify: true}
-						}
-						msgMap.Unlock()
-						mainCh <- start
-					}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				wg.Done()
+				return
+			case event, ok := <-watcher.Events:
+				if !ok {
+					wg.Done()
+					return
 				}
-
-				for uid, olds := range streamers.old {
-					if _, ok := streamers.crt[uid]; !ok {
-						// olds为被删除的主播
-						lPrintln(olds.longID() + "的设置被删除")
-						stop := controlMsg{s: olds, c: stopCycle}
-						msgMap.Lock()
-						msgMap.msg[olds.UID].ch <- stop
-						msgMap.Unlock()
-					}
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
+					loadNewConfig()
 				}
-
-				oldstreamers := make(map[int]streamer)
-				for uid, s := range streamers.crt {
-					oldstreamers[uid] = s
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					wg.Done()
+					return
 				}
-				streamers.old = oldstreamers
+				lPrintErr("监控设置文件"+liveFile+"时出现错误：", err)
 			}
-			streamers.Unlock()
+		}
+	}()
 
-			// 每半分钟循环一次
-			time.Sleep(30 * time.Second)
+	err = watcher.Add(liveFileLocation)
+	checkErr(err)
+	wg.Wait()
+	lPrintln("停止监控设置文件" + liveFile)
+}
+
+// 读取修改后的config.json
+func loadNewConfig() {
+	streamers.Lock()
+	loadLiveConfig()
+	for uid, s := range streamers.crt {
+		if olds, ok := streamers.old[uid]; ok {
+			if s != olds {
+				// olds的设置被修改
+				lPrintln(s.longID() + "的设置被修改，重新设置")
+				restart := controlMsg{s: s, c: startCycle}
+				msgMap.Lock()
+				m := msgMap.msg[s.UID]
+				m.modify = true
+				m.ch <- restart
+				msgMap.Unlock()
+			}
+		} else {
+			// s为新增的主播
+			lPrintln("新增" + s.longID() + "的设置")
+			start := controlMsg{s: s, c: startCycle}
+			msgMap.Lock()
+			if m, ok := msgMap.msg[s.UID]; ok {
+				m.modify = true
+			} else {
+				msgMap.msg[s.UID] = &sMsg{modify: true}
+			}
+			msgMap.Unlock()
+			mainCh <- start
 		}
 	}
+
+	for uid, olds := range streamers.old {
+		if _, ok := streamers.crt[uid]; !ok {
+			// olds为被删除的主播
+			lPrintln(olds.longID() + "的设置被删除")
+			stop := controlMsg{s: olds, c: stopCycle}
+			msgMap.Lock()
+			msgMap.msg[olds.UID].ch <- stop
+			msgMap.Unlock()
+		}
+	}
+
+	oldstreamers := make(map[int]streamer)
+	for uid, s := range streamers.crt {
+		oldstreamers[uid] = s
+	}
+	streamers.old = oldstreamers
+
+	streamers.Unlock()
 }
