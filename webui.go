@@ -48,6 +48,14 @@ func startUI() {
 			lPrintErr("web UI启动出现错误，请重启本程序")
 		}
 	}()
+	defer func() {
+		*isWebUI = false
+	}()
+
+	if !*isWebAPI {
+		lPrintln("启动web API服务器")
+		startWebAPI()
+	}
 
 	dir := filepath.Join(exeDir, webUIDir)
 	info, err := os.Stat(dir)
@@ -81,7 +89,7 @@ func startWebUI() bool {
 		lPrintWarn("已经启动过web UI服务器")
 	} else {
 		*isWebUI = true
-		startUI()
+		go startUI()
 	}
 	return true
 }

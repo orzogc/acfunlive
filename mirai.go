@@ -67,7 +67,8 @@ func initMirai() bool {
 			switch resp.Error {
 			case client.NeedCaptcha:
 				imageFile := filepath.Join(exeDir, qqCaptchaImage)
-				ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
+				err = ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
+				checkErr(err)
 				lPrintln("QQ验证码图片保存在：" + imageFile)
 				lPrintln("请输入验证码，按回车提交：")
 				console := bufio.NewReader(os.Stdin)
@@ -191,7 +192,7 @@ func miraiSendQQGroup(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
 	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-		lPrintErr("消息字数过多，发送失败")
+		lPrintErr("给QQ群", qqGroup, "的消息发送失败")
 	}
 }
 
@@ -201,7 +202,7 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))
 	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-		lPrintErr("消息字数过多，发送失败")
+		lPrintErr("给QQ群", qqGroup, "的消息发送失败")
 	}
 }
 

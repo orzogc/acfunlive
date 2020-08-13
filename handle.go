@@ -17,7 +17,7 @@ listrecord：列出正在下载的直播视频
 listdanmu：列出正在下载的直播弹幕
 startwebapi：启动web API服务器
 stopwebapi：停止web API服务器
-startwebui：启动web UI服务器，需要先启动web API服务器
+startwebui：启动web UI服务器，需要web API服务器运行，如果web API服务器没启动会启动web API服务器
 stopwebui：停止web UI服务器
 startmirai：利用Mirai发送直播通知到指定QQ或QQ群
 startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
@@ -43,10 +43,10 @@ quit：退出本程序，退出需要等待半分钟左右
 help：输出本帮助信息`
 
 var boolDispatch = map[string]func() bool{
-	//"startweb":   startWeb,
+	//"startweb":   startWebAPI,
 	"stopwebapi": stopWebAPI,
-	"startwebui": startWebUI,
-	"stopwebui":  stopWebUI,
+	//"startwebui": startWebUI,
+	"stopwebui": stopWebUI,
 	//"startmirai": startMirai,
 	//"startcoolq": startCoolq,
 }

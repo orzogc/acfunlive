@@ -213,7 +213,9 @@ func cycleConfig(ctx context.Context) {
 // 读取修改后的config.json
 func loadNewConfig() {
 	streamers.Lock()
+
 	loadLiveConfig()
+
 	for uid, s := range streamers.crt {
 		if olds, ok := streamers.old[uid]; ok {
 			if s != olds {

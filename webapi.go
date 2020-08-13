@@ -16,6 +16,8 @@ import (
 const webHelp = `/listlive ：列出正在直播的主播
 /listrecord ：列出正在下载的直播视频
 /listdanmu：列出正在下载的直播弹幕
+/startwebui：启动web UI服务器
+/stopwebui：停止web UI服务器
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
 /startmirai：利用Mirai发送直播通知到指定QQ或QQ群
 /startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
@@ -118,15 +120,17 @@ func printRequestURI(next http.Handler) http.Handler {
 }
 
 // web API服务器
-func apiServer() {
+func webAPI() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in APIServer(), the error is:", err)
+			lPrintErr("Recovering from panic in webAPI(), the error is:", err)
 			lPrintErr("web API服务器发生错误，尝试重启web API服务器")
 			time.Sleep(2 * time.Second)
-			go apiServer()
+			go webAPI()
 		}
 	}()
+
+	lPrintln("启动web API服务器，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/favicon.ico", faviconHandler)
@@ -162,8 +166,7 @@ func startWebAPI() bool {
 		lPrintWarn("已经启动过web API服务器")
 	} else {
 		*isWebAPI = true
-		lPrintln("启动web API服务器，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
-		go apiServer()
+		go webAPI()
 	}
 	return true
 }

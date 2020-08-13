@@ -247,6 +247,7 @@ func checkConfig() {
 func initialize() {
 	// 避免 initialization loop
 	boolDispatch["startwebapi"] = startWebAPI
+	boolDispatch["startwebui"] = startWebUI
 	boolDispatch["startmirai"] = startMirai
 	boolDispatch["startcoolq"] = startCoolq
 
@@ -340,8 +341,7 @@ func main() {
 		}
 
 		if *isWebAPI {
-			lPrintln("启动web服务，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
-			go apiServer()
+			go webAPI()
 		}
 
 		if *isWebUI {
