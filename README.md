@@ -97,13 +97,13 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 
 ### 使用方法
 gui版本直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面。
-Windows下如果要使用命令行模式，下载cli版本，运行需要加上`-nogui`参数，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/cli.md) 。
+Windows下如果要使用命令行模式，下载cli版本，运行需要加上`-nogui`参数，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
 本程序下载的视频和弹幕默认保存在本程序所在文件夹内。
 
 命令行模式运行时可以输入命令控制本程序，运行时输入help查看具体命令。
 
 ### web API
-具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/webapi.md)
+具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/doc/webapi.md)
 
 ### Mirai使用方法
 **本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) ，由于MiraiGo还不太稳定，有时候会漏发消息，私聊也无法发送过长的消息。**
@@ -112,7 +112,7 @@ Windows下如果要使用命令行模式，下载cli版本，运行需要加上`
 
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
-`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），具体命令参考命令行模式运行时的命令。
+`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），具体命令参考命令行模式运行时可以输入的命令。
 
 ### 酷Q使用方法
 **酷Q官方已经停止维护，本项目也不会有后续维护。**
