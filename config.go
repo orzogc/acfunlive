@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -190,9 +191,23 @@ func cycleConfig(ctx context.Context) {
 					wg.Done()
 					return
 				}
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
-					loadNewConfig()
+				// 很多时候保存文件会分为数段写入，避免读取未完成写入的设置文件
+				time.Sleep(100 * time.Millisecond)
+			Outer:
+				for {
+					select {
+					case event, ok = <-watcher.Events:
+						if !ok {
+							wg.Done()
+							return
+						}
+					default:
+						if event.Op&fsnotify.Write == fsnotify.Write {
+							lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
+							loadNewConfig()
+						}
+						break Outer
+					}
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
