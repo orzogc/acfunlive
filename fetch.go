@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -77,11 +78,16 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 	const acLive = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
+	client := &http.Client{Timeout: 10 * time.Second}
+
 	form := url.Values{}
 	form.Set("count", "1000")
 	form.Set("pcursor", page)
+	req, err := http.NewRequest(http.MethodPost, acLive, strings.NewReader(form.Encode()))
+	checkErr(err)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := http.PostForm(acLive, form)
+	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -160,7 +166,11 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 
 	const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 
-	resp, err := http.Get(fmt.Sprintf(acLiveInfo, uid))
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(acLiveInfo, uid), nil)
+	checkErr(err)
+	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -252,7 +262,9 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	resp, err := http.Get(s.getURL())
+	req, err := http.NewRequest(http.MethodGet, s.getURL(), nil)
+	checkErr(err)
+	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 
@@ -267,7 +279,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
-	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
+	req, err = http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
 	checkErr(err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -300,6 +312,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	req, err = http.NewRequest(http.MethodPost, streamURL, strings.NewReader(form.Encode()))
 	checkErr(err)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// 会验证Referer
 	req.Header.Set("Referer", s.getURL())
 	resp, err = client.Do(req)
 	checkErr(err)
@@ -318,12 +331,16 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	streamName = string(v.GetStringBytes("streamName"))
 
 	representation := v.GetArray("liveAdaptiveManifest", "0", "adaptationSet", "representation")
+	sort.Slice(representation, func(i, j int) bool {
+		return representation[i].GetInt("bitrate") < representation[j].GetInt("bitrate")
+	})
 
-	// 选择s.Bitrate下码率最高的直播源
 	index := 0
 	if s.Bitrate == 0 {
+		// s.Bitrate为0时选择码率最高的直播源
 		index = len(representation) - 1
 	} else {
+		// 选择s.Bitrate下码率最高的直播源
 		for i, r := range representation {
 			if s.Bitrate >= r.GetInt("bitrate") {
 				index = i
@@ -406,6 +423,7 @@ func cycleFetch(ctx context.Context) {
 			return
 		default:
 			fetchAllRooms()
+
 			var notLive []streamer
 			streamers.Lock()
 			// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
@@ -415,12 +433,22 @@ func cycleFetch(ctx context.Context) {
 				}
 			}
 			streamers.Unlock()
+
+			var wg sync.WaitGroup
+			var mu sync.Mutex
 			for _, s := range notLive {
-				if s.isLiveOnByInfo() {
-					title := s.getTitleByInfo()
-					(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
-				}
+				wg.Add(1)
+				go func(s streamer) {
+					if s.isLiveOnByInfo() {
+						title := s.getTitleByInfo()
+						mu.Lock()
+						(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
+						mu.Unlock()
+					}
+					wg.Done()
+				}(s)
 			}
+			wg.Wait()
 
 			liveRooms.Lock()
 			liveRooms.rooms = liveRooms.newRooms

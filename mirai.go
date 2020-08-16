@@ -40,6 +40,7 @@ func startMirai() bool {
 		lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
 		if !initMirai() {
 			lPrintErr("启动Mirai失败，请重新启动本程序")
+			miraiClient = nil
 			*isMirai = false
 			return false
 		}
@@ -126,18 +127,18 @@ func initMirai() bool {
 	return true
 }
 
-// 处理私人信息事件
+// 处理私聊消息事件
 func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
-	handlePrivateMsg(m.Elements, m.Sender.Uin)
+	handlePrivateMsg(m.Sender.Uin, m.Elements)
 }
 
-// 处理临时信息事件
+// 处理临时会话消息事件
 func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
-	handlePrivateMsg(m.Elements, m.Sender.Uin)
+	handlePrivateMsg(m.Sender.Uin, m.Elements)
 }
 
-// 处理QQ bot接受到的信息
-func handlePrivateMsg(Elements []message.IMessageElement, qq int64) {
+// 处理QQ bot接收到的私聊或临时会话消息
+func handlePrivateMsg(qq int64, Elements []message.IMessageElement) {
 	if qq == config.Mirai.AdminQQ {
 		for _, ele := range Elements {
 			if e, ok := ele.(*message.TextElement); ok {
@@ -153,7 +154,7 @@ func handlePrivateMsg(Elements []message.IMessageElement, qq int64) {
 	}
 }
 
-// 处理群信息事件
+// 处理群消息事件
 func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 	if m.Sender.Uin == config.Mirai.AdminQQ {
 		var isAt bool

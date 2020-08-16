@@ -181,14 +181,13 @@ func cycleConfig(ctx context.Context) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			select {
 			case <-ctx.Done():
-				wg.Done()
 				return
 			case event, ok := <-watcher.Events:
 				if !ok {
-					wg.Done()
 					return
 				}
 				// 很多时候保存文件会分为数段写入，避免读取未完成写入的设置文件
@@ -198,9 +197,9 @@ func cycleConfig(ctx context.Context) {
 					select {
 					case event, ok = <-watcher.Events:
 						if !ok {
-							wg.Done()
 							return
 						}
+						time.Sleep(100 * time.Millisecond)
 					default:
 						if event.Op&fsnotify.Write == fsnotify.Write {
 							lPrintln("设置文件" + liveFile + "被修改，重新读取设置")
@@ -211,7 +210,6 @@ func cycleConfig(ctx context.Context) {
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					wg.Done()
 					return
 				}
 				lPrintErr("监控设置文件"+liveFile+"时出现错误：", err)
