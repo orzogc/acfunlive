@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.14
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20200814042404-be0e431f8fd9
+	github.com/Mrs4s/MiraiGo v0.0.0-20200817060415-16d4bb1f0522
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/catsworld/qq-bot-api v0.0.0-20191230111849-48d158a4fd65

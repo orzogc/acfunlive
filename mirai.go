@@ -185,7 +185,9 @@ func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 func miraiSendQQ(qq int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
-	miraiClient.SendPrivateMessage(qq, msg)
+	if result := miraiClient.SendPrivateMessage(qq, msg); result == nil {
+		lPrintErr("给QQ", qq, "的消息发送失败")
+	}
 }
 
 // 发送消息到指定的QQ群

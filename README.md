@@ -106,13 +106,13 @@ Windows下如果要使用命令行模式，下载cli版本，运行需要加上`
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/doc/webapi.md)
 
 ### Mirai使用方法
-**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) ，由于MiraiGo还不太稳定，有时候会漏发消息，私聊也无法发送过长的消息。**
+**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) ，由于MiraiGo还不太稳定，偶尔会漏发消息**
 
 命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
 
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
-`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），具体命令参考命令行模式运行时可以输入的命令。
+`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。
 
 ### 酷Q使用方法
 **酷Q官方已经停止维护，本项目也不会有后续维护。**

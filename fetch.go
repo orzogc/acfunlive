@@ -262,9 +262,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	req, err := http.NewRequest(http.MethodGet, s.getURL(), nil)
-	checkErr(err)
-	resp, err := client.Do(req)
+	resp, err := http.Get(s.getURL())
 	checkErr(err)
 	defer resp.Body.Close()
 
@@ -279,7 +277,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
-	req, err = http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
+	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
 	checkErr(err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -415,6 +413,25 @@ func printStreamURL(uid int) (string, string) {
 	return "", ""
 }
 
+// 通过用户直播相关信息并行查看主播是否在直播
+func getLiveOnByInfo(ss []streamer) {
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	for _, s := range ss {
+		wg.Add(1)
+		go func(s streamer) {
+			if s.isLiveOnByInfo() {
+				title := s.getTitleByInfo()
+				mu.Lock()
+				(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
+				mu.Unlock()
+			}
+			wg.Done()
+		}(s)
+	}
+	wg.Wait()
+}
+
 // 循环获取AcFun直播间数据
 func cycleFetch(ctx context.Context) {
 	for {
@@ -434,21 +451,17 @@ func cycleFetch(ctx context.Context) {
 			}
 			streamers.Unlock()
 
-			var wg sync.WaitGroup
-			var mu sync.Mutex
-			for _, s := range notLive {
-				wg.Add(1)
-				go func(s streamer) {
-					if s.isLiveOnByInfo() {
-						title := s.getTitleByInfo()
-						mu.Lock()
-						(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
-						mu.Unlock()
-					}
-					wg.Done()
-				}(s)
+			// 并行的请求不能太多
+			const num = 10
+			length := len(notLive)
+			q := length / num
+			r := length % num
+			for i := 0; i < q; i++ {
+				getLiveOnByInfo(notLive[i*num : (i+1)*num])
 			}
-			wg.Wait()
+			if r != 0 {
+				getLiveOnByInfo(notLive[length-r : length])
+			}
 
 			liveRooms.Lock()
 			liveRooms.rooms = liveRooms.newRooms
