@@ -22,6 +22,7 @@ import (
 //const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 //const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+//const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
 // 直播间的数据结构
 type liveRoom struct {
@@ -55,6 +56,9 @@ func fetchAllRooms() {
 	allRooms := make(map[int]liveRoom)
 	for page != "no_more" {
 		rooms, nextPage := fetchLiveRoom(page)
+		if rooms == nil && nextPage == "" {
+			break
+		}
 		page = nextPage
 		for uid, r := range *rooms {
 			allRooms[uid] = r
@@ -69,25 +73,16 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in fetchLiveRoom(), the error is:", err)
-			lPrintErr("获取AcFun直播间API的json时发生错误，尝试重新运行")
+			lPrintErr("获取AcFun直播间列表时发生错误，尝试重新运行")
 			// 延迟两秒，防止意外情况下刷屏
 			time.Sleep(2 * time.Second)
 			r, nextPage = fetchLiveRoom(page)
 		}
 	}()
 
-	const acLive = "https://api-plus.app.acfun.cn/rest/app/live/channel"
+	const acLive = "https://live.acfun.cn/api/channel/list?count=1000&pcursor=%s"
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	form := url.Values{}
-	form.Set("count", "1000")
-	form.Set("pcursor", page)
-	req, err := http.NewRequest(http.MethodPost, acLive, strings.NewReader(form.Encode()))
-	checkErr(err)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := client.Do(req)
+	resp, err := http.Get(fmt.Sprintf(acLive, page))
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -96,12 +91,13 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	if v.GetInt("result") != 0 {
+	if v.GetInt("channelListData", "result") != 0 {
+		lPrintErr("无法获取AcFun直播间列表，响应为：" + string(body))
 		return nil, ""
 	}
 
 	var rooms = make(map[int]liveRoom)
-	liveList := v.GetArray("liveList")
+	liveList := v.GetArray("channelListData", "liveList")
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
 		room := liveRoom{
@@ -111,7 +107,7 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 		rooms[uid] = room
 	}
 
-	nextPage = string(v.GetStringBytes("pcursor"))
+	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
 
 	return &rooms, nextPage
 }

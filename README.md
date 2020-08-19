@@ -106,7 +106,7 @@ Windows下如果要使用命令行模式，下载cli版本，运行需要加上`
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/doc/webapi.md)
 
 ### Mirai使用方法
-**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) ，由于MiraiGo还不太稳定，偶尔会漏发消息**
+**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo)**
 
 命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
 
