@@ -252,6 +252,13 @@ func fetchAcLogo() {
 
 // 获取did的cookie
 func getDidCookie() {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in getDidCookie(), the error is:", err)
+			lPrintErr("获取didCookie时出错，请重新运行本程序")
+		}
+	}()
+
 	const mainPage = "https://live.acfun.cn"
 
 	resp, err := http.Get(mainPage)

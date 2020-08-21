@@ -308,7 +308,7 @@ func main() {
 	if *isListen {
 		if len(streamers.crt) == 0 {
 			if *isNoGUI {
-				lPrintWarn("请订阅指定主播的开播提醒或自动下载，运行 acfunlive -h 查看帮助")
+				lPrintWarn("请订阅指定主播的开播提醒或自动下载，输入 help 查看帮助")
 			} else {
 				lPrintWarn("请在web UI界面订阅指定主播的开播提醒或自动下载")
 			}
