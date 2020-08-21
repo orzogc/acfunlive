@@ -81,8 +81,13 @@ func checkErr(err error) {
 // 获取时间
 func getTime() string {
 	t := time.Now()
-	timeStr := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
-	return timeStr
+	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+}
+
+// 获取时间，按照log的时间格式
+func getLogTime() string {
+	t := time.Now()
+	return fmt.Sprintf("%d/%02d/%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
 // 打印带时间戳的log信息
@@ -93,7 +98,7 @@ func lPrintln(msg ...interface{}) {
 	// 同时输出日志到web服务
 	logString.Lock()
 	defer logString.Unlock()
-	fmt.Fprint(&logString.str, getTime()+" ")
+	fmt.Fprint(&logString.str, getLogTime()+" ")
 	fmt.Fprintln(&logString.str, msg...)
 }
 
@@ -175,7 +180,10 @@ func argsHandle() {
 				flag.PrintDefaults()
 			}
 		}
-		if !*isNoGUI {
+		if *isNoGUI {
+			// 打印 initialize() 里没有打印出来的信息
+			fmt.Print(logString.str.String())
+		} else {
 			*isListen = true
 			*isWebAPI = true
 			*isWebUI = true
@@ -287,6 +295,7 @@ func initialize() {
 		streamers.old[uid] = s
 	}
 
+	getDidCookie()
 	fetchAllRooms()
 	liveRooms.rooms = liveRooms.newRooms
 }

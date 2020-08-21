@@ -24,6 +24,8 @@ import (
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 //const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
+var didCookie *http.Cookie
+
 // 直播间的数据结构
 type liveRoom struct {
 	// 主播名字
@@ -54,7 +56,7 @@ func (s streamer) getURL() string {
 func fetchAllRooms() {
 	page := "0"
 	allRooms := make(map[int]liveRoom)
-	for page != "no_more" {
+	for page != "no_more" && page != "" {
 		rooms, nextPage := fetchLiveRoom(page)
 		if rooms == nil && nextPage == "" {
 			break
@@ -82,7 +84,13 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 	const acLive = "https://live.acfun.cn/api/channel/list?count=1000&pcursor=%s"
 
-	resp, err := http.Get(fmt.Sprintf(acLive, page))
+	client := &http.Client{Timeout: 10 * time.Second}
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(acLive, page), nil)
+	checkErr(err)
+	// 需要did的cookie
+	req.AddCookie(didCookie)
+
+	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -91,7 +99,7 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	if v.GetInt("channelListData", "result") != 0 {
+	if v.GetInt("channelListData", "result") != 0 || v.GetBool("isError") == true {
 		lPrintErr("无法获取AcFun直播间列表，响应为：" + string(body))
 		return nil, ""
 	}
@@ -196,8 +204,8 @@ func (s streamer) isLiveOnByPage() (isLive bool) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	req, err := http.NewRequest(http.MethodGet, acLivePage+itoa(s.UID), nil)
 	checkErr(err)
-
 	req.Header.Set("User-Agent", userAgent)
+
 	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
@@ -242,6 +250,26 @@ func fetchAcLogo() {
 	checkErr(err)
 }
 
+// 获取did的cookie
+func getDidCookie() {
+	const mainPage = "https://live.acfun.cn"
+
+	resp, err := http.Get(mainPage)
+	checkErr(err)
+	defer resp.Body.Close()
+
+	// 获取did（device ID）
+	for _, cookie := range resp.Cookies() {
+		if cookie.Name == "_did" {
+			didCookie = cookie
+		}
+	}
+	if didCookie == nil {
+		lPrintErr("无法获取didCookie，退出程序")
+		os.Exit(1)
+	}
+}
+
 // 获取AcFun的直播源，分为hls和flv两种
 func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName string, cfg acfundanmu.SubConfig) {
 	defer func() {
@@ -258,19 +286,6 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	resp, err := http.Get(s.getURL())
-	checkErr(err)
-	defer resp.Body.Close()
-
-	// 获取did（device ID）
-	var didCookie *http.Cookie
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name == "_did" {
-			didCookie = cookie
-		}
-	}
-	deviceID := didCookie.Value
-
 	form := url.Values{}
 	form.Set("sid", "acfun.api.visitor")
 	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
@@ -280,7 +295,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	// 需要did的cookie
 	req.AddCookie(didCookie)
 
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	checkErr(err)
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -297,7 +312,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	serviceToken := string(v.GetStringBytes("acfun.api.visitor_st"))
 
 	// 获取直播源的地址需要userId、did和对应的令牌
-	streamURL := fmt.Sprintf(playURL, userID, deviceID, serviceToken)
+	streamURL := fmt.Sprintf(playURL, userID, didCookie.Value, serviceToken)
 
 	form = url.Values{}
 	// authorId就是主播的uid
