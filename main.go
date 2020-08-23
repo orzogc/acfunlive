@@ -167,6 +167,8 @@ func argsHandle() {
 	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	flag.Parse()
 
+	initialize()
+
 	if flag.NArg() != 0 {
 		lPrintErr("请输入正确的参数")
 		if *isNoGUI {
@@ -180,10 +182,7 @@ func argsHandle() {
 				flag.PrintDefaults()
 			}
 		}
-		if *isNoGUI {
-			// 打印 initialize() 里没有打印出来的信息
-			fmt.Print(logString.str.String())
-		} else {
+		if !*isNoGUI {
 			*isListen = true
 			*isWebAPI = true
 			*isWebUI = true
@@ -301,8 +300,6 @@ func initialize() {
 }
 
 func main() {
-	initialize()
-
 	argsHandle()
 
 	if *isListen {

@@ -255,7 +255,8 @@ func getDidCookie() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in getDidCookie(), the error is:", err)
-			lPrintErr("获取didCookie时出错，请重新运行本程序")
+			lPrintErr("获取didCookie时出错，退出程序")
+			os.Exit(1)
 		}
 	}()
 
