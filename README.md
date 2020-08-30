@@ -74,7 +74,7 @@ yarn generate
         ]
 }
 ```
-Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：
+Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate的条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：
 | 直播源名字 | 高清 | 超清 | 蓝光 4M | 蓝光 5M | 蓝光 6M | 蓝光 7M | 蓝光 8M |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 码率 | 1000/2000 | 2000/3000 | 4000 | 5000 | 6000 | 7000 | 8000 |
@@ -101,8 +101,10 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 ```
 
 ### 使用方法
-gui版本直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面。
-Windows下如果要使用命令行模式，下载cli版本，运行需要加上`-nogui`参数，具体看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
+Windows的gui版本直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面。
+
+Windows下如果要使用命令行模式，下载cli版本，运行需要加上`-nogui`参数，具体参数看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
+
 本程序下载的视频和弹幕默认保存在本程序所在文件夹内。
 
 命令行模式运行时可以输入命令控制本程序，运行时输入help查看具体命令。
@@ -111,7 +113,7 @@ Windows下如果要使用命令行模式，下载cli版本，运行需要加上`
 具体看 [webapi.md](https://github.com/orzogc/acfunlive/blob/master/doc/webapi.md)
 
 ### Mirai使用方法
-**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo)**
+**本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) 。**
 
 命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
 
