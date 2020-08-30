@@ -6,12 +6,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"regexp"
-	"runtime"
 	"sync"
 	"time"
-	"unicode/utf8"
 )
 
 // record用来传递下载信息
@@ -25,56 +21,6 @@ type record struct {
 var danglingRec struct {
 	sync.Mutex // records的锁
 	records    []record
-}
-
-// 查看并获取FFmpeg的位置
-func getFFmpeg() (ffmpegFile string) {
-	ffmpegFile = "ffmpeg"
-	// linux和macOS下确认有没有安装FFmpeg
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		if _, err := exec.LookPath(ffmpegFile); err != nil {
-			lPrintErr("系统没有安装FFmpeg")
-			return ""
-		}
-	}
-	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
-	if runtime.GOOS == "windows" {
-		ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
-		if _, err := os.Stat(ffmpegFile); os.IsNotExist(err) {
-			lPrintErr("ffmpeg.exe需要和本程序放在同一文件夹下")
-			return ""
-		}
-	}
-	return ffmpegFile
-}
-
-// 转换文件名和限制文件名长度
-func transFilename(filename string) string {
-	// 转换文件名不允许的特殊字符
-	var re *regexp.Regexp
-	if runtime.GOOS == "linux" {
-		re = regexp.MustCompile(`[/]`)
-	}
-	if runtime.GOOS == "windows" {
-		re = regexp.MustCompile(`[<>:"/\\|?*]`)
-	}
-	filename = re.ReplaceAllString(filename, "-")
-	// linux和macOS下限制文件名长度
-	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
-		if len(filename) > 250 {
-			filename = filename[(len(filename) - 250):]
-		}
-	}
-	outFilename := filepath.Join(exeDir, filename)
-	// windows下全路径文件名不能过长
-	if runtime.GOOS == "windows" {
-		if utf8.RuneCountInString(outFilename) > 255 {
-			lPrintErr("全路径文件名太长，取消下载")
-			desktopNotify("全路径文件名太长，取消下载")
-			return ""
-		}
-	}
-	return outFilename
 }
 
 // 设置自动下载指定主播的直播视频
@@ -151,8 +97,7 @@ func startRec(uid int, danmu bool) bool {
 		return false
 	}
 
-	ffmpegFile := getFFmpeg()
-	if ffmpegFile == "" {
+	if ffmpegFile := getFFmpeg(); ffmpegFile == "" {
 		desktopNotify("没有找到FFmpeg，停止下载直播视频")
 		return false
 	}
@@ -160,10 +105,10 @@ func startRec(uid int, danmu bool) bool {
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.recordLive(ffmpegFile, danmu)
+		go s.recordLive(danmu)
 	} else {
 		// 程序只在单独下载一个直播视频，不用goroutine，防止程序提前结束运行
-		s.recordLive(ffmpegFile, danmu)
+		s.recordLive(danmu)
 	}
 	return true
 }
@@ -204,7 +149,7 @@ func (s streamer) quitRec() {
 }
 
 // 下载主播的直播视频
-func (s streamer) recordLive(ffmpegFile string, danmu bool) {
+func (s streamer) recordLive(danmu bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in recordLive(), the error is:", err)
@@ -214,6 +159,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 		}
 	}()
 
+	ffmpegFile := getFFmpeg()
 	if ffmpegFile == "" {
 		desktopNotify("没有找到FFmpeg，停止下载直播视频")
 		s.quitRec()
@@ -267,6 +213,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 		"-timeout", "20000000",
 		"-i", liveURL,
 		"-c", "copy", recordFile)
+	preventCmdWindow(cmd)
 
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)
@@ -318,7 +265,7 @@ func (s streamer) recordLive(ffmpegFile string, danmu bool) {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				// 延迟两秒，防止意外情况下刷屏
 				time.Sleep(2 * time.Second)
-				go s.recordLive(ffmpegFile, danmu)
+				go s.recordLive(danmu)
 			}
 		}
 	} else {
