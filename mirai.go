@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -89,7 +88,7 @@ func initMirai() bool {
 		break
 	}
 
-	lPrintln(fmt.Sprintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin))
+	lPrintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin)
 	lPrintln("开始加载QQ好友列表")
 	err = miraiClient.ReloadFriendList()
 	checkErr(err)
@@ -143,7 +142,7 @@ func handlePrivateMsg(qq int64, Elements []message.IMessageElement) {
 		for _, ele := range Elements {
 			if e, ok := ele.(*message.TextElement); ok {
 				text := e.Content
-				lPrintln(fmt.Sprintf("处理来自 QQ %d 的命令：%s", qq, text))
+				lPrintf("处理来自 QQ %d 的命令：%s", qq, text)
 				if s := handleAllCmd(text); s != "" {
 					miraiSendQQ(qq, s)
 				} else {
@@ -171,7 +170,7 @@ func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 		}
 		if isAt {
 			cmd := strings.Join(text, "")
-			lPrintln(fmt.Sprintf("处理来自QQ群 %d 里QQ %d 的命令：%s", m.GroupCode, m.Sender.Uin, cmd))
+			lPrintf("处理来自QQ群 %d 里QQ %d 的命令：%s", m.GroupCode, m.Sender.Uin, cmd)
 			if s := handleAllCmd(cmd); s != "" {
 				miraiSendQQGroup(m.GroupCode, s)
 			} else {
@@ -214,16 +213,20 @@ func (s streamer) sendMirai(text string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in sendMirai(), the error is:", err)
-			lPrintErr(fmt.Sprintf("发送%s的消息（%s）到指定的QQ（%d）/QQ群（%d）时发生错误，取消发送", s.longID(), text, s.SendQQ, s.SendQQGroup))
+			lPrintErrf("发送%s的消息（%s）到指定的QQ/QQ群时发生错误，取消发送", s.longID(), text)
 		}
 	}()
 
 	if *isMirai && miraiClient != nil {
-		if s.SendQQ > 0 {
-			miraiSendQQ(s.SendQQ, text)
+		for _, qq := range s.SendQQ {
+			if qq > 0 {
+				miraiSendQQ(qq, text)
+			}
 		}
-		if s.SendQQGroup > 0 {
-			miraiSendQQGroupAtAll(s.SendQQGroup, text)
+		for _, qqGroup := range s.SendQQGroup {
+			if qqGroup > 0 {
+				miraiSendQQGroupAtAll(qqGroup, text)
+			}
 		}
 	}
 }

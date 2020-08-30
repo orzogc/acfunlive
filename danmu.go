@@ -23,11 +23,11 @@ func addDanmu(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Danmu {
-			lPrintWarn("已经设置过自动下载" + s.Name + "的直播弹幕")
+			lPrintWarn("已经设置过自动下载" + s.longID() + "的直播弹幕")
 		} else {
 			s.Danmu = true
 			sets(s)
-			lPrintln("成功设置自动下载" + s.Name + "的直播弹幕")
+			lPrintln("成功设置自动下载" + s.longID() + "的直播弹幕")
 		}
 	}
 	streamers.Unlock()
@@ -43,7 +43,7 @@ func addDanmu(uid int) bool {
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
-		lPrintln("成功设置自动下载" + name + "的直播弹幕")
+		lPrintln("成功设置自动下载" + newStreamer.longID() + "的直播弹幕")
 	}
 
 	saveLiveConfig()
@@ -56,7 +56,7 @@ func delDanmu(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		s.Danmu = false
 		sets(s)
-		lPrintln("成功取消自动下载" + s.Name + "的直播弹幕")
+		lPrintln("成功取消自动下载" + s.longID() + "的直播弹幕")
 	} else {
 		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
 	}
@@ -114,32 +114,29 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			desktopNotify("开始下载" + s.Name + "的直播弹幕")
 		}
 	}
-	dq := acfundanmu.Start(ctx, s.UID)
+	dq, err := acfundanmu.Start(ctx, s.UID)
+	checkErr(err)
 	cfg.Title = filename
 	cfg.StartTime = startTime
 	dq.WriteASS(ctx, cfg, assFile, true)
 
+Outer:
 	for {
-		isDone := false
-
 		select {
 		case <-ctx.Done():
-			isDone = true
+			break Outer
 		default:
 			// 因意外结束弹幕下载时重启下载
 			_, _, newStreamName, _ := s.getStreamURL()
 			if newStreamName == streamName {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				dq = acfundanmu.Start(ctx, s.UID)
+				dq, err = acfundanmu.Start(ctx, s.UID)
+				checkErr(err)
 				dq.WriteASS(ctx, cfg, assFile, false)
 				time.Sleep(10 * time.Second)
 			} else {
-				isDone = true
+				break Outer
 			}
-		}
-
-		if isDone {
-			break
 		}
 	}
 

@@ -102,20 +102,33 @@ func lPrintln(msg ...interface{}) {
 	fmt.Fprintln(&logString.str, msg...)
 }
 
+// 打印警告信息
+func lPrintWarn(msg ...interface{}) {
+	w := []interface{}{"[WARN]"}
+	msg = append(w, msg...)
+	lPrintln(msg...)
+}
+
 // 打印错误信息
 func lPrintErr(msg ...interface{}) {
-	e := make([]interface{}, 1)
-	e[0] = "[ERROR]"
+	e := []interface{}{"[ERROR]"}
 	msg = append(e, msg...)
 	lPrintln(msg...)
 }
 
-// 打印警告信息
-func lPrintWarn(msg ...interface{}) {
-	w := make([]interface{}, 1)
-	w[0] = "[WARN]"
-	msg = append(w, msg...)
-	lPrintln(msg...)
+// 打印带时间戳的log信息（格式化字符串）
+func lPrintf(format string, a ...interface{}) {
+	lPrintln(fmt.Sprintf(format, a...))
+}
+
+// 打印警告信息（格式化字符串）
+func lPrintWarnf(format string, a ...interface{}) {
+	lPrintWarn(fmt.Sprintf(format, a...))
+}
+
+// 打印错误信息（格式化字符串）
+func lPrintErrf(format string, a ...interface{}) {
+	lPrintErr(fmt.Sprintf(format, a...))
 }
 
 // 将UID转换成字符串

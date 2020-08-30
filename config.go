@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/google/go-cmp/cmp"
 )
 
 const (
@@ -26,14 +27,14 @@ var (
 
 // 主播的设置数据
 type streamer struct {
-	UID         int    // 主播uid
-	Name        string // 主播名字
-	Notify      notify // 开播提醒相关
-	Record      bool   // 是否自动下载直播视频
-	Danmu       bool   // 是否自动下载直播弹幕
-	Bitrate     int    // 下载直播视频的最高码率
-	SendQQ      int64  // 给这个QQ号发送消息
-	SendQQGroup int64  // 给这个QQ群发送消息
+	UID         int     // 主播uid
+	Name        string  // 主播名字
+	Notify      notify  // 开播提醒相关
+	Record      bool    // 是否自动下载直播视频
+	Danmu       bool    // 是否自动下载直播弹幕
+	Bitrate     int     // 下载直播视频的最高码率
+	SendQQ      []int64 // 给这个QQ号发送消息
+	SendQQGroup []int64 // 给这个QQ群发送消息
 }
 
 // 存放主播的设置数据
@@ -75,11 +76,32 @@ func sets(s streamer) {
 	streamers.crt[s.UID] = s
 }
 
+// 去掉slice里重复的元素
+func removeDup(s []int64) []int64 {
+	seen := make(map[int64]struct{}, len(s))
+	i := 0
+	for _, v := range s {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		s[i] = v
+		i++
+	}
+	return s[:i]
+}
+
 // 将map[int]streamer转换为[]streamer，按照uid大小排序
 func getStreamers() []streamer {
 	var ss []streamer
 	streamers.Lock()
 	for _, s := range streamers.crt {
+		if s.SendQQ == nil {
+			s.SendQQ = []int64{}
+		}
+		if s.SendQQGroup == nil {
+			s.SendQQGroup = []int64{}
+		}
 		ss = append(ss, s)
 	}
 	streamers.Unlock()
@@ -117,6 +139,8 @@ func loadLiveConfig() {
 			checkErr(err)
 			news := make(map[int]streamer)
 			for _, s := range ss {
+				s.SendQQ = removeDup(s.SendQQ)
+				s.SendQQGroup = removeDup(s.SendQQGroup)
 				news[s.UID] = s
 			}
 			streamers.crt = news
@@ -231,7 +255,7 @@ func loadNewConfig() {
 
 	for uid, s := range streamers.crt {
 		if olds, ok := streamers.old[uid]; ok {
-			if s != olds {
+			if !cmp.Equal(s, olds) {
 				// olds的设置被修改
 				lPrintln(s.longID() + "的设置被修改，重新设置")
 				restart := controlMsg{s: s, c: startCycle}

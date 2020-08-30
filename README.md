@@ -57,16 +57,21 @@ yarn generate
     "UID": 23682490,    // 主播的uid
     "Name": "AC娘本体", // 主播的昵称
     "Notify": {
-        "NotifyOn": true,      // 主播开播通知
-        "NotifyOff": false,    // 主播下播通知，需自行手动修改设置
-        "NotifyRecord": true,  // 下载主播直播相关的通知
-        "NotifyDanmu": false   // 下载主播直播弹幕相关的通知，需自行手动修改设置
+        "NotifyOn": true,     // 主播开播通知
+        "NotifyOff": false,   // 主播下播通知，需自行手动修改设置
+        "NotifyRecord": true, // 下载主播直播相关的通知
+        "NotifyDanmu": false  // 下载主播直播弹幕相关的通知，需自行手动修改设置
         },
-    "Record": true,       // 是否下载直播视频
-    "Danmu": true,        // 是否下载直播弹幕
-    "Bitrate": 0,         // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
-    "SendQQ": 12345,      // 发送开播提醒到该QQ（需要QQ机器人添加该QQ为好友）
-    "SendQQGroup": 123456 // 发送开播提醒到该QQ群（需要QQ机器人在该群，最好是管理员，会@全体成员）
+    "Record": true, // 是否下载直播视频
+    "Danmu": true,  // 是否下载直播弹幕
+    "Bitrate": 0,   // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
+    "SendQQ": [     // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友）
+            12345,
+            123456
+        ],
+    "SendQQGroup": [ // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员）
+            1234567
+        ]
 }
 ```
 Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：

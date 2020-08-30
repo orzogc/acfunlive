@@ -29,10 +29,12 @@ adddanmu uid：自动下载指定主播的直播弹幕
 deldanmu uid：取消自动下载指定主播的直播弹幕
 delconfig uid：删除指定主播的所有设置
 getdlurl uid：查看指定主播是否在直播，如在直播输出其直播源地址
-addqq uid QQ号：设置将指定主播的开播提醒发送到指定QQ号
-delqq uid：取消设置将指定主播的开播提醒发送到QQ
-addqqgroup uid QQ群号：设置将指定主播的开播提醒发送到指定QQ群号
-delqqgroup uid：取消设置将指定主播的开播提醒发送到QQ群
+addqq uid QQ号：设置将指定主播的开播提醒发送到指定QQ号，需要QQ机器人已经添加该QQ为好友
+delqq uid QQ号：取消设置将指定主播的开播提醒发送到指定QQ号
+cancelqq uid：取消设置将指定主播的开播提醒发送到任何QQ
+addqqgroup uid QQ群号：设置将指定主播的开播提醒发送到指定QQ群号，需要QQ机器人已经加入该QQ群，最好是管理员，会@全体成员
+delqqgroup uid QQ群号：取消设置将指定主播的开播提醒发送到指定QQ群号
+cancelqqgroup uid：取消设置将指定主播的开播提醒发送到任何QQ群
 startrecord uid：临时下载指定主播的直播视频，如果没有设置自动下载该主播的直播视频，这次为一次性的下载
 stoprecord uid：正在下载指定主播的直播视频时取消下载
 startdanmu uid：临时下载指定主播的直播弹幕，如果没有设置自动下载该主播的直播弹幕，这次为一次性的下载
@@ -52,20 +54,20 @@ var boolDispatch = map[string]func() bool{
 }
 
 var uidBoolDispatch = map[string]func(int) bool{
-	"addnotify":   addNotify,
-	"delnotify":   delNotify,
-	"addrecord":   addRecord,
-	"delrecord":   delRecord,
-	"adddanmu":    addDanmu,
-	"deldanmu":    delDanmu,
-	"delconfig":   deleteStreamer,
-	"stoprecord":  stopRec,
-	"startdanmu":  startDanmu,
-	"stopdanmu":   stopDanmu,
-	"startrecdan": startRecDan,
-	"stoprecdan":  stopRecDan,
-	"delqq":       delQQNotify,
-	"delqqgroup":  delQQGroup,
+	"addnotify":     addNotify,
+	"delnotify":     delNotify,
+	"addrecord":     addRecord,
+	"delrecord":     delRecord,
+	"adddanmu":      addDanmu,
+	"deldanmu":      delDanmu,
+	"delconfig":     deleteStreamer,
+	"stoprecord":    stopRec,
+	"startdanmu":    startDanmu,
+	"stopdanmu":     stopDanmu,
+	"startrecdan":   startRecDan,
+	"stoprecdan":    stopRecDan,
+	"cancelqq":      cancelQQNotify,
+	"cancelqqgroup": cancelQQGroup,
 }
 
 var listDispatch = map[string]func() []streaming{
@@ -74,9 +76,11 @@ var listDispatch = map[string]func() []streaming{
 	"listdanmu":  listDanmu,
 }
 
-var qqDispatch = map[string]func(int, int) bool{
+var qqDispatch = map[string]func(int, int64) bool{
 	"addqq":      addQQNotify,
+	"delqq":      delQQNotify,
 	"addqqgroup": addQQGroup,
+	"delqqgroup": delQQGroup,
 }
 
 // 将bool类型转换为字符串
@@ -131,7 +135,7 @@ func handleCmdUID(cmd string, uid int) string {
 }
 
 // 处理QQ命令
-func handleCmdQQ(cmd string, uid int, qq int) string {
+func handleCmdQQ(cmd string, uid int, qq int64) string {
 	if d, ok := qqDispatch[cmd]; ok {
 		return boolStr(d(uid, qq))
 	}
@@ -172,7 +176,7 @@ func handleAllCmd(text string) string {
 		if err1 != nil || err2 != nil {
 			printErr()
 		} else {
-			return handleCmdQQ(cmd[0], int(uid), int(qq))
+			return handleCmdQQ(cmd[0], int(uid), int64(qq))
 		}
 	default:
 		printErr()

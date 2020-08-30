@@ -25,11 +25,11 @@ func addNotify(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Notify.NotifyOn {
-			lPrintWarn("已经订阅过" + s.Name + "的开播提醒")
+			lPrintWarn("已经订阅过" + s.longID() + "的开播提醒")
 		} else {
 			s.Notify.NotifyOn = true
 			sets(s)
-			lPrintln("成功订阅" + s.Name + "的开播提醒")
+			lPrintln("成功订阅" + s.longID() + "的开播提醒")
 		}
 	}
 	streamers.Unlock()
@@ -45,7 +45,7 @@ func addNotify(uid int) bool {
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
-		lPrintln("成功订阅" + name + "的开播提醒")
+		lPrintln("成功订阅" + newStreamer.longID() + "的开播提醒")
 	}
 
 	saveLiveConfig()
@@ -58,7 +58,7 @@ func delNotify(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		s.Notify.NotifyOn = false
 		sets(s)
-		lPrintln("成功取消订阅" + s.Name + "的开播提醒")
+		lPrintln("成功取消订阅" + s.longID() + "的开播提醒")
 	} else {
 		lPrintWarn("没有订阅过uid为" + itoa(uid) + "的主播的开播提醒")
 	}

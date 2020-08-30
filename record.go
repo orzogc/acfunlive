@@ -84,12 +84,12 @@ func addRecord(uid int) bool {
 	if s, ok := streamers.crt[uid]; ok {
 		isExist = true
 		if s.Record {
-			lPrintWarn("已经设置过自动下载" + s.Name + "的直播视频")
+			lPrintWarn("已经设置过自动下载" + s.longID() + "的直播视频")
 		} else {
 			s.Record = true
 			s.Notify.NotifyRecord = true
 			sets(s)
-			lPrintln("成功设置自动下载" + s.Name + "的直播视频")
+			lPrintln("成功设置自动下载" + s.longID() + "的直播视频")
 		}
 	}
 	streamers.Unlock()
@@ -105,7 +105,7 @@ func addRecord(uid int) bool {
 		streamers.Lock()
 		sets(newStreamer)
 		streamers.Unlock()
-		lPrintln("成功设置自动下载" + name + "的直播视频")
+		lPrintln("成功设置自动下载" + newStreamer.longID() + "的直播视频")
 	}
 
 	saveLiveConfig()
@@ -119,7 +119,7 @@ func delRecord(uid int) bool {
 		s.Record = false
 		s.Notify.NotifyRecord = false
 		sets(s)
-		lPrintln("成功取消自动下载" + s.Name + "的直播视频")
+		lPrintln("成功取消自动下载" + s.longID() + "的直播视频")
 	} else {
 		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
 	}

@@ -29,13 +29,17 @@ web API默认本地端口为51880
 
 `http://localhost:51880/getdlurl/23682490` 查看uid为23682490的主播是否在直播，并输出其直播源
 
-`http://localhost:51880/addqq/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ12345，需要QQ机器人已经添加其为好友
+`http://localhost:51880/addqq/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ12345，需要QQ机器人已经添加该QQ为好友
 
-`http://localhost:51880/delqq/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ
+`http://localhost:51880/delqq/23682490/12345` 取消将uid为23682490的主播的开播提醒发送到QQ12345
 
-`http://localhost:51880/addqqgroup/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ群12345，需要QQ机器人已经加入该群
+`http://localhost:51880/cancelqq/23682490` 取消将uid为23682490的主播的开播提醒发送到任何QQ
 
-`http://localhost:51880/delqqgroup/23682490` 取消将uid为23682490的主播的开播提醒发送到QQ群
+`http://localhost:51880/addqqgroup/23682490/12345` 将uid为23682490的主播的开播提醒发送到QQ群12345，需要QQ机器人已经加入该QQ群，最好是管理员，会@全体成员
+
+`http://localhost:51880/delqqgroup/23682490/12345` 取消将uid为23682490的主播的开播提醒发送到QQ群12345
+
+`http://localhost:51880/cancelqqgroup/23682490` 取消将uid为23682490的主播的开播提醒发送到任何QQ群
 
 `http://localhost:51880/startrecord/23682490` 临时下载uid为23682490的主播的直播视频
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -80,12 +81,12 @@ func cmdUIDHandler(w http.ResponseWriter, r *http.Request) {
 func cmdQQHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	cmd := vars["cmd"]
-	uid, err := atoi(vars["uid"])
+	uid, err := strconv.ParseUint(vars["uid"], 10, 64)
 	checkErr(err)
-	qq, err := atoi(vars["qq"])
+	qq, err := strconv.ParseUint(vars["qq"], 10, 64)
 	checkErr(err)
 	w.Header().Set("Content-Type", "application/json")
-	if s := handleCmdQQ(cmd, uid, qq); s != "" {
+	if s := handleCmdQQ(cmd, int(uid), int64(qq)); s != "" {
 		fmt.Fprint(w, s)
 	} else {
 		fmt.Fprint(w, "null")
