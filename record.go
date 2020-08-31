@@ -213,7 +213,7 @@ func (s streamer) recordLive(danmu bool) {
 		"-timeout", "20000000",
 		"-i", liveURL,
 		"-c", "copy", recordFile)
-	preventCmdWindow(cmd)
+	hideCmdWindow(cmd)
 
 	stdin, err := cmd.StdinPipe()
 	checkErr(err)

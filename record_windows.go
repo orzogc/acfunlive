@@ -37,8 +37,8 @@ func transFilename(filename string) string {
 	return outFilename
 }
 
-// Windows下启用GUI时阻止FFmpeg的cmd窗口出现
-func preventCmdWindow(cmd *exec.Cmd) {
+// Windows下启用GUI时隐藏FFmpeg的cmd窗口
+func hideCmdWindow(cmd *exec.Cmd) {
 	if !*isNoGUI {
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	}
