@@ -99,13 +99,14 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	if v.GetInt("channelListData", "result") != 0 || v.GetBool("isError") == true {
-		lPrintErr("无法获取AcFun直播间列表，响应为：" + string(body))
+	v = v.Get("channelListData")
+	if !v.Exists("result") || v.GetInt("result") != 0 {
+		lPrintErrf("无法获取AcFun直播间列表，响应为：%s", string(body))
 		return nil, ""
 	}
 
 	var rooms = make(map[int]liveRoom)
-	liveList := v.GetArray("channelListData", "liveList")
+	liveList := v.GetArray("liveList")
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
 		room := liveRoom{
@@ -115,7 +116,7 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 		rooms[uid] = room
 	}
 
-	nextPage = string(v.GetStringBytes("channelListData", "pcursor"))
+	nextPage = string(v.GetStringBytes("pcursor"))
 
 	return &rooms, nextPage
 }
@@ -151,7 +152,7 @@ func (s streamer) getTitleByInfo() string {
 // 通过用户直播相关信息查看主播是否在直播
 func (s streamer) isLiveOnByInfo() bool {
 	v := getLiveInfo(s.UID)
-	if v.Exists("user", "liveId") {
+	if v.Exists("liveId") {
 		return true
 	}
 	return false
@@ -168,7 +169,8 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 		}
 	}()
 
-	const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+	//const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+	const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
@@ -183,6 +185,10 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 	var p fastjson.Parser
 	v, err = p.ParseBytes(body)
 	checkErr(err)
+
+	if !v.Exists("result") || v.GetInt("result") != 0 {
+		lPrintErrf("无法获取uid为%d的主播的直播信息，响应为：%s", uid, string(body))
+	}
 
 	return v
 }
