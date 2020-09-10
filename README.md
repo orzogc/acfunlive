@@ -19,6 +19,7 @@ AcFun直播通知和下载助手
 ### 依赖
 #### 运行依赖
 * ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
+* gtk3 和 libappindicator3 （Linux下需要）
 
 #### 编译依赖
 * go
