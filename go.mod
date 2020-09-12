@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.14
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20200910013944-236c0f629099
+	github.com/Mrs4s/MiraiGo v0.0.0-20200912144206-ba9ffe0f419b
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/catsworld/qq-bot-api v0.0.0-20191230111849-48d158a4fd65
@@ -15,7 +15,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20200910224245-6884bd229768
+	github.com/orzogc/acfundanmu v0.0.0-20200911205732-d71ee3c30e97
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966

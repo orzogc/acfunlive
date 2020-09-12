@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/Mrs4s/MiraiGo v0.0.0-20200910013944-236c0f629099 h1:b+Tmo9h5leZmQokdUu8c2xSIRkkSYoP1z8G+zcwwyRY=
-github.com/Mrs4s/MiraiGo v0.0.0-20200910013944-236c0f629099/go.mod h1:cwYPI2uq6nxNbx0nA6YuAKF1V5szSs6FPlGVLQvRUlo=
+github.com/Mrs4s/MiraiGo v0.0.0-20200912144206-ba9ffe0f419b h1:kGSgiyF21u1goSBng7U/aQPP15v+6Gs8/8gWxVs83Nw=
+github.com/Mrs4s/MiraiGo v0.0.0-20200912144206-ba9ffe0f419b/go.mod h1:cwYPI2uq6nxNbx0nA6YuAKF1V5szSs6FPlGVLQvRUlo=
 github.com/PuerkitoBio/goquery v1.5.1 h1:PSPBGne8NIUWw+/7vFBV+kG2J/5MOjbzc7154OaKCSE=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/Workiva/go-datastructures v1.0.52 h1:PLSK6pwn8mYdaoaCZEMsXBpBotr4HHn9abU0yMQt0NI=
@@ -114,8 +114,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 h1:Esafd1046DLD
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
-github.com/orzogc/acfundanmu v0.0.0-20200910224245-6884bd229768 h1:7Jy2GNOvcaA0XN1g2M29Tee7yOXd00A63Brp8Z8uq48=
-github.com/orzogc/acfundanmu v0.0.0-20200910224245-6884bd229768/go.mod h1:5JLu26e2iu/sQkzH4mqmPLSCu44JQA/ACCokS5+RiSU=
+github.com/orzogc/acfundanmu v0.0.0-20200911205732-d71ee3c30e97 h1:BTfCOXZA5bBi4JnEp//DRlc4XgDcRTJNuep+8uReROs=
+github.com/orzogc/acfundanmu v0.0.0-20200911205732-d71ee3c30e97/go.mod h1:5JLu26e2iu/sQkzH4mqmPLSCu44JQA/ACCokS5+RiSU=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c h1:rp5dCmg/yLR3mgFuSOe4oEnDDmGLROTvMragMUXpTQw=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c/go.mod h1:X07ZCGwUbLaax7L0S3Tw4hpejzu63ZrrQiUe6W0hcy0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
