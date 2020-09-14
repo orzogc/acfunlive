@@ -114,8 +114,9 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			desktopNotify("开始下载" + s.Name + "的直播弹幕")
 		}
 	}
-	dq, err := acfundanmu.Start(ctx, s.UID, nil)
+	dq, err := acfundanmu.Init(int64(s.UID))
 	checkErr(err)
+	dq.StartDanmu(ctx)
 	cfg.Title = filename
 	cfg.StartTime = startTime
 	dq.WriteASS(ctx, cfg, assFile, true)
@@ -130,8 +131,9 @@ Outer:
 			_, _, newStreamName, _ := s.getStreamURL()
 			if newStreamName == streamName {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				dq, err = acfundanmu.Start(ctx, s.UID, nil)
+				dq, err := acfundanmu.Init(int64(s.UID))
 				checkErr(err)
+				dq.StartDanmu(ctx)
 				dq.WriteASS(ctx, cfg, assFile, false)
 				time.Sleep(10 * time.Second)
 			} else {

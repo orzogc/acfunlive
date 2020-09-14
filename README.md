@@ -30,7 +30,7 @@ AcFun直播通知和下载助手
 ### 编译
 #### 使用GNU Make
 ```
-# 更新repo需使用 git submodule update --init --recursive
+# 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
 cd acfunlive
 # 编译Windows版本运行 make build-windows-gui 或 make build-windows-cli
@@ -40,7 +40,7 @@ make
 
 #### 不使用GNU Make
 ```
-# 更新repo需使用 git submodule update --init --recursive
+# 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
 # Windows下编译没有控制台的gui版本需加上 -ldflags -H=windowsgui 参数
 go build
