@@ -39,6 +39,14 @@ var httpClient = &fasthttp.Client{
 
 var didCookie []byte
 
+var (
+	fetchRoomPool   fastjson.ParserPool
+	getLiveInfoPool fastjson.ParserPool
+	getStreamPool1  fastjson.ParserPool
+	getStreamPool2  fastjson.ParserPool
+	getStreamPool3  fastjson.ParserPool
+)
+
 // 直播间的数据结构
 type liveRoom struct {
 	// 主播名字
@@ -170,7 +178,8 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
 
-	var p fastjson.Parser
+	p := fetchRoomPool.Get()
+	defer fetchRoomPool.Put(p)
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	v = v.Get("channelListData")
@@ -214,32 +223,14 @@ func (s streamer) isLiveOn() bool {
 	return ok
 }
 
-// 通过用户直播相关信息获取主播直播间的标题
-func (s streamer) getTitleByInfo() string {
-	v := getLiveInfo(s.UID)
-	if v.Exists("title") {
-		return string(v.GetStringBytes("title"))
-	}
-	return ""
-}
-
-// 通过用户直播相关信息查看主播是否在直播
-func (s streamer) isLiveOnByInfo() bool {
-	v := getLiveInfo(s.UID)
-	if v.Exists("liveId") {
-		return true
-	}
-	return false
-}
-
 // 获取用户直播相关信息
-func getLiveInfo(uid int) (v *fastjson.Value) {
+func getLiveInfo(uid int) (name string, isLive bool, title string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in getLiveInfo(), the error is:", err)
 			lPrintErr("获取uid为" + itoa(uid) + "的主播的直播信息时出错，尝试重新运行")
 			time.Sleep(2 * time.Second)
-			v = getLiveInfo(uid)
+			name, isLive, title = getLiveInfo(uid)
 		}
 	}()
 
@@ -255,15 +246,27 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
 
-	var p fastjson.Parser
-	v, err = p.ParseBytes(body)
+	p := getLiveInfoPool.Get()
+	defer getLiveInfoPool.Put(p)
+	v, err := p.ParseBytes(body)
 	checkErr(err)
 
 	if !v.Exists("result") || v.GetInt("result") != 0 {
 		lPrintErrf("无法获取uid为%d的主播的直播信息，响应为：%s", uid, string(body))
+		return "", false, ""
 	}
 
-	return v
+	name = string(v.GetStringBytes("user", "name"))
+
+	if v.Exists("liveId") {
+		isLive = true
+	} else {
+		isLive = false
+	}
+
+	title = string(v.GetStringBytes("title"))
+
+	return name, isLive, title
 }
 
 // 通过wap版网页查看主播是否在直播
@@ -307,11 +310,8 @@ func getName(uid int) string {
 		return room.name
 	}
 
-	v := getLiveInfo(uid)
-	if v.Exists("user", "name") {
-		return string(v.GetStringBytes("user", "name"))
-	}
-	return ""
+	name, _, _ := getLiveInfo(uid)
+	return name
 }
 
 // 获取AcFun的logo
@@ -401,7 +401,8 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
 
-	var p fastjson.Parser
+	p := getStreamPool1.Get()
+	defer getStreamPool1.Put(p)
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if !v.Exists("result") || v.GetInt("result") != 0 {
@@ -431,12 +432,16 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	defer fasthttp.ReleaseResponse(resp)
 	body = resp.Body()
 
+	p = getStreamPool2.Get()
+	defer getStreamPool2.Put(p)
 	v, err = p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 1 {
 		return "", "", "", cfg
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
+	p = getStreamPool3.Get()
+	defer getStreamPool3.Put(p)
 	v, err = p.ParseBytes(videoPlayRes)
 	checkErr(err)
 	streamName = string(v.GetStringBytes("streamName"))
@@ -533,8 +538,7 @@ func getLiveOnByInfo(ss []streamer) {
 	for _, s := range ss {
 		wg.Add(1)
 		go func(s streamer) {
-			if s.isLiveOnByInfo() {
-				title := s.getTitleByInfo()
+			if _, isLive, title := getLiveInfo(s.UID); isLive {
 				mu.Lock()
 				(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
 				mu.Unlock()
