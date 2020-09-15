@@ -2,12 +2,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"sort"
 	"strings"
@@ -16,6 +13,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/orzogc/acfundanmu"
+	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
 )
 
@@ -24,7 +22,22 @@ import (
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 //const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
-var didCookie *http.Cookie
+type httpVars struct {
+	url         string
+	body        []byte
+	method      string
+	cookies     []*fasthttp.Cookie
+	userAgent   string
+	contentType string
+	referer     string
+}
+
+var httpClient = &fasthttp.Client{
+	ReadTimeout:  10 * time.Second,
+	WriteTimeout: 10 * time.Second,
+}
+
+var didCookie []byte
 
 // 直播间的数据结构
 type liveRoom struct {
@@ -50,6 +63,65 @@ func getURL(uid int) string {
 // 获取主播的直播链接
 func (s streamer) getURL() string {
 	return getURL(s.UID)
+}
+
+// http请求，调用后需要 defer fasthttp.ReleaseResponse(resp)
+func (hv *httpVars) httpRequest() (resp *fasthttp.Response, e error) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErrf("Recovering from panic in httpRequest(), the error is: %v", err)
+			lPrintErrf("请求 %s 时出错，错误为 %v", hv.url, err)
+			var ok bool
+			e, ok = err.(error)
+			if !ok {
+				e = fmt.Errorf("%s", err)
+			}
+		}
+	}()
+
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	resp = fasthttp.AcquireResponse()
+
+	if hv.url != "" {
+		req.SetRequestURI(hv.url)
+	} else {
+		return nil, fmt.Errorf("请求的url不能为空")
+	}
+
+	if len(hv.body) != 0 {
+		req.SetBody(hv.body)
+	}
+
+	if hv.method != "" {
+		req.Header.SetMethod(hv.method)
+	} else {
+		// 默认为GET
+		req.Header.SetMethod("GET")
+	}
+
+	if len(hv.cookies) != 0 {
+		for _, cookie := range hv.cookies {
+			req.Header.SetCookieBytesKV(cookie.Key(), cookie.Value())
+		}
+	}
+
+	if hv.userAgent != "" {
+		req.Header.SetUserAgent(hv.userAgent)
+	}
+
+	if hv.contentType != "" {
+		req.Header.SetContentType(hv.contentType)
+	}
+
+	if hv.referer != "" {
+		req.Header.SetReferer(hv.referer)
+	}
+
+	err := httpClient.Do(req, resp)
+	checkErr(err)
+
+	return resp, nil
 }
 
 // 获取全部AcFun直播间
@@ -84,17 +156,19 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 	const acLive = "https://live.acfun.cn/api/channel/list?count=1000&pcursor=%s"
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(acLive, page), nil)
+	cookie := fasthttp.AcquireCookie()
+	defer fasthttp.ReleaseCookie(cookie)
+	err := cookie.ParseBytes(didCookie)
 	checkErr(err)
-	// 需要did的cookie
-	req.AddCookie(didCookie)
-
-	resp, err := client.Do(req)
+	hv := &httpVars{
+		url:     fmt.Sprintf(acLive, page),
+		method:  "GET",
+		cookies: []*fasthttp.Cookie{cookie}, // 需要didCookie
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body := resp.Body()
 
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
@@ -172,15 +246,14 @@ func getLiveInfo(uid int) (v *fastjson.Value) {
 	//const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 	const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf(acLiveInfo, uid), nil)
+	hv := &httpVars{
+		url:    fmt.Sprintf(acLiveInfo, uid),
+		method: "GET",
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	resp, err := client.Do(req)
-	checkErr(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body := resp.Body()
 
 	var p fastjson.Parser
 	v, err = p.ParseBytes(body)
@@ -207,16 +280,17 @@ func (s streamer) isLiveOnByPage() (isLive bool) {
 	const acLivePage = "https://m.acfun.cn/live/detail/"
 	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(http.MethodGet, acLivePage+itoa(s.UID), nil)
+	hv := &httpVars{
+		url:       acLivePage + itoa(s.UID),
+		method:    "GET",
+		userAgent: userAgent,
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	req.Header.Set("User-Agent", userAgent)
+	defer fasthttp.ReleaseResponse(resp)
+	body := resp.Body()
 
-	resp, err := client.Do(req)
-	checkErr(err)
-	defer resp.Body.Close()
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	checkErr(err)
 	if doc.Find("p.closed-tip").Text() == "直播已结束" {
 		return false
@@ -244,15 +318,20 @@ func getName(uid int) string {
 func fetchAcLogo() {
 	const acLogo = "https://cdn.aixifan.com/ico/favicon.ico"
 
-	resp, err := http.Get(acLogo)
+	hv := &httpVars{
+		url:    acLogo,
+		method: "GET",
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	defer resp.Body.Close()
+	defer fasthttp.ReleaseResponse(resp)
+	body := resp.Body()
 
 	newLogoFile, err := os.Create(logoFileLocation)
 	checkErr(err)
 	defer newLogoFile.Close()
 
-	_, err = io.Copy(newLogoFile, resp.Body)
+	_, err = newLogoFile.Write(body)
 	checkErr(err)
 }
 
@@ -260,7 +339,7 @@ func fetchAcLogo() {
 func getDidCookie() {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in getDidCookie(), the error is:", err)
+			lPrintErrf("Recovering from panic in getDidCookie(), the error is: %v", err)
 			lPrintErr("获取didCookie时出错，退出程序")
 			os.Exit(1)
 		}
@@ -268,16 +347,21 @@ func getDidCookie() {
 
 	const mainPage = "https://live.acfun.cn"
 
-	resp, err := http.Get(mainPage)
+	hv := &httpVars{
+		url:    mainPage,
+		method: "GET",
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	defer resp.Body.Close()
+	defer fasthttp.ReleaseResponse(resp)
 
 	// 获取did（device ID）
-	for _, cookie := range resp.Cookies() {
-		if cookie.Name == "_did" {
-			didCookie = cookie
+	resp.Header.VisitAllCookie(func(key, value []byte) {
+		if string(key) == "_did" {
+			didCookie = value
 		}
-	}
+	})
+
 	if didCookie == nil {
 		lPrintErr("无法获取didCookie，退出程序")
 		os.Exit(1)
@@ -298,50 +382,54 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	const loginPage = "https://id.app.acfun.cn/rest/app/visitor/login"
 	const playURL = "https://api.kuaishouzt.com/rest/zt/live/web/startPlay?subBiz=mainApp&kpn=ACFUN_APP&kpf=PC_WEB&userId=%d&did=%s&acfun.api.visitor_st=%s"
 
-	client := &http.Client{Timeout: 10 * time.Second}
-
-	form := url.Values{}
+	form := fasthttp.AcquireArgs()
+	defer fasthttp.ReleaseArgs(form)
 	form.Set("sid", "acfun.api.visitor")
-	req, err := http.NewRequest(http.MethodPost, loginPage, strings.NewReader(form.Encode()))
+	cookie := fasthttp.AcquireCookie()
+	defer fasthttp.ReleaseCookie(cookie)
+	err := cookie.ParseBytes(didCookie)
 	checkErr(err)
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	// 需要did的cookie
-	req.AddCookie(didCookie)
-
-	resp, err := client.Do(req)
+	hv := &httpVars{
+		url:         loginPage,
+		body:        form.QueryString(),
+		method:      "POST",
+		cookies:     []*fasthttp.Cookie{cookie},
+		contentType: "application/x-www-form-urlencoded",
+	}
+	resp, err := hv.httpRequest()
 	checkErr(err)
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body := resp.Body()
 
 	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	if v.GetInt("result") != 0 {
+	if !v.Exists("result") || v.GetInt("result") != 0 {
 		return "", "", "", cfg
 	}
 	// 获取userId和对应的令牌
-	userID := v.GetInt("userId")
+	userID := v.GetInt64("userId")
 	serviceToken := string(v.GetStringBytes("acfun.api.visitor_st"))
 
 	// 获取直播源的地址需要userId、did和对应的令牌
-	streamURL := fmt.Sprintf(playURL, userID, didCookie.Value, serviceToken)
+	streamURL := fmt.Sprintf(playURL, userID, cookie.Value(), serviceToken)
 
-	form = url.Values{}
+	form = fasthttp.AcquireArgs()
+	defer fasthttp.ReleaseArgs(form)
 	// authorId就是主播的uid
 	form.Set("authorId", s.itoa())
 	form.Set("pullStreamType", "FLV")
-	req, err = http.NewRequest(http.MethodPost, streamURL, strings.NewReader(form.Encode()))
+	hv = &httpVars{
+		url:         streamURL,
+		body:        form.QueryString(),
+		method:      "POST",
+		contentType: "application/x-www-form-urlencoded",
+		referer:     s.getURL(), // 会验证 Referer
+	}
+	resp, err = hv.httpRequest()
 	checkErr(err)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	// 会验证Referer
-	req.Header.Set("Referer", s.getURL())
-	resp, err = client.Do(req)
-	checkErr(err)
-	defer resp.Body.Close()
-	body, err = ioutil.ReadAll(resp.Body)
-	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body = resp.Body()
 
 	v, err = p.ParseBytes(body)
 	checkErr(err)
