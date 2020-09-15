@@ -37,7 +37,7 @@ var httpClient = &fasthttp.Client{
 	WriteTimeout: 10 * time.Second,
 }
 
-var didCookie []byte
+var didCookie string
 
 var (
 	fetchRoomPool   fastjson.ParserPool
@@ -166,7 +166,7 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 	cookie := fasthttp.AcquireCookie()
 	defer fasthttp.ReleaseCookie(cookie)
-	err := cookie.ParseBytes(didCookie)
+	err := cookie.Parse(didCookie)
 	checkErr(err)
 	hv := &httpVars{
 		url:     fmt.Sprintf(acLive, page),
@@ -358,11 +358,13 @@ func getDidCookie() {
 	// 获取did（device ID）
 	resp.Header.VisitAllCookie(func(key, value []byte) {
 		if string(key) == "_did" {
-			didCookie = value
+			if len(didCookie) == 0 {
+				didCookie = string(value)
+			}
 		}
 	})
 
-	if didCookie == nil {
+	if len(didCookie) == 0 {
 		lPrintErr("无法获取didCookie，退出程序")
 		os.Exit(1)
 	}
@@ -387,7 +389,7 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	form.Set("sid", "acfun.api.visitor")
 	cookie := fasthttp.AcquireCookie()
 	defer fasthttp.ReleaseCookie(cookie)
-	err := cookie.ParseBytes(didCookie)
+	err := cookie.Parse(didCookie)
 	checkErr(err)
 	hv := &httpVars{
 		url:         loginPage,
