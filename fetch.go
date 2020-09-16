@@ -22,7 +22,8 @@ import (
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 //const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
 
-type httpVars struct {
+type httpClient struct {
+	client      *fasthttp.Client
 	url         string
 	body        []byte
 	method      string
@@ -32,7 +33,7 @@ type httpVars struct {
 	referer     string
 }
 
-var httpClient = &fasthttp.Client{
+var defaultClient = &fasthttp.Client{
 	ReadTimeout:  10 * time.Second,
 	WriteTimeout: 10 * time.Second,
 }
@@ -42,9 +43,6 @@ var didCookie string
 var (
 	fetchRoomPool   fastjson.ParserPool
 	getLiveInfoPool fastjson.ParserPool
-	getStreamPool1  fastjson.ParserPool
-	getStreamPool2  fastjson.ParserPool
-	getStreamPool3  fastjson.ParserPool
 )
 
 // 直播间的数据结构
@@ -74,59 +72,60 @@ func (s streamer) getURL() string {
 }
 
 // http请求，调用后需要 defer fasthttp.ReleaseResponse(resp)
-func (hv *httpVars) httpRequest() (resp *fasthttp.Response, e error) {
+func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErrf("Recovering from panic in httpRequest(), the error is: %v", err)
-			lPrintErrf("请求 %s 时出错，错误为 %v", hv.url, err)
-			var ok bool
-			e, ok = err.(error)
-			if !ok {
-				e = fmt.Errorf("%s", err)
-			}
+			lPrintErrf("Recovering from panic in doRequest(), the error is: %v", err)
+			e = fmt.Errorf("请求 %s 时出错，错误为 %w", c.url, err)
+			fasthttp.ReleaseResponse(resp)
 		}
 	}()
+
+	if c.client == nil {
+		c.client = defaultClient
+	}
 
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	resp = fasthttp.AcquireResponse()
 
-	if hv.url != "" {
-		req.SetRequestURI(hv.url)
+	if c.url != "" {
+		req.SetRequestURI(c.url)
 	} else {
+		fasthttp.ReleaseResponse(resp)
 		return nil, fmt.Errorf("请求的url不能为空")
 	}
 
-	if len(hv.body) != 0 {
-		req.SetBody(hv.body)
+	if len(c.body) != 0 {
+		req.SetBody(c.body)
 	}
 
-	if hv.method != "" {
-		req.Header.SetMethod(hv.method)
+	if c.method != "" {
+		req.Header.SetMethod(c.method)
 	} else {
 		// 默认为GET
 		req.Header.SetMethod("GET")
 	}
 
-	if len(hv.cookies) != 0 {
-		for _, cookie := range hv.cookies {
+	if len(c.cookies) != 0 {
+		for _, cookie := range c.cookies {
 			req.Header.SetCookieBytesKV(cookie.Key(), cookie.Value())
 		}
 	}
 
-	if hv.userAgent != "" {
-		req.Header.SetUserAgent(hv.userAgent)
+	if c.userAgent != "" {
+		req.Header.SetUserAgent(c.userAgent)
 	}
 
-	if hv.contentType != "" {
-		req.Header.SetContentType(hv.contentType)
+	if c.contentType != "" {
+		req.Header.SetContentType(c.contentType)
 	}
 
-	if hv.referer != "" {
-		req.Header.SetReferer(hv.referer)
+	if c.referer != "" {
+		req.Header.SetReferer(c.referer)
 	}
 
-	err := httpClient.Do(req, resp)
+	err := c.client.Do(req, resp)
 	checkErr(err)
 
 	return resp, nil
@@ -168,12 +167,12 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 	defer fasthttp.ReleaseCookie(cookie)
 	err := cookie.Parse(didCookie)
 	checkErr(err)
-	hv := &httpVars{
+	client := &httpClient{
 		url:     fmt.Sprintf(acLive, page),
 		method:  "GET",
 		cookies: []*fasthttp.Cookie{cookie}, // 需要didCookie
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
@@ -237,11 +236,11 @@ func getLiveInfo(uid int) (name string, isLive bool, title string) {
 	//const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 	const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
 
-	hv := &httpVars{
+	client := &httpClient{
 		url:    fmt.Sprintf(acLiveInfo, uid),
 		method: "GET",
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
@@ -283,12 +282,12 @@ func (s streamer) isLiveOnByPage() (isLive bool) {
 	const acLivePage = "https://m.acfun.cn/live/detail/"
 	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
-	hv := &httpVars{
+	client := &httpClient{
 		url:       acLivePage + itoa(s.UID),
 		method:    "GET",
 		userAgent: userAgent,
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
@@ -318,11 +317,11 @@ func getName(uid int) string {
 func fetchAcLogo() {
 	const acLogo = "https://cdn.aixifan.com/ico/favicon.ico"
 
-	hv := &httpVars{
+	client := &httpClient{
 		url:    acLogo,
 		method: "GET",
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
@@ -347,11 +346,11 @@ func getDidCookie() {
 
 	const mainPage = "https://live.acfun.cn"
 
-	hv := &httpVars{
+	client := &httpClient{
 		url:    mainPage,
 		method: "GET",
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 
@@ -391,20 +390,19 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	defer fasthttp.ReleaseCookie(cookie)
 	err := cookie.Parse(didCookie)
 	checkErr(err)
-	hv := &httpVars{
+	client := &httpClient{
 		url:         loginPage,
 		body:        form.QueryString(),
 		method:      "POST",
 		cookies:     []*fasthttp.Cookie{cookie},
 		contentType: "application/x-www-form-urlencoded",
 	}
-	resp, err := hv.httpRequest()
+	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body := resp.Body()
 
-	p := getStreamPool1.Get()
-	defer getStreamPool1.Put(p)
+	var p fastjson.Parser
 	v, err := p.ParseBytes(body)
 	checkErr(err)
 	if !v.Exists("result") || v.GetInt("result") != 0 {
@@ -422,28 +420,24 @@ func (s streamer) getStreamURL() (hlsURL string, flvURL string, streamName strin
 	// authorId就是主播的uid
 	form.Set("authorId", s.itoa())
 	form.Set("pullStreamType", "FLV")
-	hv = &httpVars{
+	client = &httpClient{
 		url:         streamURL,
 		body:        form.QueryString(),
 		method:      "POST",
 		contentType: "application/x-www-form-urlencoded",
 		referer:     s.getURL(), // 会验证 Referer
 	}
-	resp, err = hv.httpRequest()
+	resp, err = client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
 	body = resp.Body()
 
-	p = getStreamPool2.Get()
-	defer getStreamPool2.Put(p)
 	v, err = p.ParseBytes(body)
 	checkErr(err)
 	if v.GetInt("result") != 1 {
 		return "", "", "", cfg
 	}
 	videoPlayRes := v.GetStringBytes("data", "videoPlayRes")
-	p = getStreamPool3.Get()
-	defer getStreamPool3.Put(p)
 	v, err = p.ParseBytes(videoPlayRes)
 	checkErr(err)
 	streamName = string(v.GetStringBytes("streamName"))
@@ -586,6 +580,7 @@ func cycleFetch(ctx context.Context) {
 			liveRooms.rooms = liveRooms.newRooms
 			liveRooms.Unlock()
 
+			lPrintln("cycleFetch()循环一次")
 			// 每10秒循环一次
 			time.Sleep(10 * time.Second)
 		}

@@ -73,7 +73,6 @@ var (
 // 检查错误
 func checkErr(err error) {
 	if err != nil {
-		lPrintErr(err)
 		panic(err)
 	}
 }
