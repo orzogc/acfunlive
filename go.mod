@@ -15,12 +15,12 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20200916034120-fdd71d1db51d
+	github.com/orzogc/acfundanmu v0.0.0-20200916091148-0f933948691c
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.16.0
 	github.com/valyala/fastjson v1.6.1
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
-	golang.org/x/sys v0.0.0-20200916030750-2334cc1a136f // indirect
+	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a // indirect
 )

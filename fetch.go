@@ -580,9 +580,8 @@ func cycleFetch(ctx context.Context) {
 			liveRooms.rooms = liveRooms.newRooms
 			liveRooms.Unlock()
 
-			lPrintln("cycleFetch()循环一次")
-			// 每10秒循环一次
-			time.Sleep(10 * time.Second)
+			// 超过10秒A站服务器可能关闭TCP连接而不通知？
+			time.Sleep(8 * time.Second)
 		}
 	}
 }
