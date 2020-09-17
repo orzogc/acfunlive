@@ -120,8 +120,8 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 h1:Esafd1046DLD
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
-github.com/orzogc/acfundanmu v0.0.0-20200916091148-0f933948691c h1:veZlsUZ7svJh6SqudXTNQM2OgJ5M1CUcjeHAgDNv/Js=
-github.com/orzogc/acfundanmu v0.0.0-20200916091148-0f933948691c/go.mod h1:L+CEGEoFmXBe07rqdeRPRd9KEPaAaLi61ve3bIMK8gI=
+github.com/orzogc/acfundanmu v0.0.0-20200916110018-56284f8b471d h1:RA+yB6+FmLHcmrXNE5tNWIAQAt4DU19/YaCLlrMMYjs=
+github.com/orzogc/acfundanmu v0.0.0-20200916110018-56284f8b471d/go.mod h1:L+CEGEoFmXBe07rqdeRPRd9KEPaAaLi61ve3bIMK8gI=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c h1:rp5dCmg/yLR3mgFuSOe4oEnDDmGLROTvMragMUXpTQw=
 github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c/go.mod h1:X07ZCGwUbLaax7L0S3Tw4hpejzu63ZrrQiUe6W0hcy0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

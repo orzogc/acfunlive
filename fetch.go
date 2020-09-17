@@ -34,8 +34,9 @@ type httpClient struct {
 }
 
 var defaultClient = &fasthttp.Client{
-	ReadTimeout:  10 * time.Second,
-	WriteTimeout: 10 * time.Second,
+	MaxIdleConnDuration: 90 * time.Second,
+	ReadTimeout:         10 * time.Second,
+	WriteTimeout:        10 * time.Second,
 }
 
 var didCookie string
@@ -580,8 +581,8 @@ func cycleFetch(ctx context.Context) {
 			liveRooms.rooms = liveRooms.newRooms
 			liveRooms.Unlock()
 
-			// 超过10秒A站服务器可能关闭TCP连接而不通知？
-			time.Sleep(8 * time.Second)
+			// 每10秒循环一次
+			time.Sleep(10 * time.Second)
 		}
 	}
 }
