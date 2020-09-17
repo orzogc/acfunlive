@@ -22,7 +22,7 @@ func getFFmpeg() (ffmpegFile string) {
 // 转换文件名和限制文件名长度
 func transFilename(filename string) string {
 	// 转换文件名不允许的特殊字符
-	re := regexp.MustCompile(`[/]`)
+	re := regexp.MustCompile(`[<>:"/\\|?*]`)
 	filename = re.ReplaceAllString(filename, "-")
 	// linux和macOS下限制文件名长度
 	if len(filename) >= 250 {
