@@ -249,14 +249,23 @@ func argsHandle() {
 
 // 检查config.json里的配置
 func checkConfig() {
-	switch {
-	case config.Source != "hls" && config.Source != "flv":
+	if config.Source != "hls" && config.Source != "flv" {
 		lPrintErr(configFile + "里的Source必须是hls或flv")
 		os.Exit(1)
-	case config.WebPort < 1024 || config.WebPort > 65525:
+	}
+	if config.WebPort < 1024 || config.WebPort > 65525 {
 		lPrintErr(configFile + "里的WebPort必须大于1023且少于65526")
 		os.Exit(1)
-	case config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 || config.Coolq.AdminQQ < 0:
+	}
+	if config.Directory != "" {
+		info, err := os.Stat(config.Directory)
+		checkErr(err)
+		if !info.IsDir() {
+			lPrintErr(configFile + "里的Directory必须是存在的文件夹")
+			os.Exit(1)
+		}
+	}
+	if config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 || config.Coolq.AdminQQ < 0 {
 		lPrintErr(configFile + "里的QQ号必须大于等于0")
 		os.Exit(1)
 	}

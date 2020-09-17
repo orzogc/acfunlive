@@ -46,18 +46,20 @@ var streamers struct {
 
 // 设置数据
 type configData struct {
-	Source  string    // 直播源，有hls和flv两种
-	Output  string    // 直播下载视频格式的后缀名
-	WebPort int       // web API的本地端口
-	Mirai   miraiData // Mirai相关设置
-	Coolq   coolqData // 酷Q相关设置
+	Source    string    // 直播源，有hls和flv两种
+	Output    string    // 直播下载视频格式的后缀名
+	WebPort   int       // web API的本地端口
+	Directory string    // 直播视频和弹幕下载完毕后会被移动到该文件夹
+	Mirai     miraiData // Mirai相关设置
+	Coolq     coolqData // 酷Q相关设置
 }
 
 // 默认设置
 var config = configData{
-	Source:  "flv",
-	Output:  "mp4",
-	WebPort: 51880,
+	Source:    "flv",
+	Output:    "mp4",
+	WebPort:   51880,
+	Directory: "",
 	Mirai: miraiData{
 		AdminQQ:       0,
 		BotQQ:         0,
@@ -298,4 +300,24 @@ func loadNewConfig() {
 	streamers.old = oldstreamers
 
 	streamers.Unlock()
+}
+
+// 移动文件
+func moveFile(oldFile string) {
+	if config.Directory != "" {
+		info, err := os.Stat(config.Directory)
+		checkErr(err)
+		if !info.IsDir() {
+			lPrintErr(configFile + "里的Directory必须是存在的文件夹")
+			return
+		}
+
+		if _, err := os.Stat(oldFile); err == nil {
+			filename := filepath.Base(oldFile)
+			newFile := filepath.Join(config.Directory, filename)
+			err := os.Rename(oldFile, newFile)
+			checkErr(err)
+			lPrintf("成功将文件 %s 移动到 %s", oldFile, newFile)
+		}
+	}
 }

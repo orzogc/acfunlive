@@ -280,4 +280,6 @@ func (s streamer) recordLive(danmu bool) {
 			desktopNotify(s.Name + "的直播视频下载已经结束")
 		}
 	}
+
+	moveFile(recordFile)
 }

@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.14
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20200915071055-1607cdf2bff8
+	github.com/Mrs4s/MiraiGo v0.0.0-20200917013104-8408c5ac5ff3
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/catsworld/qq-bot-api v0.0.0-20191230111849-48d158a4fd65
@@ -22,5 +22,5 @@ require (
 	github.com/valyala/fasthttp v1.16.0
 	github.com/valyala/fastjson v1.6.1
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73 // indirect
-	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a // indirect
+	golang.org/x/sys v0.0.0-20200917061948-648f2a039071 // indirect
 )

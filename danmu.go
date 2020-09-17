@@ -150,6 +150,8 @@ Outer:
 			desktopNotify(s.Name + "的直播弹幕下载已经结束")
 		}
 	}
+
+	moveFile(assFile)
 }
 
 // 退出直播弹幕下载相关操作
