@@ -80,7 +80,7 @@ func checkErr(err error) {
 // 获取时间
 func getTime() string {
 	t := time.Now()
-	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+	return fmt.Sprintf("%d-%02d-%02d %02d-%02d-%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
 // 获取时间，按照log的时间格式

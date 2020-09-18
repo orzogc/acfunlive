@@ -91,8 +91,9 @@ func (s streamer) cycle() {
 					} else {
 						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 						// 不下载直播视频时下载弹幕
-						if s.Danmu {
-							startDanmu(s.UID)
+						if s.Danmu || s.KeepOnline {
+							filename := getTime() + " " + s.Name + " " + s.getTitle()
+							go s.initDanmu(mainCtx, filename)
 						}
 					}
 				}

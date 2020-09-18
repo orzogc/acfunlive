@@ -32,9 +32,10 @@ type streamer struct {
 	Notify      notify  // 开播提醒相关
 	Record      bool    // 是否自动下载直播视频
 	Danmu       bool    // 是否自动下载直播弹幕
+	KeepOnline  bool    // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
 	Bitrate     int     // 下载直播视频的最高码率
-	SendQQ      []int64 // 给这个QQ号发送消息
-	SendQQGroup []int64 // 给这个QQ群发送消息
+	SendQQ      []int64 // 给这些QQ号发送消息
+	SendQQGroup []int64 // 给这些QQ群发送消息
 }
 
 // 存放主播的设置数据
@@ -50,6 +51,7 @@ type configData struct {
 	Output    string    // 直播下载视频格式的后缀名
 	WebPort   int       // web API的本地端口
 	Directory string    // 直播视频和弹幕下载完毕后会被移动到该文件夹
+	Acfun     acfunUser // AcFun帐号相关
 	Mirai     miraiData // Mirai相关设置
 	Coolq     coolqData // 酷Q相关设置
 }
@@ -60,6 +62,10 @@ var config = configData{
 	Output:    "mp4",
 	WebPort:   51880,
 	Directory: "",
+	Acfun: acfunUser{
+		UserEmail: "",
+		Password:  "",
+	},
 	Mirai: miraiData{
 		AdminQQ:       0,
 		BotQQ:         0,
@@ -71,6 +77,11 @@ var config = configData{
 		AccessToken:  "",
 		Secret:       "",
 	},
+}
+
+type acfunUser struct {
+	UserEmail string // AcFun帐号邮箱
+	Password  string // AcFun帐号密码
 }
 
 // 将s放进streamers里

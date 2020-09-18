@@ -73,9 +73,9 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			lPrintErr("ERROR: Recovering from panic in getDanmu(), the error is:", err)
 			lPrintErr("ERROR: 下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
-			s.quitDanmu()
 		}
 	}()
+	defer s.quitDanmu()
 
 	startTime := time.Now().UnixNano()
 
@@ -91,7 +91,6 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		if retry == 2 {
 			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
-			s.quitDanmu()
 			return
 		}
 		time.Sleep(10 * time.Second)
@@ -99,27 +98,54 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 
 	assFile := transFilename(filename)
 	if assFile == "" {
-		s.quitDanmu()
 		return
 	}
 	assFile = assFile + ".ass"
 
-	lPrintln("开始下载" + s.longID() + "的直播弹幕")
-	lPrintln("本次下载的ass文件保存在" + assFile)
-	if *isListen {
-		lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行 stopdanmu " + s.itoa())
-	}
-	if s.Notify.NotifyDanmu {
-		if !s.Record {
-			desktopNotify("开始下载" + s.Name + "的直播弹幕")
+	var cookies []string
+	var err error
+	if s.KeepOnline {
+		if config.Acfun.UserEmail != "" && config.Acfun.Password != "" {
+			cookies, err = acfundanmu.Login(config.Acfun.UserEmail, config.Acfun.Password)
+			if err != nil {
+				lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
+				cookies = nil
+			} else {
+				lPrintf("开始在%s的直播间挂机", s.longID())
+			}
 		}
 	}
-	dq, err := acfundanmu.Init(int64(s.UID))
+
+	if s.Danmu {
+		lPrintln("开始下载" + s.longID() + "的直播弹幕")
+		lPrintln("本次下载的ass文件保存在" + assFile)
+		if *isListen {
+			lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行 stopdanmu " + s.itoa())
+		}
+		if s.Notify.NotifyDanmu {
+			if !s.Record {
+				desktopNotify("开始下载" + s.Name + "的直播弹幕")
+			}
+		}
+	}
+
+	dq, err := acfundanmu.Init(int64(s.UID), cookies)
 	checkErr(err)
 	dq.StartDanmu(ctx)
-	cfg.Title = filename
-	cfg.StartTime = startTime
-	dq.WriteASS(ctx, cfg, assFile, true)
+	if s.Danmu {
+		cfg.Title = filename
+		cfg.StartTime = startTime
+		dq.WriteASS(ctx, cfg, assFile, true)
+	} else if s.KeepOnline {
+		for {
+			if danmu := dq.GetDanmu(); danmu == nil {
+				break
+			}
+		}
+	} else {
+		lPrintErr("s.Danmu或s.KeepOnline必须为true")
+		return
+	}
 
 Outer:
 	for {
@@ -131,10 +157,18 @@ Outer:
 			_, _, newStreamName, _ := s.getStreamURL()
 			if newStreamName == streamName {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				dq, err := acfundanmu.Init(int64(s.UID))
+				dq, err := acfundanmu.Init(int64(s.UID), cookies)
 				checkErr(err)
 				dq.StartDanmu(ctx)
-				dq.WriteASS(ctx, cfg, assFile, false)
+				if s.Danmu {
+					dq.WriteASS(ctx, cfg, assFile, false)
+				} else if s.KeepOnline {
+					for {
+						if danmu := dq.GetDanmu(); danmu == nil {
+							break
+						}
+					}
+				}
 				time.Sleep(10 * time.Second)
 			} else {
 				break Outer
@@ -142,12 +176,15 @@ Outer:
 		}
 	}
 
-	s.quitDanmu()
-
-	lPrintln(s.longID() + "的直播弹幕下载已经结束")
-	if s.Notify.NotifyDanmu {
-		if !s.Record {
-			desktopNotify(s.Name + "的直播弹幕下载已经结束")
+	if s.KeepOnline {
+		lPrintf("停止在%s的直播间挂机", s.longID())
+	}
+	if s.Danmu {
+		lPrintln(s.longID() + "的直播弹幕下载已经结束")
+		if s.Notify.NotifyDanmu {
+			if !s.Record {
+				desktopNotify(s.Name + "的直播弹幕下载已经结束")
+			}
 		}
 	}
 
@@ -185,7 +222,7 @@ func startDanmu(uid int) bool {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
-	s := streamer{UID: uid, Name: name, Notify: notify{NotifyDanmu: true}}
+	s := streamer{UID: uid, Name: name, Notify: notify{NotifyDanmu: true}, Danmu: true}
 
 	if !s.isLiveOn() {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")

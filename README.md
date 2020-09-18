@@ -63,10 +63,11 @@ yarn generate
         "NotifyRecord": true, // 下载主播直播相关的通知
         "NotifyDanmu": false  // 下载主播直播弹幕相关的通知，需自行手动修改设置
         },
-    "Record": true, // 是否下载直播视频
-    "Danmu": true,  // 是否下载直播弹幕
-    "Bitrate": 0,   // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
-    "SendQQ": [     // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友）
+    "Record": true,     // 是否下载直播视频
+    "Danmu": true,      // 是否下载直播弹幕
+    "KeepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
+    "Bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
+    "SendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友）
             12345,
             123456
         ],
@@ -88,6 +89,10 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
     "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
     "WebPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
     "Directory": "",  // 直播视频和弹幕下载完毕后会被移动到该文件夹，其值最好是绝对路径
+    "Acfun": {
+        "UserEmail": "", // AcFun帐号邮箱，目前只用于直播间挂机，不需要可以为空
+        "Password": ""   // AcFun帐号密码
+    },
     "Mirai": {
         "AdminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
         "BotQQ": 123456,         // QQ机器人的QQ号

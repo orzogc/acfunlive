@@ -82,7 +82,7 @@ func startRec(uid int, danmu bool) bool {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return false
 	}
-	s := streamer{UID: uid, Name: name, Notify: notify{NotifyRecord: true}}
+	s := streamer{UID: uid, Name: name, Notify: notify{NotifyRecord: true}, Record: true, Danmu: danmu}
 
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.isRecording {
