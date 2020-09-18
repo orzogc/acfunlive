@@ -42,7 +42,7 @@ func (s streamer) cycle() {
 	msgMap.Unlock()
 
 	// 设置文件里有该主播，但是不通知不下载
-	if !(s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu || s.Record || s.Danmu) {
+	if !(s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu || s.Record || s.Danmu || s.KeepOnline) {
 		for {
 			msg := <-ch
 			s.handleMsg(msg)
