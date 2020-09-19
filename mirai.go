@@ -184,8 +184,11 @@ func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 func miraiSendQQ(qq int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
-	if result := miraiClient.SendPrivateMessage(qq, msg); result == nil {
-		lPrintErr("给QQ", qq, "的消息发送失败")
+	if miraiClient != nil {
+		lPrintln("给QQ", qq, "发送消息")
+		if result := miraiClient.SendPrivateMessage(qq, msg); result == nil {
+			lPrintErr("给QQ", qq, "的消息发送失败")
+		}
 	}
 }
 
@@ -193,8 +196,11 @@ func miraiSendQQ(qq int64, text string) {
 func miraiSendQQGroup(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
-	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-		lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+	if miraiClient != nil {
+		lPrintln("给QQ群", qqGroup, "发送消息")
+		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
+			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+		}
 	}
 }
 
@@ -203,8 +209,11 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))
-	if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-		lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+	if miraiClient != nil {
+		lPrintln("给QQ群", qqGroup, "发送消息")
+		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
+			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+		}
 	}
 }
 
