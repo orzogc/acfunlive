@@ -189,7 +189,8 @@ func (s streamer) recordLive(danmu bool) {
 		time.Sleep(10 * time.Second)
 	}
 
-	filename := getTime() + " " + s.Name + " " + s.getTitle()
+	title := s.getTitle()
+	filename := getTime() + " " + s.Name + " " + title
 	recordFile := transFilename(filename)
 	if recordFile == "" {
 		s.quitRec()
@@ -206,10 +207,10 @@ func (s streamer) recordLive(danmu bool) {
 	if s.Notify.NotifyRecord {
 		if danmu {
 			desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
-			s.sendMirai("开始下载" + s.longID() + "的直播视频和弹幕")
+			s.sendMirai("开始下载" + s.longID() + "的直播视频和弹幕：" + title)
 		} else {
 			desktopNotify("开始下载" + s.Name + "的直播视频")
-			s.sendMirai("开始下载" + s.longID() + "的直播视频")
+			s.sendMirai("开始下载" + s.longID() + "的直播视频：" + title)
 		}
 	}
 

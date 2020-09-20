@@ -127,7 +127,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		if s.Notify.NotifyDanmu {
 			if !s.Record {
 				desktopNotify("开始下载" + s.Name + "的直播弹幕")
-				s.sendMirai("开始下载" + s.longID() + "的直播弹幕")
+				s.sendMirai("开始下载" + s.longID() + "的直播弹幕：" + s.getTitle())
 			}
 		}
 	}

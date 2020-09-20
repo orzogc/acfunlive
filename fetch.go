@@ -21,6 +21,7 @@ import (
 //const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 //const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
+//const acUserInfo2 = "https://api-new.app.acfun.cn/rest/app/user/userInfo?userId=%d"
 
 type httpClient struct {
 	client      *fasthttp.Client
@@ -234,8 +235,8 @@ func getLiveInfo(uid int) (name string, isLive bool, title string) {
 		}
 	}()
 
-	//const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
-	const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
+	const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+	//const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
 
 	client := &httpClient{
 		url:    fmt.Sprintf(acLiveInfo, uid),

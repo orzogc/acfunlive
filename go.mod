@@ -15,7 +15,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20200918140038-c582e2f64a86
+	github.com/orzogc/acfundanmu v0.0.0-20200920190652-20043e4a5b23
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
