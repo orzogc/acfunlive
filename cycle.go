@@ -68,8 +68,8 @@ func (s streamer) cycle() {
 
 					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
-						s.sendCoolq(s.Name + "正在直播：" + title + "，直播观看地址：" + s.getURL())
-						s.sendMirai(s.Name + "正在直播：" + title + "，直播观看地址：" + s.getURL())
+						s.sendCoolq(s.longID() + "正在直播：" + title + "，直播观看地址：" + s.getURL())
+						s.sendMirai(s.longID() + "正在直播：" + title + "，直播观看地址：" + s.getURL())
 					}
 					if s.Record {
 						msgMap.Lock()
@@ -105,8 +105,8 @@ func (s streamer) cycle() {
 						lPrintln(s.longID() + "已经下播")
 						if s.Notify.NotifyOff {
 							desktopNotify(s.Name + "已经下播")
-							s.sendCoolq(s.Name + "已经下播")
-							s.sendMirai(s.Name + "已经下播")
+							s.sendCoolq(s.longID() + "已经下播")
+							s.sendMirai(s.longID() + "已经下播")
 						}
 						if s.Record {
 							msgMap.Lock()

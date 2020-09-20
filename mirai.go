@@ -101,19 +101,23 @@ func initMirai() bool {
 	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
 		lPrintWarn("QQ Bot已离线，尝试重连")
 		time.Sleep(10 * time.Second)
-		resp, err := miraiClient.Login()
-		checkErr(err)
+		if miraiClient != nil {
+			resp, err := miraiClient.Login()
+			checkErr(err)
 
-		if !resp.Success {
-			switch resp.Error {
-			case client.NeedCaptcha:
-				lPrintErr("QQ重连失败：需要验证码，请重启本程序")
-			case client.UnsafeDeviceError:
-				lPrintErr("QQ重连失败：设备锁")
-				lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
-			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErr("QQ重连失败：" + resp.ErrorMessage + "，请重启本程序")
+			if !resp.Success {
+				switch resp.Error {
+				case client.NeedCaptcha:
+					lPrintErr("QQ重连失败：需要验证码，请重启本程序")
+				case client.UnsafeDeviceError:
+					lPrintErr("QQ重连失败：设备锁")
+					lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
+				case client.OtherLoginError, client.UnknownLoginError:
+					lPrintErr("QQ重连失败：" + resp.ErrorMessage + "，请重启本程序")
+				}
 			}
+		} else {
+			lPrintErr("miraiClient不能为nil")
 		}
 	})
 
@@ -189,6 +193,8 @@ func miraiSendQQ(qq int64, text string) {
 		if result := miraiClient.SendPrivateMessage(qq, msg); result == nil {
 			lPrintErr("给QQ", qq, "的消息发送失败")
 		}
+	} else {
+		lPrintErr("miraiClient不能为nil")
 	}
 }
 
@@ -201,6 +207,8 @@ func miraiSendQQGroup(qqGroup int64, text string) {
 		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
 			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
 		}
+	} else {
+		lPrintErr("miraiClient不能为nil")
 	}
 }
 
@@ -214,6 +222,8 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
 			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
 		}
+	} else {
+		lPrintErr("miraiClient不能为nil")
 	}
 }
 

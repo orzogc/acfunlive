@@ -99,6 +99,7 @@ func startRec(uid int, danmu bool) bool {
 
 	if ffmpegFile := getFFmpeg(); ffmpegFile == "" {
 		desktopNotify("没有找到FFmpeg，停止下载直播视频")
+		s.sendMirai("没有找到FFmpeg，停止下载直播视频")
 		return false
 	}
 
@@ -153,8 +154,9 @@ func (s streamer) recordLive(danmu bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in recordLive(), the error is:", err)
-			lPrintErr("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa())
+			lPrintErr("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
+			s.sendMirai("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 			s.quitRec()
 		}
 	}()
@@ -162,6 +164,7 @@ func (s streamer) recordLive(danmu bool) {
 	ffmpegFile := getFFmpeg()
 	if ffmpegFile == "" {
 		desktopNotify("没有找到FFmpeg，停止下载直播视频")
+		s.sendMirai("没有找到FFmpeg，停止下载直播视频")
 		s.quitRec()
 		return
 	}
@@ -175,8 +178,11 @@ func (s streamer) recordLive(danmu bool) {
 			break
 		}
 		if retry == 2 {
-			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，如要重启下载直播视频，请运行 startrecord " + s.itoa())
-			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
+			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
+			if s.Notify.NotifyRecord {
+				desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
+				s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
+			}
 			s.quitRec()
 			return
 		}
@@ -200,8 +206,10 @@ func (s streamer) recordLive(danmu bool) {
 	if s.Notify.NotifyRecord {
 		if danmu {
 			desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
+			s.sendMirai("开始下载" + s.longID() + "的直播视频和弹幕")
 		} else {
 			desktopNotify("开始下载" + s.Name + "的直播视频")
+			s.sendMirai("开始下载" + s.longID() + "的直播视频")
 		}
 	}
 
@@ -276,8 +284,10 @@ func (s streamer) recordLive(danmu bool) {
 	if s.Notify.NotifyRecord {
 		if danmu {
 			desktopNotify(s.Name + "的直播视频和弹幕下载已经结束")
+			s.sendMirai(s.longID() + "的直播视频和弹幕下载已经结束")
 		} else {
 			desktopNotify(s.Name + "的直播视频下载已经结束")
+			s.sendMirai(s.longID() + "的直播视频下载已经结束")
 		}
 	}
 

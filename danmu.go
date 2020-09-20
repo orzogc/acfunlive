@@ -70,9 +70,10 @@ func delDanmu(uid int) bool {
 func (s streamer) getDanmu(ctx context.Context, filename string) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("ERROR: Recovering from panic in getDanmu(), the error is:", err)
-			lPrintErr("ERROR: 下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
+			lPrintErr("Recovering from panic in getDanmu(), the error is:", err)
+			lPrintErr("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 			desktopNotify("下载" + s.Name + "的直播弹幕发生错误")
+			s.sendMirai("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 		}
 	}()
 	defer s.quitDanmu()
@@ -89,8 +90,9 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			break
 		}
 		if retry == 2 {
-			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
+			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
+			s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 			return
 		}
 		time.Sleep(10 * time.Second)
@@ -125,6 +127,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		if s.Notify.NotifyDanmu {
 			if !s.Record {
 				desktopNotify("开始下载" + s.Name + "的直播弹幕")
+				s.sendMirai("开始下载" + s.longID() + "的直播弹幕")
 			}
 		}
 	}
@@ -184,6 +187,7 @@ Outer:
 		if s.Notify.NotifyDanmu {
 			if !s.Record {
 				desktopNotify(s.Name + "的直播弹幕下载已经结束")
+				s.sendMirai(s.longID() + "的直播弹幕下载已经结束")
 			}
 		}
 	}
