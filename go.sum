@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/Mrs4s/MiraiGo v0.0.0-20200919153352-249af274638d h1:nGJSE9xQBeDiugBKKX0vUOq51MqlUEm/y2FMfZFH/w4=
-github.com/Mrs4s/MiraiGo v0.0.0-20200919153352-249af274638d/go.mod h1:cwYPI2uq6nxNbx0nA6YuAKF1V5szSs6FPlGVLQvRUlo=
+github.com/Mrs4s/MiraiGo v0.0.0-20200921142226-9a449519db5c h1:TpGiSjI8Pe0YLEQPAVkOV37OFLeJnQ6jxvcDSb/LESY=
+github.com/Mrs4s/MiraiGo v0.0.0-20200921142226-9a449519db5c/go.mod h1:cwYPI2uq6nxNbx0nA6YuAKF1V5szSs6FPlGVLQvRUlo=
 github.com/PuerkitoBio/goquery v1.5.1 h1:PSPBGne8NIUWw+/7vFBV+kG2J/5MOjbzc7154OaKCSE=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/Workiva/go-datastructures v1.0.52 h1:PLSK6pwn8mYdaoaCZEMsXBpBotr4HHn9abU0yMQt0NI=
