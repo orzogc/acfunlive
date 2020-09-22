@@ -59,6 +59,18 @@ func initMirai() bool {
 	}()
 
 	miraiClient = client.NewClient(config.Mirai.BotQQ, config.Mirai.BotQQPassword)
+	/*
+		miraiClient.OnLog(func(c *client.QQClient, e *client.LogEvent) {
+			switch e.Type {
+			case "INFO":
+				lPrintln("Mirai INFO: " + e.Message)
+			case "ERROR":
+				lPrintErr("Mirai ERROR: " + e.Message)
+			case "DEBUG":
+				lPrintln("Mirai DEBUG: " + e.Message)
+			}
+		})
+	*/
 	resp, err := miraiClient.Login()
 	checkErr(err)
 

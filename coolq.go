@@ -33,28 +33,28 @@ func startCoolq() bool {
 	return true
 }
 
-// 设置将主播的开播提醒发送到指定的QQ
+// 设置将主播的相关提醒消息发送到指定的QQ
 func addQQNotify(uid int, qq int64) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn {
+		if s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu {
 			for _, q := range s.SendQQ {
 				if q == qq {
-					lPrintf("已经设置过将%s的开播提醒发送到QQ%d", s.longID(), qq)
+					lPrintf("已经设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 					streamers.Unlock()
 					return true
 				}
 			}
 			s.SendQQ = append(s.SendQQ, qq)
 			sets(s)
-			lPrintf("成功设置将%s的开播提醒发送到QQ%d", s.longID(), qq)
+			lPrintf("成功设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 		} else {
-			lPrintWarn("设置QQ的开播提醒需要先订阅" + s.longID() + "的开播提醒，请运行addnotify " + s.itoa())
+			lPrintWarn("设置QQ的相关提醒消息需要先订阅" + s.longID() + "的开播或录播提醒")
 			streamers.Unlock()
 			return false
 		}
 	} else {
-		lPrintWarn("设置QQ的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
+		lPrintWarn("设置QQ的相关提醒消息需要先订阅uid为" + itoa(uid) + "的主播的开播或录播提醒")
 		streamers.Unlock()
 		return false
 	}
@@ -64,7 +64,7 @@ func addQQNotify(uid int, qq int64) bool {
 	return true
 }
 
-// 取消设置将主播的开播提醒发送到指定的QQ
+// 取消设置将主播的相关提醒消息发送到指定的QQ
 func delQQNotify(uid int, qq int64) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
@@ -75,9 +75,9 @@ func delQQNotify(uid int, qq int64) bool {
 			}
 		}
 		sets(s)
-		lPrintf("成功取消设置将%s的开播提醒发送到QQ%d", s.longID(), qq)
+		lPrintf("成功取消设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒消息")
 	}
 	streamers.Unlock()
 
@@ -85,15 +85,15 @@ func delQQNotify(uid int, qq int64) bool {
 	return true
 }
 
-// 取消设置QQ开播提醒
+// 取消设置QQ提醒
 func cancelQQNotify(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		s.SendQQ = []int64{}
 		sets(s)
-		lPrintln("成功取消设置" + s.longID() + "的QQ开播提醒")
+		lPrintln("成功取消设置" + s.longID() + "的QQ提醒")
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒")
 	}
 	streamers.Unlock()
 
@@ -101,28 +101,28 @@ func cancelQQNotify(uid int) bool {
 	return true
 }
 
-// 设置将主播的开播提醒发送到指定的QQ群
+// 设置将主播的相关提醒消息发送到指定的QQ群
 func addQQGroup(uid int, qqGroup int64) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn {
+		if s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu {
 			for _, q := range s.SendQQGroup {
 				if q == qqGroup {
-					lPrintf("已经设置过将%s的开播提醒发送到QQ群%d", s.longID(), qqGroup)
+					lPrintf("已经设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 					streamers.Unlock()
 					return true
 				}
 			}
 			s.SendQQGroup = append(s.SendQQGroup, qqGroup)
 			sets(s)
-			lPrintf("成功设置将%s的开播提醒发送到QQ群%d", s.longID(), qqGroup)
+			lPrintf("成功设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 		} else {
-			lPrintWarn("设置QQ群的开播提醒需要先订阅" + s.longID() + "的开播提醒，请运行addnotify " + s.itoa())
+			lPrintWarn("设置QQ群的相关提醒消息需要先订阅" + s.longID() + "的开播或录播提醒")
 			streamers.Unlock()
 			return false
 		}
 	} else {
-		lPrintWarn("设置QQ群的开播提醒需要先订阅uid为" + itoa(uid) + "的主播的开播提醒，请运行addnotify " + itoa(uid))
+		lPrintWarn("设置QQ群的相关提醒消息需要先订阅uid为" + itoa(uid) + "的主播的开播或录播提醒")
 		streamers.Unlock()
 		return false
 	}
@@ -132,7 +132,7 @@ func addQQGroup(uid int, qqGroup int64) bool {
 	return true
 }
 
-// 取消设置将主播的开播提醒发送到指定的QQ群
+// 取消设置将主播的相关提醒消息发送到指定的QQ群
 func delQQGroup(uid int, qqGroup int64) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
@@ -143,9 +143,9 @@ func delQQGroup(uid int, qqGroup int64) bool {
 			}
 		}
 		sets(s)
-		lPrintf("成功取消设置将%s的开播提醒发送到QQ群%d", s.longID(), qqGroup)
+		lPrintf("成功取消设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒消息")
 	}
 	streamers.Unlock()
 
@@ -153,15 +153,15 @@ func delQQGroup(uid int, qqGroup int64) bool {
 	return true
 }
 
-// 取消设置QQ群开播提醒
+// 取消设置QQ群提醒
 func cancelQQGroup(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
 		s.SendQQGroup = []int64{}
 		sets(s)
-		lPrintln("成功取消设置" + s.longID() + "的QQ群开播提醒")
+		lPrintln("成功取消设置" + s.longID() + "的QQ群提醒")
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群开播提醒")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒")
 	}
 	streamers.Unlock()
 
