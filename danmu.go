@@ -221,12 +221,20 @@ func (s streamer) initDanmu(ctx context.Context, filename string) {
 
 // 临时下载指定主播的直播弹幕
 func startDanmu(uid int) bool {
-	name := getName(uid)
-	if name == "" {
-		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
-		return false
+	var name string
+	streamers.Lock()
+	s, ok := streamers.crt[uid]
+	streamers.Unlock()
+	if !ok {
+		name = getName(uid)
+		if name == "" {
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			return false
+		}
+		s = streamer{UID: uid, Name: name}
 	}
-	s := streamer{UID: uid, Name: name, Notify: notify{NotifyDanmu: true}, Danmu: true}
+	s.Notify.NotifyDanmu = true
+	s.Danmu = true
 
 	if !s.isLiveOn() {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")

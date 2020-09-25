@@ -57,9 +57,9 @@ type liveRoom struct {
 
 // liveRoom的map
 var liveRooms struct {
-	sync.Mutex                   // rooms的锁
-	rooms      *map[int]liveRoom // 现在的liveRoom
-	newRooms   *map[int]liveRoom // 新的liveRoom
+	sync.Mutex                  // rooms的锁
+	rooms      map[int]liveRoom // 现在的liveRoom
+	newRooms   map[int]liveRoom // 新的liveRoom
 }
 
 // 获取主播的直播链接
@@ -136,23 +136,21 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 // 获取全部AcFun直播间
 func fetchAllRooms() {
 	page := "0"
-	allRooms := make(map[int]liveRoom)
+	liveRooms.newRooms = make(map[int]liveRoom)
 	for page != "no_more" && page != "" {
 		rooms, nextPage := fetchLiveRoom(page)
 		if rooms == nil && nextPage == "" {
 			break
 		}
 		page = nextPage
-		for uid, r := range *rooms {
-			allRooms[uid] = r
+		for uid, r := range rooms {
+			liveRooms.newRooms[uid] = r
 		}
 	}
-
-	liveRooms.newRooms = &allRooms
 }
 
 // 获取指定页数的AcFun直播间
-func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
+func fetchLiveRoom(page string) (r map[int]liveRoom, nextPage string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in fetchLiveRoom(), the error is:", err)
@@ -202,13 +200,13 @@ func fetchLiveRoom(page string) (r *map[int]liveRoom, nextPage string) {
 
 	nextPage = string(v.GetStringBytes("pcursor"))
 
-	return &rooms, nextPage
+	return rooms, nextPage
 }
 
 // 获取主播直播间的标题
 func (s streamer) getTitle() string {
 	liveRooms.Lock()
-	room, ok := (*liveRooms.rooms)[s.UID]
+	room, ok := liveRooms.rooms[s.UID]
 	liveRooms.Unlock()
 	if ok {
 		return room.title
@@ -219,7 +217,7 @@ func (s streamer) getTitle() string {
 // 查看主播是否在直播
 func (s streamer) isLiveOn() bool {
 	liveRooms.Lock()
-	_, ok := (*liveRooms.rooms)[s.UID]
+	_, ok := liveRooms.rooms[s.UID]
 	liveRooms.Unlock()
 	return ok
 }
@@ -305,7 +303,7 @@ func (s streamer) isLiveOnByPage() (isLive bool) {
 // 根据uid获取主播的名字
 func getName(uid int) string {
 	liveRooms.Lock()
-	room, ok := (*liveRooms.rooms)[uid]
+	room, ok := liveRooms.rooms[uid]
 	liveRooms.Unlock()
 	if ok {
 		return room.name
@@ -538,7 +536,7 @@ func getLiveOnByInfo(ss []streamer) {
 		go func(s streamer) {
 			if _, isLive, title := getLiveInfo(s.UID); isLive {
 				mu.Lock()
-				(*liveRooms.newRooms)[s.UID] = liveRoom{name: s.Name, title: title}
+				liveRooms.newRooms[s.UID] = liveRoom{name: s.Name, title: title}
 				mu.Unlock()
 			}
 			wg.Done()
@@ -560,7 +558,7 @@ func cycleFetch(ctx context.Context) {
 			streamers.Lock()
 			// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
 			for _, s := range streamers.crt {
-				if _, ok := (*liveRooms.newRooms)[s.UID]; !ok {
+				if _, ok := liveRooms.newRooms[s.UID]; !ok {
 					notLive = append(notLive, s)
 				}
 			}

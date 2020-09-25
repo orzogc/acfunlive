@@ -77,12 +77,21 @@ func delRecord(uid int) bool {
 
 // 临时下载指定主播的直播视频
 func startRec(uid int, danmu bool) bool {
-	name := getName(uid)
-	if name == "" {
-		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
-		return false
+	var name string
+	streamers.Lock()
+	s, ok := streamers.crt[uid]
+	streamers.Unlock()
+	if !ok {
+		name = getName(uid)
+		if name == "" {
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			return false
+		}
+		s = streamer{UID: uid, Name: name}
 	}
-	s := streamer{UID: uid, Name: name, Notify: notify{NotifyRecord: true}, Record: true, Danmu: danmu}
+	s.Notify.NotifyRecord = true
+	s.Record = true
+	s.Danmu = danmu
 
 	msgMap.Lock()
 	if m, ok := msgMap.msg[s.UID]; ok && m.isRecording {
