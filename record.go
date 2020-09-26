@@ -101,7 +101,7 @@ func startRec(uid int, danmu bool) bool {
 	}
 	msgMap.Unlock()
 
-	if _, isLive, _ := getLiveInfo(s.UID); isLive {
+	if _, isLive, _ := getLiveInfo(s.UID); !isLive {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播视频")
 		return false
 	}
