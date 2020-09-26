@@ -236,7 +236,7 @@ func startDanmu(uid int) bool {
 	s.Notify.NotifyDanmu = true
 	s.Danmu = true
 
-	if !s.isLiveOn() {
+	if _, isLive, _ := getLiveInfo(s.UID); isLive {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
 		return false
 	}
