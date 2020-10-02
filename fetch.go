@@ -161,6 +161,7 @@ func fetchLiveRoom(page string) (r map[int]liveRoom, nextPage string) {
 		}
 	}()
 
+	//const acLive = "https://api-new.app.acfun.cn/rest/app/live/channel"
 	const acLive = "https://live.acfun.cn/api/channel/list?count=1000&pcursor=%s"
 
 	cookie := fasthttp.AcquireCookie()
@@ -210,6 +211,10 @@ func (s streamer) getTitle() string {
 	liveRooms.Unlock()
 	if ok {
 		return room.title
+	}
+	_, isLive, title := getLiveInfo(s.UID)
+	if isLive {
+		return title
 	}
 	return ""
 }
