@@ -134,7 +134,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 
 	dq, err := acfundanmu.Init(int64(s.UID), cookies)
 	checkErr(err)
-	dq.StartDanmu(ctx)
+	dq.StartDanmu(ctx, false)
 	if s.Danmu {
 		cfg.Title = filename
 		cfg.StartTime = startTime
@@ -162,7 +162,7 @@ Outer:
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
 				dq, err := acfundanmu.Init(int64(s.UID), cookies)
 				checkErr(err)
-				dq.StartDanmu(ctx)
+				dq.StartDanmu(ctx, false)
 				if s.Danmu {
 					dq.WriteASS(ctx, cfg, assFile, false)
 				} else if s.KeepOnline {

@@ -89,11 +89,14 @@ func initMirai() bool {
 				resp, err = miraiClient.SubmitCaptcha(strings.ReplaceAll(captcha, "\n", ""), resp.CaptchaSign)
 				checkErr(err)
 				continue
-			case client.UnsafeDeviceError:
-				lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
+			case client.UnsafeDeviceError, client.SNSOrVerifyNeededError:
+				lPrintWarn("QQ账号需要验证才能登陆，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
 				return false
 			case client.OtherLoginError, client.UnknownLoginError:
 				lPrintErr("QQ登陆失败：" + resp.ErrorMessage)
+				return false
+			default:
+				lPrintErrf("QQ登陆出现未处理的错误，响应为：%+v", resp)
 				return false
 			}
 		}
