@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/getlantern/systray"
+	"github.com/orzogc/acfundanmu"
 )
 
 type control int
@@ -318,6 +319,16 @@ func initialize() {
 	getDidCookie()
 	fetchAllRooms()
 	liveRooms.rooms = liveRooms.newRooms
+
+	if config.Acfun.UserEmail != "" && config.Acfun.Password != "" {
+		acfunCookies, err = acfundanmu.Login(config.Acfun.UserEmail, config.Acfun.Password)
+		if err != nil {
+			lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
+			acfunCookies = nil
+		} else if len(acfunCookies) != 0 {
+			lPrintln("登陆AcFun帐号成功")
+		}
+	}
 }
 
 func main() {

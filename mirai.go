@@ -48,17 +48,22 @@ func startMirai() bool {
 }
 
 // 初始化Mirai
-func initMirai() bool {
+func initMirai() (result bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in initMirai(), the error is:", err)
 			lPrintErr("初始化Mirai出现错误，停止启动Mirai")
+			if miraiClient != nil {
+				miraiClient.Disconnect()
+			}
 			miraiClient = nil
 			*isMirai = false
+			result = false
 		}
 	}()
 
 	miraiClient = client.NewClient(config.Mirai.BotQQ, config.Mirai.BotQQPassword)
+
 	/*
 		miraiClient.OnLog(func(c *client.QQClient, e *client.LogEvent) {
 			switch e.Type {
@@ -71,12 +76,24 @@ func initMirai() bool {
 			}
 		})
 	*/
+
 	resp, err := miraiClient.Login()
 	checkErr(err)
 
 	for {
 		if !resp.Success {
 			switch resp.Error {
+			case client.SliderNeededError:
+				if client.SystemDeviceInfo.Protocol == client.AndroidPhone {
+					lPrintWarn("Android Phone强制要求暂不支持的滑条验证码, 请开启设备锁或切换到Watch协议验证通过后再使用。")
+					miraiClient.Disconnect()
+					return false
+				}
+				miraiClient.AllowSlider = false
+				miraiClient.Disconnect()
+				resp, err = miraiClient.Login()
+				checkErr(err)
+				continue
 			case client.NeedCaptcha:
 				imageFile := filepath.Join(exeDir, qqCaptchaImage)
 				err = ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
@@ -89,18 +106,60 @@ func initMirai() bool {
 				resp, err = miraiClient.SubmitCaptcha(strings.ReplaceAll(captcha, "\n", ""), resp.CaptchaSign)
 				checkErr(err)
 				continue
-			case client.UnsafeDeviceError, client.SNSOrVerifyNeededError:
-				lPrintWarn("QQ账号需要验证才能登陆，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
+			case client.SMSNeededError:
+				lPrintWarnf("QQ账号已开启设备锁, 向手机 %v 发送短信验证码", resp.SMSPhone)
+				if !miraiClient.RequestSMS() {
+					lPrintWarn("发送短信验证码失败，可能是请求过于频繁")
+					miraiClient.Disconnect()
+					return false
+				}
+				lPrintln("请输入短信验证码，按回车提交：")
+				console := bufio.NewReader(os.Stdin)
+				captcha, err := console.ReadString('\n')
+				checkErr(err)
+				resp, err = miraiClient.SubmitSMS(strings.ReplaceAll(strings.ReplaceAll(captcha, "\n", ""), "\r", ""))
+				checkErr(err)
+				continue
+			case client.SMSOrVerifyNeededError:
+				lPrintWarn("QQ账号已开启设备锁，请选择验证方式：")
+				lPrintf("1. 向手机 %v 发送短信验证码", resp.SMSPhone)
+				lPrintln("2. 使用手机QQ扫码验证")
+				lPrintln("请输入1或2，按回车提交：")
+				console := bufio.NewReader(os.Stdin)
+				text, err := console.ReadString('\n')
+				checkErr(err)
+				if strings.Contains(text, "1") {
+					if !miraiClient.RequestSMS() {
+						lPrintWarn("发送短信验证码失败，可能是请求过于频繁")
+						miraiClient.Disconnect()
+						return false
+					}
+					lPrintln("请输入短信验证码，按回车提交：")
+					captcha, err := console.ReadString('\n')
+					checkErr(err)
+					resp, err = miraiClient.SubmitSMS(strings.ReplaceAll(strings.ReplaceAll(captcha, "\n", ""), "\r", ""))
+					checkErr(err)
+					continue
+				}
+				lPrintWarnf("请前往 %s 验证并重启本程序", resp.VerifyUrl)
+				miraiClient.Disconnect()
+				return false
+			case client.UnsafeDeviceError:
+				lPrintWarnf("QQ账号已开启设备锁，请前往 %s 验证并重启本程序", resp.VerifyUrl)
+				miraiClient.Disconnect()
 				return false
 			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErr("QQ登陆失败：" + resp.ErrorMessage)
+				lPrintErrf("QQ登陆失败：%s", resp.ErrorMessage)
+				miraiClient.Disconnect()
 				return false
 			default:
 				lPrintErrf("QQ登陆出现未处理的错误，响应为：%+v", resp)
+				miraiClient.Disconnect()
 				return false
 			}
+		} else {
+			break
 		}
-		break
 	}
 
 	lPrintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin)
@@ -114,22 +173,32 @@ func initMirai() bool {
 	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
 
 	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
-		lPrintWarn("QQ Bot已离线，尝试重连")
-		time.Sleep(10 * time.Second)
 		if miraiClient != nil {
+			if miraiClient.Online {
+				lPrintWarn("QQ帐号已登陆，无需重连")
+				return
+			}
+
+			lPrintWarn("QQ Bot已离线，尝试重连")
+			time.Sleep(10 * time.Second)
 			resp, err := miraiClient.Login()
-			checkErr(err)
+			if err != nil {
+				lPrintErrf("QQ帐号重连失败，请重启本程序：%v", err)
+				return
+			}
 
 			if !resp.Success {
 				switch resp.Error {
 				case client.NeedCaptcha:
-					lPrintErr("QQ重连失败：需要验证码，请重启本程序")
+					lPrintErr("QQ帐号重连失败：需要验证码，请重启本程序")
 				case client.UnsafeDeviceError:
-					lPrintErr("QQ重连失败：设备锁")
-					lPrintWarn("QQ账号已开启设备锁，请前往 " + resp.VerifyUrl + " 验证并重启本程序")
-				case client.OtherLoginError, client.UnknownLoginError:
-					lPrintErr("QQ重连失败：" + resp.ErrorMessage + "，请重启本程序")
+					lPrintErr("QQ帐号重连失败：设备锁")
+					lPrintWarnf("QQ账号已开启设备锁，请前往 %s 验证并重启本程序", resp.VerifyUrl)
+				default:
+					lPrintErrf("QQ重连失败，请重启本程序，响应为：%+v", resp)
 				}
+			} else {
+				lPrintln("QQ帐号重连成功")
 			}
 		} else {
 			lPrintErr("miraiClient不能为nil")

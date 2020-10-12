@@ -8,6 +8,9 @@ import (
 	"github.com/orzogc/acfundanmu"
 )
 
+// AcFun帐号的cookies
+var acfunCookies []string
+
 // 不同的视频分辨率对应的弹幕字幕设置
 var subConfigs = map[int]acfundanmu.SubConfig{
 	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 60}, // 这是手机直播，有一些是540X960
@@ -104,16 +107,13 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	}
 	assFile = assFile + ".ass"
 
-	var cookies []string
-	var err error
 	if s.KeepOnline {
-		if config.Acfun.UserEmail != "" && config.Acfun.Password != "" {
-			cookies, err = acfundanmu.Login(config.Acfun.UserEmail, config.Acfun.Password)
-			if err != nil {
-				lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
-				cookies = nil
-			} else {
-				lPrintf("开始在%s的直播间挂机", s.longID())
+		if len(acfunCookies) != 0 {
+			lPrintf("开始在%s的直播间挂机", s.longID())
+		} else {
+			lPrintErrf("没有登陆AcFun帐号，取消在%s的直播间挂机", s.longID())
+			if !s.Danmu {
+				return
 			}
 		}
 	}
@@ -132,6 +132,10 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 		}
 	}
 
+	var cookies []string
+	if s.KeepOnline {
+		cookies = acfunCookies
+	}
 	dq, err := acfundanmu.Init(int64(s.UID), cookies)
 	checkErr(err)
 	dq.StartDanmu(ctx, false)
@@ -160,7 +164,7 @@ Outer:
 			_, _, newStreamName, _ := s.getStreamURL()
 			if newStreamName == streamName {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				dq, err := acfundanmu.Init(int64(s.UID), cookies)
+				dq, err = acfundanmu.Init(int64(s.UID), cookies)
 				checkErr(err)
 				dq.StartDanmu(ctx, false)
 				if s.Danmu {
