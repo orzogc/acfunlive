@@ -90,7 +90,7 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
     "WebPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
     "Directory": "",  // 直播视频和弹幕下载完毕后会被移动到该文件夹，其值最好是绝对路径
     "Acfun": {
-        "UserEmail": "", // AcFun帐号邮箱，目前只用于直播间挂机，不需要可以为空
+        "UserEmail": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
         "Password": ""   // AcFun帐号密码
     },
     "Mirai": {
