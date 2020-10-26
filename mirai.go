@@ -323,12 +323,30 @@ func (s streamer) sendMirai(text string) {
 	if *isMirai && miraiClient != nil {
 		for _, qq := range s.SendQQ {
 			if qq > 0 {
+				if miraiClient.FindFriend(qq) == nil {
+					lPrintErrf("QQ号 %d 不是QQ机器人的好友，取消发送消息", qq)
+					continue
+				}
 				miraiSendQQ(qq, text)
+			} else {
+				lPrintErrf("QQ号 %d 小于等于0，取消发送消息", qq)
 			}
 		}
 		for _, qqGroup := range s.SendQQGroup {
 			if qqGroup > 0 {
-				miraiSendQQGroupAtAll(qqGroup, text)
+				if groupInfo := miraiClient.FindGroup(qqGroup); groupInfo == nil {
+					lPrintErrf("QQ机器人未加入QQ群 %d，取消发送消息", qqGroup)
+					continue
+				} else {
+					info := groupInfo.FindMember(config.Mirai.BotQQ)
+					if info.Permission == client.Member {
+						miraiSendQQGroup(qqGroup, text)
+					} else {
+						miraiSendQQGroupAtAll(qqGroup, text)
+					}
+				}
+			} else {
+				lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
 			}
 		}
 	}
