@@ -85,7 +85,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 
 	// 获取直播源和对应的弹幕设置
 	// 应付AcFun API可能出现的bug
-	info, err := s.tryGetStreamInfo()
+	info, err := s.getStreamInfo()
 	if err != nil {
 		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
 		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
@@ -155,24 +155,25 @@ Outer:
 		default:
 			// 因意外结束弹幕下载时重启下载
 			// 应付AcFun API可能出现的bug
-			newInfo, err := s.tryGetStreamInfo()
-			if err == nil && info.LiveID == newInfo.LiveID {
-				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-				dq, err = acfundanmu.Init(int64(s.UID), cookies)
-				checkErr(err)
-				dq.StartDanmu(ctx, false)
-				if s.Danmu {
-					dq.WriteASS(ctx, cfg, assFile, false)
-				} else if s.KeepOnline {
-					for {
-						if danmu := dq.GetDanmu(); danmu == nil {
-							break
+			if s.isLiveOnByPage() {
+				if newInfo, err := s.getStreamInfo(); err == nil && info.LiveID == newInfo.LiveID {
+					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
+					dq, err = acfundanmu.Init(int64(s.UID), cookies)
+					checkErr(err)
+					dq.StartDanmu(ctx, false)
+					if s.Danmu {
+						dq.WriteASS(ctx, cfg, assFile, false)
+					} else if s.KeepOnline {
+						for {
+							if danmu := dq.GetDanmu(); danmu == nil {
+								break
+							}
 						}
 					}
+					time.Sleep(10 * time.Second)
+				} else {
+					break Outer
 				}
-				time.Sleep(10 * time.Second)
-			} else {
-				break Outer
 			}
 		}
 	}

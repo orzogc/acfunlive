@@ -425,15 +425,6 @@ func (s streamer) getStreamInfo() (info streamInfo, e error) {
 	return info, nil
 }
 
-// 获取AcFun的直播源信息，分为hls和flv两种
-func (s streamer) tryGetStreamInfo() (info streamInfo, err error) {
-	err = run(func() (err error) {
-		info, err = s.getStreamInfo()
-		return err
-	})
-	return info, err
-}
-
 // 根据config.Source获取直播源
 func (s streamer) getLiveURL() (liveURL string, e error) {
 	defer func() {
@@ -442,7 +433,7 @@ func (s streamer) getLiveURL() (liveURL string, e error) {
 		}
 	}()
 
-	info, err := s.tryGetStreamInfo()
+	info, err := s.getStreamInfo()
 	checkErr(err)
 
 	switch config.Source {
@@ -473,7 +464,7 @@ func printStreamURL(uid int) (string, string) {
 	if s.isLiveOn() {
 		title := s.getTitle()
 		lPrintln(s.longID() + "正在直播：" + title)
-		info, err := s.tryGetStreamInfo()
+		info, err := s.getStreamInfo()
 		if err != nil {
 			lPrintErr("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {

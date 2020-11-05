@@ -260,7 +260,7 @@ func (s streamer) recordLive(danmu bool) {
 
 	time.Sleep(10 * time.Second)
 
-	if _, err := s.tryGetStreamInfo(); err == nil {
+	if s.isLiveOnByPage() {
 		select {
 		case msg := <-ch:
 			switch msg {
