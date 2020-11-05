@@ -84,22 +84,15 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	startTime := time.Now().UnixNano()
 
 	// 获取直播源和对应的弹幕设置
-	var streamName string
-	var cfg acfundanmu.SubConfig
 	// 应付AcFun API可能出现的bug
-	for retry := 0; retry < 3; retry++ {
-		_, _, streamName, cfg = s.getStreamURL()
-		if streamName != "" {
-			break
-		}
-		if retry == 2 {
-			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
-			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
-			s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
-			return
-		}
-		time.Sleep(10 * time.Second)
+	info, err := s.tryGetStreamInfo()
+	if err != nil {
+		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
+		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
+		s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
+		return
 	}
+	cfg := info.cfg
 
 	assFile := transFilename(filename)
 	if assFile == "" {
@@ -161,8 +154,9 @@ Outer:
 			break Outer
 		default:
 			// 因意外结束弹幕下载时重启下载
-			_, _, newStreamName, _ := s.getStreamURL()
-			if newStreamName == streamName {
+			// 应付AcFun API可能出现的bug
+			newInfo, err := s.tryGetStreamInfo()
+			if err == nil && info.LiveID == newInfo.LiveID {
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
 				dq, err = acfundanmu.Init(int64(s.UID), cookies)
 				checkErr(err)
@@ -240,7 +234,9 @@ func startDanmu(uid int) bool {
 	s.Notify.NotifyDanmu = true
 	s.Danmu = true
 
-	if _, isLive, _ := getLiveInfo(s.UID); !isLive {
+	if _, isLive, _, err := tryGetLiveInfo(s.UID); err != nil {
+		return false
+	} else if !isLive {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
 		return false
 	}

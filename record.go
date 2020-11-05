@@ -101,7 +101,9 @@ func startRec(uid int, danmu bool) bool {
 	}
 	msgMap.Unlock()
 
-	if _, isLive, _ := getLiveInfo(s.UID); !isLive {
+	if _, isLive, _, err := tryGetLiveInfo(s.UID); err != nil {
+		return false
+	} else if !isLive {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播视频")
 		return false
 	}
@@ -179,23 +181,16 @@ func (s streamer) recordLive(danmu bool) {
 	}
 
 	// 获取直播源
-	var liveURL string
-	// 应付AcFun API可能出现的bug
-	for retry := 0; retry < 3; retry++ {
-		liveURL = s.getLiveURL()
-		if liveURL != "" {
-			break
+	liveURL, err := s.getLiveURL()
+	if err != nil {
+		lPrintErr(err)
+		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
+		if s.Notify.NotifyRecord {
+			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
+			s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 		}
-		if retry == 2 {
-			lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
-			if s.Notify.NotifyRecord {
-				desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
-				s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
-			}
-			s.quitRec()
-			return
-		}
-		time.Sleep(10 * time.Second)
+		s.quitRec()
+		return
 	}
 
 	title := s.getTitle()
@@ -265,7 +260,7 @@ func (s streamer) recordLive(danmu bool) {
 
 	time.Sleep(10 * time.Second)
 
-	if _, _, streamName, _ := s.getStreamURL(); streamName != "" {
+	if _, err := s.tryGetStreamInfo(); err == nil {
 		select {
 		case msg := <-ch:
 			switch msg {
