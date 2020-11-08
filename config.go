@@ -53,7 +53,6 @@ type configData struct {
 	Directory string    `json:"directory"` // 直播视频和弹幕下载完毕后会被移动到该文件夹
 	Acfun     acfunUser `json:"acfun"`     // AcFun帐号相关
 	Mirai     miraiData `json:"mirai"`     // Mirai相关设置
-	Coolq     coolqData `json:"coolq"`     // 酷Q相关设置
 }
 
 // 默认设置
@@ -70,12 +69,6 @@ var config = configData{
 		AdminQQ:       0,
 		BotQQ:         0,
 		BotQQPassword: "",
-	},
-	Coolq: coolqData{
-		CqhttpWSAddr: "ws://localhost:6700",
-		AdminQQ:      0,
-		AccessToken:  "",
-		Secret:       "",
 	},
 }
 

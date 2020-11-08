@@ -9,8 +9,6 @@
 
 `acfunlive -nogui -listen -mirai` 利用Mirai发送直播通知到指定QQ或QQ群
 
-`acfunlive -nogui -listen -coolq` 使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
-
 `acfunlive -nogui -listlive` 列出正在直播的主播
 
 `acfunlive -nogui -addnotify 23682490` 通知uid为23682490的主播的直播

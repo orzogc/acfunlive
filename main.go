@@ -27,7 +27,6 @@ func argsHandle() {
 	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面，需要webapi参数")
 	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
 	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群，需要listen参数")
-	isCoolq = flag.Bool("coolq", false, "使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -67,11 +66,9 @@ func argsHandle() {
 				os.Exit(1)
 			}
 		}
-		if *isWebAPI || *isCoolq {
-			if !*isListen {
-				lPrintErr("webapi和coolq参数需要和listen参数一起运行")
-				os.Exit(1)
-			}
+		if *isWebAPI && !*isListen {
+			lPrintErr("webapi参数需要和listen参数一起运行")
+			os.Exit(1)
 		}
 		if *isListLive {
 			listLive()
@@ -127,7 +124,7 @@ func checkConfig() {
 			os.Exit(1)
 		}
 	}
-	if config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 || config.Coolq.AdminQQ < 0 {
+	if config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 {
 		lPrintErr(configFile + "里的QQ号必须大于等于0")
 		os.Exit(1)
 	}
@@ -139,7 +136,6 @@ func initialize() {
 	boolDispatch["startwebapi"] = startWebAPI
 	boolDispatch["startwebui"] = startWebUI
 	boolDispatch["startmirai"] = startMirai
-	boolDispatch["startcoolq"] = startCoolq
 
 	exePath, err := os.Executable()
 	checkErr(err)
@@ -217,11 +213,6 @@ func main() {
 				lPrintErr("启动Mirai失败，请重新启动本程序")
 				*isMirai = false
 			}
-		}
-
-		if *isCoolq {
-			lPrintln("尝试通过 " + config.Coolq.CqhttpWSAddr + " 连接酷Q")
-			initCoolq()
 		}
 
 		for _, s := range streamers.crt {

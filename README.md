@@ -14,7 +14,6 @@ AcFun直播通知和下载助手
     * [使用方法](#使用方法)
     * [web API](#web-api)
     * [Mirai使用方法](#mirai使用方法)
-    * [酷Q使用方法](#酷q使用方法)
 
 ### 依赖
 #### 运行依赖
@@ -97,12 +96,6 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
         "adminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
         "botQQ": 123456,         // QQ机器人的QQ号
         "botQQPassword": "abcde" // QQ机器人QQ号的密码
-    },
-    "coolq": {
-        "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
-        "AdminQQ": 12345,                      // 用来发送命令控制本程序的管理者QQ，可选
-        "AccessToken": "",                     // CQHTTP的access_token，可以为空
-        "Secret": ""                           // CQHTTP的secret，可以为空
     }
 }
 ```
@@ -127,16 +120,3 @@ Windows下如果要使用命令行模式，下载cli版本，运行需要加上`
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
 `config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。
-
-### 酷Q使用方法
-**酷Q官方已经停止维护，本项目也不会有后续维护。**
-
-本程序使用 [酷Q](https://cqp.cc/) 和 [CQHTTP](https://github.com/richardchien/coolq-http-api) 作为WebSocket服务端来发送QQ消息，请事先设置好酷Q和CQHTTP插件并启动酷Q，具体可以看 [CQHTTP的文档](https://richardchien.gitee.io/coolq-http-api/docs/) 。
-
-CQHTTP插件必须启用WebSocket服务端，也就是其配置里的use_ws必须为true。
-
-本程序酷Q相关配置参考 [config\.json配置](#configjson) 。
-
-目前群通知@全体成员 需要酷Q Pro。
-
-`config.json`里Coolq对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。

@@ -94,9 +94,7 @@ func (s streamer) cycle(liveID string) {
 
 					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
-						msg := s.longID() + "正在直播：" + title + "，直播观看地址：" + s.getURL()
-						s.sendCoolq(msg)
-						s.sendMirai(msg)
+						s.sendMirai(s.longID() + "正在直播：" + title + "，直播观看地址：" + s.getURL())
 					}
 
 					info, _ := getLiveInfo(liveID)
@@ -121,7 +119,6 @@ func (s streamer) cycle(liveID string) {
 						lPrintln(msg)
 						if s.Notify.NotifyOff {
 							desktopNotify(s.Name + "已经下播")
-							s.sendCoolq(msg)
 							s.sendMirai(msg)
 						}
 					}

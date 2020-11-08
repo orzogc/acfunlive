@@ -20,7 +20,6 @@ stopwebapi：停止web API服务器
 startwebui：启动web UI服务器，需要web API服务器运行，如果web API服务器没启动会启动web API服务器
 stopwebui：停止web UI服务器
 startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 addnotify uid：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
 delnotify uid：取消订阅指定主播的开播提醒
 addrecord uid：自动下载指定主播的直播视频
@@ -50,7 +49,6 @@ var boolDispatch = map[string]func() bool{
 	//"startwebui": startWebUI,
 	"stopwebui": stopWebUI,
 	//"startmirai": startMirai,
-	//"startcoolq": startCoolq,
 }
 
 var uidBoolDispatch = map[string]func(int) bool{

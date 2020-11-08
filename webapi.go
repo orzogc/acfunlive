@@ -21,7 +21,6 @@ const webHelp = `/listlive ：列出正在直播的主播
 /stopwebui：停止web UI服务器
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
 /startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-/startcoolq：使用酷Q发送直播通知到指定QQ或QQ群，需要事先设置并启动酷Q
 /addnotify/uid ：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
 /delnotify/uid ：取消订阅指定主播的开播提醒
 /addrecord/uid ：自动下载指定主播的直播视频

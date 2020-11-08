@@ -6,7 +6,6 @@ require (
 	github.com/Mrs4s/MiraiGo v0.0.0-20201103175136-2566bea1f884
 	github.com/PuerkitoBio/goquery v1.6.0
 	github.com/andybalholm/cascadia v1.2.0 // indirect
-	github.com/catsworld/qq-bot-api v0.0.0-20191230111849-48d158a4fd65
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9 // indirect
@@ -15,9 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/orzogc/acfundanmu v0.0.0-20201105091041-f08494f8dc36
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/tidwall/gjson v1.6.3 // indirect
