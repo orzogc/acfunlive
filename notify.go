@@ -12,10 +12,10 @@ const logoFile = "acfunlogo.ico"
 var logoFileLocation string
 
 type notify struct {
-	NotifyOn     bool // 通知开播
-	NotifyOff    bool // 通知下播
-	NotifyRecord bool // 通知下载直播视频相关
-	NotifyDanmu  bool // 通知下载直播弹幕相关
+	NotifyOn     bool `json:"notifyOn"`     // 通知开播
+	NotifyOff    bool `json:"notifyOff"`    // 通知下播
+	NotifyRecord bool `json:"notifyRecord"` // 通知下载直播视频相关
+	NotifyDanmu  bool `json:"notifyDanmu"`  // 通知下载直播弹幕相关
 }
 
 // 添加订阅指定uid的直播提醒

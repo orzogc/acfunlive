@@ -55,23 +55,23 @@ yarn generate
 `live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
 {
-    "UID": 23682490,    // 主播的uid
-    "Name": "AC娘本体", // 主播的昵称
-    "Notify": {
-        "NotifyOn": true,     // 主播开播通知
-        "NotifyOff": false,   // 主播下播通知，需自行手动修改设置
-        "NotifyRecord": true, // 下载主播直播相关的通知
-        "NotifyDanmu": false  // 下载主播直播弹幕相关的通知，需自行手动修改设置
+    "uid": 23682490,    // 主播的uid
+    "name": "AC娘本体", // 主播的昵称
+    "notify": {
+        "notifyOn": true,     // 主播开播通知
+        "notifyOff": false,   // 主播下播通知，需自行手动修改设置
+        "notifyRecord": true, // 下载主播直播相关的通知
+        "notifyDanmu": false  // 下载主播直播弹幕相关的通知，需自行手动修改设置
         },
-    "Record": true,     // 是否下载直播视频
-    "Danmu": true,      // 是否下载直播弹幕
-    "KeepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
-    "Bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
-    "SendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友）
+    "record": true,     // 是否下载直播视频
+    "danmu": true,      // 是否下载直播弹幕
+    "keepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
+    "bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
+    "sendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友）
             12345,
             123456
         ],
-    "SendQQGroup": [ // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员）
+    "sendQQGroup": [ // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员）
             1234567
         ]
 }
@@ -85,20 +85,20 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 `config.json`的内容手动修改后需要重新启动本程序以生效
 ```
 {
-    "Source": "flv",  // 直播源，有hls和flv两种，默认是flv
-    "Output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
-    "WebPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
-    "Directory": "",  // 直播视频和弹幕下载完毕后会被移动到该文件夹，其值最好是绝对路径
-    "Acfun": {
-        "UserEmail": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
-        "Password": ""   // AcFun帐号密码
+    "source": "flv",  // 直播源，有hls和flv两种，默认是flv
+    "output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
+    "webPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
+    "directory": "",  // 直播视频和弹幕下载完毕后会被移动到该文件夹，其值最好是绝对路径
+    "acfun": {
+        "userAccount": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
+        "password": ""   // AcFun帐号密码
     },
-    "Mirai": {
-        "AdminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
-        "BotQQ": 123456,         // QQ机器人的QQ号
-        "BotQQPassword": "abcde" // QQ机器人QQ号的密码
+    "mirai": {
+        "adminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
+        "botQQ": 123456,         // QQ机器人的QQ号
+        "botQQPassword": "abcde" // QQ机器人QQ号的密码
     },
-    "Coolq": {
+    "coolq": {
         "CqhttpWSAddr": "ws://localhost:6700", // CQHTTP的WebSocket地址和端口
         "AdminQQ": 12345,                      // 用来发送命令控制本程序的管理者QQ，可选
         "AccessToken": "",                     // CQHTTP的access_token，可以为空

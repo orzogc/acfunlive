@@ -21,9 +21,9 @@ var (
 
 // Mirai相关设置数据
 type miraiData struct {
-	AdminQQ       int64  // 管理者的QQ，通过这个QQ发送命令
-	BotQQ         int64  // bot的QQ号
-	BotQQPassword string // bot的QQ密码
+	AdminQQ       int64  `json:"adminQQ"`       // 管理者的QQ，通过这个QQ发送命令
+	BotQQ         int64  `json:"botQQ"`         // bot的QQ号
+	BotQQPassword string `json:"botQQPassword"` // bot的QQ密码
 }
 
 // 启动Mirai
