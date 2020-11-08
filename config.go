@@ -4,11 +4,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -62,8 +65,8 @@ var config = configData{
 	WebPort:   51880,
 	Directory: "",
 	Acfun: acfunUser{
-		UserAccount: "",
-		Password:    "",
+		Account:  "",
+		Password: "",
 	},
 	Mirai: miraiData{
 		AdminQQ:       0,
@@ -73,8 +76,8 @@ var config = configData{
 }
 
 type acfunUser struct {
-	UserAccount string `json:"userAccount"` // AcFun帐号邮箱或手机号
-	Password    string `json:"password"`    // AcFun帐号密码
+	Account  string `json:"account"`  // AcFun帐号邮箱或手机号
+	Password string `json:"password"` // AcFun帐号密码
 }
 
 // 将s放进streamers里
@@ -324,12 +327,39 @@ func moveFile(oldFile string) {
 			return
 		}
 
-		if _, err := os.Stat(oldFile); err == nil {
-			filename := filepath.Base(oldFile)
-			newFile := filepath.Join(config.Directory, filename)
-			err := os.Rename(oldFile, newFile)
-			checkErr(err)
-			lPrintf("成功将文件 %s 移动到 %s", oldFile, newFile)
+		_, err = os.Stat(oldFile)
+		checkErr(err)
+
+		filename := filepath.Base(oldFile)
+		newFile := filepath.Join(config.Directory, filename)
+
+		// https://github.com/cloudfoundry/bosh-utils/blob/master/fileutil/mover.go
+		err = os.Rename(oldFile, newFile)
+		if err != nil {
+			le, ok := err.(*os.LinkError)
+			if !ok {
+				lPrintErrf("将文件 %s 移动到 %s 失败", oldFile, newFile)
+				return
+			}
+
+			if le.Err == syscall.EXDEV || (runtime.GOOS == "windows" && le.Err == syscall.Errno(0x11)) {
+				inputFile, err := os.Open(oldFile)
+				checkErr(err)
+				defer inputFile.Close()
+				outputFile, err := os.Create(newFile)
+				checkErr(err)
+				defer outputFile.Close()
+				_, err = io.Copy(outputFile, inputFile)
+				checkErr(err)
+				_ = inputFile.Close()
+				err = os.Remove(oldFile)
+				checkErr(err)
+			} else {
+				lPrintErrf("将文件 %s 移动到 %s 失败", oldFile, newFile)
+				return
+			}
 		}
+
+		lPrintf("成功将文件 %s 移动到 %s", oldFile, newFile)
 	}
 }

@@ -178,8 +178,8 @@ func initialize() {
 	fetchAllRooms()
 	liveRooms.rooms = liveRooms.newRooms
 
-	if config.Acfun.UserAccount != "" && config.Acfun.Password != "" {
-		acfunCookies, err = acfundanmu.Login(config.Acfun.UserAccount, config.Acfun.Password)
+	if config.Acfun.Account != "" && config.Acfun.Password != "" {
+		acfunCookies, err = acfundanmu.Login(config.Acfun.Account, config.Acfun.Password)
 		if err != nil {
 			lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
 			acfunCookies = nil
