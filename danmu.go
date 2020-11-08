@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"github.com/orzogc/acfundanmu"
@@ -70,7 +71,7 @@ func delDanmu(uid int) bool {
 }
 
 // 下载直播弹幕
-func (s streamer) getDanmu(ctx context.Context, filename string) {
+func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in getDanmu(), the error is:", err)
@@ -79,26 +80,6 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 			s.sendMirai("下载" + s.longID() + "的直播弹幕发生错误，如要重启下载，请运行 startdanmu " + s.itoa())
 		}
 	}()
-	defer s.quitDanmu()
-
-	startTime := time.Now().UnixNano()
-
-	// 获取直播源和对应的弹幕设置
-	// 应付AcFun API可能出现的bug
-	info, err := s.getStreamInfo()
-	if err != nil {
-		lPrintErr("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
-		desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
-		s.sendMirai("无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa())
-		return
-	}
-	cfg := info.cfg
-
-	assFile := transFilename(filename)
-	if assFile == "" {
-		return
-	}
-	assFile = assFile + ".ass"
 
 	if s.KeepOnline {
 		if len(acfunCookies) != 0 {
@@ -113,7 +94,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 
 	if s.Danmu {
 		lPrintln("开始下载" + s.longID() + "的直播弹幕")
-		lPrintln("本次下载的ass文件保存在" + assFile)
+		lPrintln("本次下载的ass文件保存在" + info.assFile)
 		if *isListen {
 			lPrintln("如果想提前结束下载" + s.longID() + "的直播弹幕，运行 stopdanmu " + s.itoa())
 		}
@@ -133,9 +114,7 @@ func (s streamer) getDanmu(ctx context.Context, filename string) {
 	checkErr(err)
 	dq.StartDanmu(ctx, false)
 	if s.Danmu {
-		cfg.Title = filename
-		cfg.StartTime = startTime
-		dq.WriteASS(ctx, cfg, assFile, true)
+		dq.WriteASS(ctx, info.cfg, info.assFile, true)
 	} else if s.KeepOnline {
 		for {
 			if danmu := dq.GetDanmu(); danmu == nil {
@@ -162,7 +141,7 @@ Outer:
 					checkErr(err)
 					dq.StartDanmu(ctx, false)
 					if s.Danmu {
-						dq.WriteASS(ctx, cfg, assFile, false)
+						dq.WriteASS(ctx, info.cfg, info.assFile, false)
 					} else if s.KeepOnline {
 						for {
 							if danmu := dq.GetDanmu(); danmu == nil {
@@ -191,31 +170,70 @@ Outer:
 		}
 	}
 
-	moveFile(assFile)
+	moveFile(info.assFile)
 }
 
 // 退出直播弹幕下载相关操作
-func (s streamer) quitDanmu() {
-	msgMap.Lock()
-	if m, ok := msgMap.msg[s.UID]; ok {
-		m.danmuCancel = nil
+func quitDanmu(liveID string) {
+	lInfoMap.Lock()
+	defer lInfoMap.Unlock()
+	if info, ok := lInfoMap.info[liveID]; ok {
+		if info.isDanmu {
+			info.isDanmu = false
+		}
+		if info.isKeepOnline {
+			info.isKeepOnline = false
+		}
+		lInfoMap.info[info.LiveID] = info
 	}
-	msgMap.Unlock()
-	deleteMsg(s.UID)
 }
 
 // 初始化弹幕下载
-func (s streamer) initDanmu(ctx context.Context, filename string) {
+func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 	dctx, dcancel := context.WithCancel(ctx)
 	defer dcancel()
-	msgMap.Lock()
-	if m, ok := msgMap.msg[s.UID]; ok {
-		m.danmuCancel = dcancel
+	info, ok := getLiveInfo(liveID)
+	if ok {
+		if info.isDanmu {
+			lPrintWarn("已经在下载" + s.longID() + "的直播弹幕，如要重启下载，请先运行 stopdanmu " + s.itoa())
+			return
+		}
 	} else {
-		msgMap.msg[s.UID] = &sMsg{danmuCancel: dcancel}
+		// 获取直播源和对应的弹幕设置
+		var err error
+		info, err = s.getLiveInfo()
+		if err != nil {
+			lPrintErr(err)
+			msg := "无法获取" + s.longID() + "的直播源，退出下载直播弹幕，请确定主播正在直播，如要重启下载直播弹幕，请运行 startdanmu " + s.itoa()
+			lPrintErr(msg)
+			if s.Notify.NotifyDanmu {
+				desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播弹幕")
+				s.sendMirai(msg)
+			}
+			return
+		}
 	}
-	msgMap.Unlock()
-	s.getDanmu(dctx, filename)
+	defer quitDanmu(info.LiveID)
+
+	if s.Danmu {
+		info.isDanmu = true
+		info.danmuCancel = dcancel
+	}
+	if s.KeepOnline && !info.isKeepOnline {
+		info.isKeepOnline = true
+		info.onlineCancel = dcancel
+	}
+
+	assFile := transFilename(filename)
+	if assFile == "" {
+		return
+	}
+	info.assFile = assFile + ".ass"
+	info.cfg.Title = filepath.Base(assFile)
+	info.cfg.StartTime = time.Now().UnixNano()
+	setLiveInfo(info)
+
+	s.getDanmu(dctx, info)
 }
 
 // 临时下载指定主播的直播弹幕
@@ -235,10 +253,15 @@ func startDanmu(uid int) bool {
 	s.Notify.NotifyDanmu = true
 	s.Danmu = true
 
-	if _, isLive, _, err := tryGetLiveInfo(s.UID); err != nil {
+	isLive, room, err := tryFetchLiveInfo(s.UID)
+	if err != nil {
+		lPrintErr(err)
 		return false
 	} else if !isLive {
 		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
+		return false
+	} else if isDanmu(room.liveID) {
+		lPrintWarn("已经在下载" + s.longID() + "的直播弹幕，如要重启下载，请先运行 stopdanmu " + s.itoa())
 		return false
 	}
 
@@ -247,29 +270,29 @@ func startDanmu(uid int) bool {
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.initDanmu(mainCtx, filename)
+		go s.initDanmu(mainCtx, room.liveID, filename)
 	} else {
 		// 程序只在单独下载一个直播弹幕，不用goroutine，防止程序提前结束运行
-		s.initDanmu(mainCtx, filename)
+		s.initDanmu(mainCtx, room.liveID, filename)
 	}
 	return true
 }
 
 // 停止下载指定主播的直播弹幕
 func stopDanmu(uid int) bool {
-	msgMap.Lock()
-	defer msgMap.Unlock()
-	if m, ok := msgMap.msg[uid]; ok {
-		s := streamer{UID: uid, Name: getName(uid)}
-		if m.danmuCancel != nil {
-			lPrintln("开始停止下载" + s.longID() + "的直播弹幕")
-			m.danmuCancel()
-		} else {
-			lPrintWarn("没有在下载" + s.longID() + "的直播弹幕")
-		}
-	} else {
+	infoList, ok := getLiveInfoByUID(uid)
+	if !ok {
 		lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播弹幕")
+		return true
 	}
+
+	for _, info := range infoList {
+		if info.isDanmu {
+			lPrintf("开始停止下载%s的liveID为%s直播弹幕", longID(uid), info.LiveID)
+			info.danmuCancel()
+		}
+	}
+
 	return true
 }
 
@@ -280,5 +303,5 @@ func startRecDan(uid int) bool {
 
 // 取消下载指定主播的直播视频和弹幕
 func stopRecDan(uid int) bool {
-	return stopRec(uid)
+	return stopRec(uid) && stopDanmu(uid)
 }

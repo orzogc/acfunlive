@@ -166,7 +166,8 @@ func initialize() {
 		lPrintln("创建设置文件" + configFile)
 	}
 
-	msgMap.msg = make(map[int]*sMsg)
+	sInfoMap.info = make(map[int]*streamerInfo)
+	lInfoMap.info = make(map[string]liveInfo)
 	streamers.crt = make(map[int]streamer)
 	streamers.old = make(map[int]streamer)
 	loadLiveConfig()
@@ -224,7 +225,7 @@ func main() {
 		}
 
 		for _, s := range streamers.crt {
-			go s.cycle()
+			go s.cycle("")
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -232,6 +233,8 @@ func main() {
 		mainCtx = ctx
 
 		go cycleConfig(ctx)
+		go cycleFetch(ctx)
+		go cycleDelKey(ctx)
 
 		// 启动GUI时不需要处理命令输入
 		if *isNoGUI {
@@ -247,8 +250,6 @@ func main() {
 			go startUI()
 		}
 
-		go cycleFetch(ctx)
-
 		if !*isNoGUI {
 			go systray.Run(trayOnReady, trayOnExit)
 		}
@@ -258,7 +259,7 @@ func main() {
 			case msg := <-mainCh:
 				switch msg.c {
 				case startCycle:
-					go msg.s.cycle()
+					go msg.s.cycle(msg.liveID)
 				case quit:
 					// 退出systray
 					if !*isNoGUI {
@@ -276,29 +277,30 @@ func main() {
 					cancel()
 					// 结束cycle()
 					lPrintln("正在退出各主播的循环")
-					msgMap.Lock()
-					for _, m := range msgMap.msg {
+					sInfoMap.Lock()
+					for _, info := range sInfoMap.info {
 						// 退出各主播的循环
-						if m.ch != nil {
-							m.ch <- msg
+						if info.ch != nil {
+							info.ch <- msg
 						}
+					}
+					sInfoMap.Unlock()
+					lInfoMap.Lock()
+					for _, info := range lInfoMap.info {
 						// 结束下载直播视频
-						if m.isRecording {
-							m.rec.ch <- stopRecord
-							io.WriteString(m.rec.stdin, "q")
+						if info.isRecording {
+							io.WriteString(info.ffmpegStdin, "q")
 						}
 						// 结束下载弹幕
-						if m.danmuCancel != nil {
-							m.danmuCancel()
+						if info.isDanmu {
+							info.danmuCancel()
+						}
+						// 结束直播间挂机
+						if info.isKeepOnline {
+							info.onlineCancel()
 						}
 					}
-					msgMap.Unlock()
-					danglingRec.Lock()
-					for _, rec := range danglingRec.records {
-						rec.ch <- stopRecord
-						io.WriteString(rec.stdin, "q")
-					}
-					danglingRec.Unlock()
+					lInfoMap.Unlock()
 					// 等待20秒，等待其他goroutine结束
 					time.Sleep(20 * time.Second)
 					lPrintln("本程序结束运行")

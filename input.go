@@ -47,47 +47,55 @@ func listLive() (streamings []streaming) {
 
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
-	if *isNoGUI {
-		log.Println("正在下载的直播视频：")
-	}
-	msgMap.Lock()
-	defer msgMap.Unlock()
-	for uid, m := range msgMap.msg {
-		if m.isRecording {
-			s := streamer{UID: uid, Name: getName(uid)}
-			if *isNoGUI {
-				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
-			}
-			recordings = append(recordings, streaming(s))
+	lInfoMap.Lock()
+	for _, info := range lInfoMap.info {
+		if info.isRecording {
+			recordings = append(recordings, streaming{
+				UID:  info.uid,
+				Name: getName(info.uid),
+			})
 		}
 	}
+	lInfoMap.Unlock()
 
 	sort.Slice(recordings, func(i, j int) bool {
 		return recordings[i].UID < recordings[j].UID
 	})
+	if *isNoGUI {
+		log.Println("正在下载的直播视频：")
+		for _, r := range recordings {
+			s := streamer(r)
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+		}
+	}
+
 	return recordings
 }
 
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
-	if *isNoGUI {
-		log.Println("正在下载的直播弹幕：")
-	}
-	msgMap.Lock()
-	defer msgMap.Unlock()
-	for uid, m := range msgMap.msg {
-		if m.danmuCancel != nil {
-			s := streamer{UID: uid, Name: getName(uid)}
-			if *isNoGUI {
-				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
-			}
-			danmu = append(danmu, streaming(s))
+	lInfoMap.Lock()
+	for _, info := range lInfoMap.info {
+		if info.isDanmu {
+			danmu = append(danmu, streaming{
+				UID:  info.uid,
+				Name: getName(info.uid),
+			})
 		}
 	}
+	lInfoMap.Unlock()
 
 	sort.Slice(danmu, func(i, j int) bool {
 		return danmu[i].UID < danmu[j].UID
 	})
+	if *isNoGUI {
+		log.Println("正在下载的直播弹幕：")
+		for _, d := range danmu {
+			s := streamer(d)
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+		}
+	}
+
 	return danmu
 }
 

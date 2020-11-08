@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -19,26 +20,42 @@ type control int
 const (
 	startCycle control = iota
 	stopCycle
-	liveOff
 	stopRecord
 	quit
 )
 
 // 主播的管道信息
 type controlMsg struct {
-	s streamer
-	c control
+	s      streamer
+	c      control
+	liveID string
 }
 
-// 主播的信息结构
-type sMsg struct {
-	ch          chan controlMsg    // 控制信息
-	rec         record             // 下载信息
-	isRecording bool               // 是否正在下载
-	modify      bool               // 是否被修改设置
-	danmuCancel context.CancelFunc // 用来停止下载弹幕
+// 主播信息
+type streamerInfo struct {
+	//streamer
+	ch     chan controlMsg // 控制信息
+	modify bool
 }
 
+// 直播信息
+type liveInfo struct {
+	streamInfo
+	uid          int                // 主播的uid
+	streamURL    string             // 直播源链接
+	isRecording  bool               // 是否正在下载直播
+	isDanmu      bool               // 是否正在下载直播弹幕
+	isKeepOnline bool               // 是否正在直播间挂机
+	recordCh     chan control       // 控制录播的管道
+	ffmpegStdin  io.WriteCloser     // ffmpeg的stdin
+	recordCancel context.CancelFunc // 用来强行停止ffmpeg运行
+	danmuCancel  context.CancelFunc // 用来停止下载弹幕
+	onlineCancel context.CancelFunc // 用来停止直播间挂机
+	recordFile   string             // 录播文件路径
+	assFile      string             // 弹幕文件路径
+}
+
+// 直播源信息
 type streamInfo struct {
 	acfundanmu.StreamInfo        // 直播源信息
 	hlsURL                string // hls直播源
@@ -46,10 +63,16 @@ type streamInfo struct {
 	cfg                   acfundanmu.SubConfig
 }
 
-// sMsg的map
-var msgMap struct {
+// streamerInfo的map
+var sInfoMap struct {
 	sync.Mutex
-	msg map[int]*sMsg
+	info map[int]*streamerInfo
+}
+
+// liveInfo的map
+var lInfoMap struct {
+	sync.Mutex
+	info map[string]liveInfo
 }
 
 // 储存日志
@@ -154,7 +177,13 @@ func (s streamer) longID() string {
 	return s.Name + "（" + s.itoa() + "）"
 }
 
+// 返回ID（UID）形式的字符串
+func longID(uid int) string {
+	return getName(uid) + "（" + itoa(uid) + "）"
+}
+
 // 尝试删除msgMap.msg里的键
+/*
 func deleteMsg(uid int) {
 	streamers.Lock()
 	defer streamers.Unlock()
@@ -166,4 +195,78 @@ func deleteMsg(uid int) {
 	if !oks && okm && !m.isRecording && (m.danmuCancel == nil) {
 		delete(msgMap.msg, uid)
 	}
+}
+*/
+
+// 根据uid获取liveInfo
+func getLiveInfoByUID(uid int) (infoList []liveInfo, ok bool) {
+	lInfoMap.Lock()
+	defer lInfoMap.Unlock()
+	for _, info := range lInfoMap.info {
+		if info.uid == uid {
+			infoList = append(infoList, info)
+			ok = true
+		}
+	}
+	return infoList, ok
+}
+
+// 根据liveID获取liveInfo
+func getLiveInfo(liveID string) (liveInfo, bool) {
+	lInfoMap.Lock()
+	defer lInfoMap.Unlock()
+	if info, ok := lInfoMap.info[liveID]; ok {
+		return info, true
+	}
+	return liveInfo{}, false
+}
+
+// 将info放进lInfoMap里
+func setLiveInfo(info liveInfo) {
+	lInfoMap.Lock()
+	defer lInfoMap.Unlock()
+	lInfoMap.info[info.LiveID] = info
+}
+
+/*
+// 根据uid获取streamerInfo
+func getStreamerInfo(uid int) (streamerInfo, bool) {
+	sInfoMap.Lock()
+	defer sInfoMap.Unlock()
+	if info, ok := sInfoMap.info[uid]; ok {
+		return info, true
+	}
+	return streamerInfo{}, false
+}
+
+// 将info放进sInfoMap里
+func setStreamerInfo(info streamerInfo) {
+	sInfoMap.Lock()
+	defer sInfoMap.Unlock()
+	sInfoMap.info[info.UID] = info
+}
+*/
+
+// 根据liveID查询是否正在下载直播视频
+func isRecording(liveID string) bool {
+	if info, ok := getLiveInfo(liveID); ok {
+		return info.isRecording
+	}
+	return false
+}
+
+// 根据liveID查询是否正在下载直播弹幕
+func isDanmu(liveID string) bool {
+	if info, ok := getLiveInfo(liveID); ok {
+		return info.isDanmu
+	}
+	return false
+}
+
+// 根据liveID查询是否正在直播间挂机
+func isKeepOnline(liveID string) bool {
+	if info, ok := getLiveInfo(liveID); ok {
+		return info.isKeepOnline
+	}
+	return false
 }

@@ -272,23 +272,27 @@ func loadNewConfig() {
 				// olds的设置被修改
 				lPrintln(s.longID() + "的设置被修改，重新设置")
 				restart := controlMsg{s: s, c: startCycle}
-				msgMap.Lock()
-				m := msgMap.msg[s.UID]
-				m.modify = true
-				m.ch <- restart
-				msgMap.Unlock()
+				sInfoMap.Lock()
+				if m, ok := sInfoMap.info[s.UID]; ok {
+					m.modify = true
+					m.ch <- restart
+				} else {
+					lPrintErr("sInfoMap没有%s的key", s.longID())
+				}
+				sInfoMap.Unlock()
 			}
 		} else {
 			// s为新增的主播
 			lPrintln("新增" + s.longID() + "的设置")
 			start := controlMsg{s: s, c: startCycle}
-			msgMap.Lock()
-			if m, ok := msgMap.msg[s.UID]; ok {
+			sInfoMap.Lock()
+			if m, ok := sInfoMap.info[s.UID]; ok {
+				lPrintErr("sInfoMap不应该有%s的key", s.longID())
 				m.modify = true
 			} else {
-				msgMap.msg[s.UID] = &sMsg{modify: true}
+				sInfoMap.info[s.UID] = &streamerInfo{modify: true}
 			}
-			msgMap.Unlock()
+			sInfoMap.Unlock()
 			mainCh <- start
 		}
 	}
@@ -298,9 +302,13 @@ func loadNewConfig() {
 			// olds为被删除的主播
 			lPrintln(olds.longID() + "的设置被删除")
 			stop := controlMsg{s: olds, c: stopCycle}
-			msgMap.Lock()
-			msgMap.msg[olds.UID].ch <- stop
-			msgMap.Unlock()
+			sInfoMap.Lock()
+			if m, ok := sInfoMap.info[olds.UID]; ok {
+				m.ch <- stop
+			} else {
+				lPrintErr("sInfoMap没有%s的key", olds.longID())
+			}
+			sInfoMap.Unlock()
 		}
 	}
 
