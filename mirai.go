@@ -21,9 +21,11 @@ var (
 
 // Mirai相关设置数据
 type miraiData struct {
-	AdminQQ       int64  `json:"adminQQ"`       // 管理者的QQ，通过这个QQ发送命令
-	BotQQ         int64  `json:"botQQ"`         // bot的QQ号
-	BotQQPassword string `json:"botQQPassword"` // bot的QQ密码
+	AdminQQ       int64   `json:"adminQQ"`       // 管理者的QQ，通过这个QQ发送命令
+	BotQQ         int64   `json:"botQQ"`         // bot的QQ号
+	BotQQPassword string  `json:"botQQPassword"` // bot的QQ密码
+	SendQQ        []int64 `json:"sendQQ"`        // 默认给这些QQ号发送消息，会被live.json里的设置覆盖
+	SendQQGroup   []int64 `json:"sendQQGroup"`   // 默认给这些QQ群发送消息，会被live.json里的设置覆盖
 }
 
 // 启动Mirai
@@ -207,7 +209,7 @@ func initMirai() (result bool) {
 
 	if config.Mirai.AdminQQ > 0 {
 		miraiClient.OnPrivateMessage(privateMsgEvent)
-		miraiClient.OnTempMessage(tempMsgEvent)
+		//miraiClient.OnTempMessage(tempMsgEvent)
 		miraiClient.OnGroupMessage(groupMsgEvent)
 	}
 
@@ -220,9 +222,9 @@ func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
 }
 
 // 处理临时会话消息事件
-func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
-	handlePrivateMsg(m.Sender.Uin, m.Elements)
-}
+//func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
+//	handlePrivateMsg(m.Sender.Uin, m.Elements)
+//}
 
 // 处理QQ bot接收到的私聊或临时会话消息
 func handlePrivateMsg(qq int64, Elements []message.IMessageElement) {
@@ -274,8 +276,8 @@ func miraiSendQQ(qq int64, text string) {
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
 		lPrintln("给QQ", qq, "发送消息")
-		if result := miraiClient.SendPrivateMessage(qq, msg); result == nil {
-			lPrintErr("给QQ", qq, "的消息发送失败")
+		if result := miraiClient.SendPrivateMessage(qq, msg); result == nil || result.Id <= 0 {
+			lPrintErr("给QQ", qq, "发送消息失败")
 		}
 	} else {
 		lPrintErr("miraiClient不能为nil")
@@ -288,8 +290,8 @@ func miraiSendQQGroup(qqGroup int64, text string) {
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
 		lPrintln("给QQ群", qqGroup, "发送消息")
-		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil || result.Id <= 0 {
+			lPrintErr("给QQ群", qqGroup, "发送消息失败")
 		}
 	} else {
 		lPrintErr("miraiClient不能为nil")
@@ -303,8 +305,9 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
 		lPrintln("给QQ群", qqGroup, "发送消息")
-		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil {
-			lPrintErr("给QQ群", qqGroup, "的消息发送失败")
+		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil || result.Id <= 0 {
+			lPrintErr("给QQ群", qqGroup, "发送@全体成员的消息失败")
+			miraiSendQQGroup(qqGroup, text)
 		}
 	} else {
 		lPrintErr("miraiClient不能为nil")
@@ -321,7 +324,11 @@ func (s streamer) sendMirai(text string) {
 	}()
 
 	if *isMirai && miraiClient != nil {
-		for _, qq := range s.SendQQ {
+		sendQQ := config.Mirai.SendQQ
+		if len(s.SendQQ) != 0 {
+			sendQQ = s.SendQQ
+		}
+		for _, qq := range sendQQ {
 			if qq > 0 {
 				if miraiClient.FindFriend(qq) == nil {
 					lPrintErrf("QQ号 %d 不是QQ机器人的好友，取消发送消息", qq)
@@ -332,7 +339,12 @@ func (s streamer) sendMirai(text string) {
 				lPrintErrf("QQ号 %d 小于等于0，取消发送消息", qq)
 			}
 		}
-		for _, qqGroup := range s.SendQQGroup {
+
+		sendQQGroup := config.Mirai.SendQQGroup
+		if len(s.SendQQGroup) != 0 {
+			sendQQGroup = s.SendQQGroup
+		}
+		for _, qqGroup := range sendQQGroup {
 			if qqGroup > 0 {
 				if groupInfo := miraiClient.FindGroup(qqGroup); groupInfo == nil {
 					lPrintErrf("QQ机器人未加入QQ群 %d，取消发送消息", qqGroup)

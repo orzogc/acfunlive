@@ -280,6 +280,7 @@ func main() {
 					for _, info := range lInfoMap.info {
 						// 结束下载直播视频
 						if info.isRecording {
+							info.recordCh <- stopRecord
 							io.WriteString(info.ffmpegStdin, "q")
 						}
 						// 结束下载弹幕

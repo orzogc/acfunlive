@@ -16,6 +16,8 @@ type notify struct {
 	NotifyOff    bool `json:"notifyOff"`    // 通知下播
 	NotifyRecord bool `json:"notifyRecord"` // 通知下载直播视频相关
 	NotifyDanmu  bool `json:"notifyDanmu"`  // 通知下载直播弹幕相关
+	//NotifyQQ      bool `json:"notifyQQ"`      // 通知QQ
+	//NotifyQQGroup bool `json:"notifyQQGroup"` // 通知QQ群
 }
 
 // 添加订阅指定uid的直播提醒

@@ -37,8 +37,9 @@ type streamer struct {
 	Danmu       bool    `json:"danmu"`       // 是否自动下载直播弹幕
 	KeepOnline  bool    `json:"keepOnline"`  // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
 	Bitrate     int     `json:"bitrate"`     // 下载直播视频的最高码率
-	SendQQ      []int64 `json:"sendQQ"`      // 给这些QQ号发送消息
-	SendQQGroup []int64 `json:"sendQQGroup"` // 给这些QQ群发送消息
+	Directory   string  `json:"directory"`   // 直播视频和弹幕下载结束后会被移动到该文件夹，会覆盖config.json里的设置
+	SendQQ      []int64 `json:"sendQQ"`      // 给这些QQ号发送消息，会覆盖config.json里的设置
+	SendQQGroup []int64 `json:"sendQQGroup"` // 给这些QQ群发送消息，会覆盖config.json里的设置
 }
 
 // 存放主播的设置数据
@@ -53,7 +54,7 @@ type configData struct {
 	Source    string    `json:"source"`    // 直播源，有hls和flv两种
 	Output    string    `json:"output"`    // 直播下载视频格式的后缀名
 	WebPort   int       `json:"webPort"`   // web API的本地端口
-	Directory string    `json:"directory"` // 直播视频和弹幕下载完毕后会被移动到该文件夹
+	Directory string    `json:"directory"` // 直播视频和弹幕下载结束后会被移动到该文件夹，会被live.json里的设置覆盖
 	Acfun     acfunUser `json:"acfun"`     // AcFun帐号相关
 	Mirai     miraiData `json:"mirai"`     // Mirai相关设置
 }
@@ -72,6 +73,8 @@ var config = configData{
 		AdminQQ:       0,
 		BotQQ:         0,
 		BotQQPassword: "",
+		SendQQ:        []int64{},
+		SendQQGroup:   []int64{},
 	},
 }
 
@@ -318,12 +321,17 @@ func loadNewConfig() {
 }
 
 // 移动文件
-func moveFile(oldFile string) {
-	if config.Directory != "" {
-		info, err := os.Stat(config.Directory)
+func (s streamer) moveFile(oldFile string) {
+	directory := config.Directory
+	if s.Directory != "" {
+		directory = s.Directory
+	}
+
+	if directory != "" {
+		info, err := os.Stat(directory)
 		checkErr(err)
 		if !info.IsDir() {
-			lPrintErr(configFile + "里的Directory必须是存在的文件夹")
+			lPrintErrf("%s 或 %s 里的directory必须是存在的文件夹：%s", configFile, liveFile, directory)
 			return
 		}
 
@@ -331,14 +339,14 @@ func moveFile(oldFile string) {
 		checkErr(err)
 
 		filename := filepath.Base(oldFile)
-		newFile := filepath.Join(config.Directory, filename)
+		newFile := filepath.Join(directory, filename)
 
 		// https://github.com/cloudfoundry/bosh-utils/blob/master/fileutil/mover.go
 		err = os.Rename(oldFile, newFile)
 		if err != nil {
 			le, ok := err.(*os.LinkError)
 			if !ok {
-				lPrintErrf("将文件 %s 移动到 %s 失败", oldFile, newFile)
+				lPrintErrf("将文件 %s 移动到 %s 失败：%v", oldFile, newFile, err)
 				return
 			}
 
@@ -355,7 +363,7 @@ func moveFile(oldFile string) {
 				err = os.Remove(oldFile)
 				checkErr(err)
 			} else {
-				lPrintErrf("将文件 %s 移动到 %s 失败", oldFile, newFile)
+				lPrintErrf("将文件 %s 移动到 %s 失败：%+v", oldFile, newFile, le)
 				return
 			}
 		}

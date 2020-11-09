@@ -170,7 +170,7 @@ Outer:
 		}
 	}
 
-	moveFile(info.assFile)
+	s.moveFile(info.assFile)
 }
 
 // 退出直播弹幕下载相关操作

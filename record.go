@@ -299,5 +299,5 @@ func (s streamer) recordLive(danmu bool) {
 		}
 	}
 
-	moveFile(recordFile)
+	s.moveFile(recordFile)
 }
