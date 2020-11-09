@@ -116,6 +116,9 @@ func handleCmdUID(cmd string, uid int) string {
 		return boolStr(d(uid))
 	}
 
+	if cmd == "addnotify" || cmd == "delnotify" {
+		cmd = cmd + "on"
+	}
 	s, ok := getStreamer(uid)
 	if !ok {
 		s = streamer{UID: uid, Name: getName(uid)}

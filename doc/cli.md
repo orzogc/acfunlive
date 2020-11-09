@@ -11,9 +11,9 @@
 
 `acfunlive -nogui -listlive` 列出正在直播的主播
 
-`acfunlive -nogui -addnotifyon 23682490` 通知uid为23682490的主播的开播
+`acfunlive -nogui -addnotify 23682490` 通知uid为23682490的主播的开播
 
-`acfunlive -nogui -delnotifyon 23682490` 取消通知uid为23682490的主播的开播
+`acfunlive -nogui -delnotify 23682490` 取消通知uid为23682490的主播的开播
 
 `acfunlive -nogui -addrecord 23682490` uid为23682490的主播直播时自动下载其直播视频
 
