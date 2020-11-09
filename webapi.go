@@ -21,12 +21,20 @@ const webHelp = `/listlive ：列出正在直播的主播
 /stopwebui：停止web UI服务器
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
 /startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-/addnotify/uid ：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
-/delnotify/uid ：取消订阅指定主播的开播提醒
+/addnotifyon/uid ：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
+/delnotifyon/uid ：取消订阅指定主播的开播提醒
+/addnotifyoff/uid ：订阅指定主播的下播提醒
+/delnotifyoff/uid ：取消订阅指定主播的下播提醒
+/addnotifyrecord/uid ：通知指定主播的直播视频下载
+/delnotifyrecord/uid ：取消通知指定主播的直播视频下载
+/addnotifydanmu/uid ：通知指定主播的直播弹幕下载
+/delnotifydanmu/uid ：取消通知指定主播的直播弹幕下载
 /addrecord/uid ：自动下载指定主播的直播视频
 /delrecord/uid ：取消自动下载指定主播的直播视频
 /adddanmu/uid ：自动下载指定主播的直播弹幕
 /deldanmu/uid ：取消自动下载指定主播的直播弹幕
+/addkeeponline/uid ：指定主播直播时在其直播间挂机
+/delkeeponline/uid ：取消在指定主播直播时在其直播间挂机
 /delconfig/uid：删除指定主播的所有设置
 /getdlurl/uid ：查看指定主播是否在直播，如在直播输出其直播源地址
 /addqq/uid/QQ号：设置将指定主播的开播提醒发送到指定QQ号

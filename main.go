@@ -28,8 +28,8 @@ func argsHandle() {
 	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
 	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群，需要listen参数")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
-	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
-	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
+	addNotifyUID := flag.Uint("addnotifyon", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
+	delNotifyUID := flag.Uint("delnotifyon", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	addRecordUID := flag.Uint("addrecord", 0, "自动下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
 	delRecordUID := flag.Uint("delrecord", 0, "取消自动下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
 	addDanmuUID := flag.Uint("adddanmu", 0, "自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
@@ -74,22 +74,22 @@ func argsHandle() {
 			listLive()
 		}
 		if *addNotifyUID != 0 {
-			addNotify(int(*addNotifyUID))
+			_ = handleCmdUID("addnotifyon", int(*addNotifyUID))
 		}
 		if *delNotifyUID != 0 {
-			delNotify(int(*delNotifyUID))
+			_ = handleCmdUID("delnotifyon", int(*delNotifyUID))
 		}
 		if *addRecordUID != 0 {
-			addRecord(int(*addRecordUID))
+			_ = handleCmdUID("addrecord", int(*addRecordUID))
 		}
 		if *delRecordUID != 0 {
-			delRecord(int(*delRecordUID))
+			_ = handleCmdUID("delrecord", int(*delRecordUID))
 		}
 		if *addDanmuUID != 0 {
-			addDanmu(int(*addDanmuUID))
+			_ = handleCmdUID("adddanmu", int(*addDanmuUID))
 		}
 		if *delDanmuUID != 0 {
-			delDanmu(int(*delDanmuUID))
+			_ = handleCmdUID("deldanmu", int(*delDanmuUID))
 		}
 		if *getStreamURL != 0 {
 			printStreamURL(int(*getStreamURL))

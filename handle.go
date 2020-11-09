@@ -20,12 +20,20 @@ stopwebapi：停止web API服务器
 startwebui：启动web UI服务器，需要web API服务器运行，如果web API服务器没启动会启动web API服务器
 stopwebui：停止web UI服务器
 startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-addnotify uid：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
-delnotify uid：取消订阅指定主播的开播提醒
+addnotifyon uid：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
+delnotifyon uid：取消订阅指定主播的开播提醒
+addnotifyoff uid：订阅指定主播的下播提醒
+delnotifyoff uid：取消订阅指定主播的下播提醒
+addnotifyrecord uid：通知指定主播的直播视频下载
+delnotifyrecord uid：取消通知指定主播的直播视频下载
+addnotifydanmu uid：通知指定主播的直播弹幕下载
+delnotifydanmu uid：取消通知指定主播的直播弹幕下载
 addrecord uid：自动下载指定主播的直播视频
 delrecord uid：取消自动下载指定主播的直播视频
 adddanmu uid：自动下载指定主播的直播弹幕
 deldanmu uid：取消自动下载指定主播的直播弹幕
+addkeeponline uid：指定主播直播时在其直播间挂机
+delkeeponline uid：取消在指定主播直播时在其直播间挂机
 delconfig uid：删除指定主播的所有设置
 getdlurl uid：查看指定主播是否在直播，如在直播输出其直播源地址
 addqq uid QQ号：设置将指定主播的开播提醒发送到指定QQ号，需要QQ机器人已经添加该QQ为好友
@@ -52,12 +60,6 @@ var boolDispatch = map[string]func() bool{
 }
 
 var uidBoolDispatch = map[string]func(int) bool{
-	"addnotify":     addNotify,
-	"delnotify":     delNotify,
-	"addrecord":     addRecord,
-	"delrecord":     delRecord,
-	"adddanmu":      addDanmu,
-	"deldanmu":      delDanmu,
 	"delconfig":     deleteStreamer,
 	"stoprecord":    stopRec,
 	"startdanmu":    startDanmu,
@@ -80,9 +82,6 @@ var qqDispatch = map[string]func(int, int64) bool{
 	"addqqgroup": addQQGroup,
 	"delqqgroup": delQQGroup,
 }
-
-// 将bool类型转换为字符串
-var boolStr = strconv.FormatBool
 
 // 处理单个命令
 func handleCmd(cmd string) string {
@@ -115,6 +114,27 @@ func handleCmd(cmd string) string {
 func handleCmdUID(cmd string, uid int) string {
 	if d, ok := uidBoolDispatch[cmd]; ok {
 		return boolStr(d(uid))
+	}
+
+	s, ok := getStreamer(uid)
+	if !ok {
+		s = streamer{UID: uid, Name: getName(uid)}
+	}
+	if strings.HasPrefix(cmd, "add") {
+		if s.setBoolConfig(cmd[3:], true) {
+			return boolStr(true)
+		}
+		lPrintErr("错误的命令："+cmd, uid)
+		printErr()
+		return ""
+	}
+	if strings.HasPrefix(cmd, "del") {
+		if s.setBoolConfig(cmd[3:], false) {
+			return boolStr(true)
+		}
+		lPrintErr("错误的命令："+cmd, uid)
+		printErr()
+		return ""
 	}
 
 	switch cmd {

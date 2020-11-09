@@ -58,13 +58,13 @@ yarn generate
     "name": "AC娘本体", // 主播的昵称
     "notify": {
         "notifyOn": true,     // 主播开播通知
-        "notifyOff": false,   // 主播下播通知，需自行手动修改设置
+        "notifyOff": false,   // 主播下播通知
         "notifyRecord": true, // 下载主播直播相关的通知
-        "notifyDanmu": false  // 下载主播直播弹幕相关的通知，需自行手动修改设置
+        "notifyDanmu": false  // 下载主播直播弹幕相关的通知
         },
     "record": true,     // 是否下载直播视频
     "danmu": true,      // 是否下载直播弹幕
-    "keepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级，需自行手动修改设置
+    "keepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
     "bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
     "directory": "",    // 直播视频和弹幕下载结束后会被移动到该文件夹，其值最好是绝对路径，会覆盖config.json里的设置，需自行手动修改设置
     "sendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友），会覆盖config.json里的设置，QQ号小于等于0会取消通知QQ

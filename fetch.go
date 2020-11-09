@@ -468,9 +468,7 @@ func printStreamURL(uid int) (string, string) {
 		lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 		return "", ""
 	}
-	streamers.Lock()
-	s, ok := streamers.crt[uid]
-	streamers.Unlock()
+	s, ok := getStreamer(uid)
 	if !ok {
 		s = streamer{UID: uid, Name: name}
 	}

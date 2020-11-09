@@ -20,56 +20,6 @@ var subConfigs = map[int]acfundanmu.SubConfig{
 	1080: {PlayResX: 1920, PlayResY: 1080, FontSize: 60},
 }
 
-// 设置自动下载指定主播的直播弹幕
-func addDanmu(uid int) bool {
-	isExist := false
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		isExist = true
-		if s.Danmu {
-			lPrintWarn("已经设置过自动下载" + s.longID() + "的直播弹幕")
-		} else {
-			s.Danmu = true
-			sets(s)
-			lPrintln("成功设置自动下载" + s.longID() + "的直播弹幕")
-		}
-	}
-	streamers.Unlock()
-
-	if !isExist {
-		name := getName(uid)
-		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
-			return false
-		}
-
-		newStreamer := streamer{UID: uid, Name: name, Danmu: true}
-		streamers.Lock()
-		sets(newStreamer)
-		streamers.Unlock()
-		lPrintln("成功设置自动下载" + newStreamer.longID() + "的直播弹幕")
-	}
-
-	saveLiveConfig()
-	return true
-}
-
-// 取消自动下载指定主播的直播弹幕
-func delDanmu(uid int) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		s.Danmu = false
-		sets(s)
-		lPrintln("成功取消自动下载" + s.longID() + "的直播弹幕")
-	} else {
-		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播弹幕")
-	}
-	streamers.Unlock()
-
-	saveLiveConfig()
-	return true
-}
-
 // 下载直播弹幕
 func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	defer func() {
@@ -239,9 +189,7 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 // 临时下载指定主播的直播弹幕
 func startDanmu(uid int) bool {
 	var name string
-	streamers.Lock()
-	s, ok := streamers.crt[uid]
-	streamers.Unlock()
+	s, ok := getStreamer(uid)
 	if !ok {
 		name = getName(uid)
 		if name == "" {

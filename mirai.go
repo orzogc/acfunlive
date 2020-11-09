@@ -306,7 +306,7 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	if miraiClient != nil {
 		lPrintln("给QQ群", qqGroup, "发送消息")
 		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil || result.Id <= 0 {
-			lPrintErr("给QQ群", qqGroup, "发送@全体成员的消息失败")
+			lPrintErr("给QQ群", qqGroup, "发送@全体成员的消息失败，尝试发送普通群消息")
 			miraiSendQQGroup(qqGroup, text)
 		}
 	} else {
@@ -366,30 +366,20 @@ func (s streamer) sendMirai(text string) {
 
 // 设置将主播的相关提醒消息发送到指定的QQ
 func addQQNotify(uid int, qq int64) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu {
-			for _, q := range s.SendQQ {
-				if q == qq {
-					lPrintf("已经设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
-					streamers.Unlock()
-					return true
-				}
+	s, ok := getStreamer(uid)
+	if ok {
+		for _, q := range s.SendQQ {
+			if q == qq {
+				lPrintf("已经设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
+				return true
 			}
-			s.SendQQ = append(s.SendQQ, qq)
-			sets(s)
-			lPrintf("成功设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
-		} else {
-			lPrintWarn("设置QQ的相关提醒消息需要先订阅" + s.longID() + "的开播或录播提醒")
-			streamers.Unlock()
-			return false
 		}
+		s.SendQQ = append(s.SendQQ, qq)
 	} else {
-		lPrintWarn("设置QQ的相关提醒消息需要先订阅uid为" + itoa(uid) + "的主播的开播或录播提醒")
-		streamers.Unlock()
-		return false
+		s = streamer{UID: uid, Name: getName(uid), SendQQ: []int64{qq}}
 	}
-	streamers.Unlock()
+	setStreamer(s)
+	lPrintf("成功设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 
 	saveLiveConfig()
 	return true
@@ -397,20 +387,24 @@ func addQQNotify(uid int, qq int64) bool {
 
 // 取消设置将主播的相关提醒消息发送到指定的QQ
 func delQQNotify(uid int, qq int64) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
+	if s, ok := getStreamer(uid); ok {
+		var isSet bool
 		for i, q := range s.SendQQ {
 			if q == qq {
 				s.SendQQ = append(s.SendQQ[:i], s.SendQQ[i+1:]...)
+				isSet = true
 				break
 			}
 		}
-		sets(s)
-		lPrintf("成功取消设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
+		if isSet {
+			setStreamer(s)
+			lPrintf("成功取消设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
+		} else {
+			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
+		}
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒消息")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒")
 	}
-	streamers.Unlock()
 
 	saveLiveConfig()
 	return true
@@ -418,15 +412,13 @@ func delQQNotify(uid int, qq int64) bool {
 
 // 取消设置QQ提醒
 func cancelQQNotify(uid int) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
+	if s, ok := getStreamer(uid); ok {
 		s.SendQQ = []int64{}
-		sets(s)
+		setStreamer(s)
 		lPrintln("成功取消设置" + s.longID() + "的QQ提醒")
 	} else {
 		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒")
 	}
-	streamers.Unlock()
 
 	saveLiveConfig()
 	return true
@@ -434,30 +426,20 @@ func cancelQQNotify(uid int) bool {
 
 // 设置将主播的相关提醒消息发送到指定的QQ群
 func addQQGroup(uid int, qqGroup int64) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		if s.Notify.NotifyOn || s.Notify.NotifyOff || s.Notify.NotifyRecord || s.Notify.NotifyDanmu {
-			for _, q := range s.SendQQGroup {
-				if q == qqGroup {
-					lPrintf("已经设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
-					streamers.Unlock()
-					return true
-				}
+	s, ok := getStreamer(uid)
+	if ok {
+		for _, q := range s.SendQQGroup {
+			if q == qqGroup {
+				lPrintf("已经设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
+				return true
 			}
-			s.SendQQGroup = append(s.SendQQGroup, qqGroup)
-			sets(s)
-			lPrintf("成功设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
-		} else {
-			lPrintWarn("设置QQ群的相关提醒消息需要先订阅" + s.longID() + "的开播或录播提醒")
-			streamers.Unlock()
-			return false
 		}
+		s.SendQQGroup = append(s.SendQQGroup, qqGroup)
 	} else {
-		lPrintWarn("设置QQ群的相关提醒消息需要先订阅uid为" + itoa(uid) + "的主播的开播或录播提醒")
-		streamers.Unlock()
-		return false
+		s = streamer{UID: uid, Name: getName(uid), SendQQGroup: []int64{qqGroup}}
 	}
-	streamers.Unlock()
+	setStreamer(s)
+	lPrintf("成功设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 
 	saveLiveConfig()
 	return true
@@ -465,20 +447,24 @@ func addQQGroup(uid int, qqGroup int64) bool {
 
 // 取消设置将主播的相关提醒消息发送到指定的QQ群
 func delQQGroup(uid int, qqGroup int64) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
+	if s, ok := getStreamer(uid); ok {
+		var isSet bool
 		for i, q := range s.SendQQGroup {
 			if q == qqGroup {
 				s.SendQQGroup = append(s.SendQQGroup[:i], s.SendQQGroup[i+1:]...)
+				isSet = true
 				break
 			}
 		}
-		sets(s)
-		lPrintf("成功取消设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
+		if isSet {
+			setStreamer(s)
+			lPrintf("成功取消设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
+		} else {
+			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
+		}
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒消息")
+		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒")
 	}
-	streamers.Unlock()
 
 	saveLiveConfig()
 	return true
@@ -486,15 +472,13 @@ func delQQGroup(uid int, qqGroup int64) bool {
 
 // 取消设置QQ群提醒
 func cancelQQGroup(uid int) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
+	if s, ok := getStreamer(uid); ok {
 		s.SendQQGroup = []int64{}
-		sets(s)
+		setStreamer(s)
 		lPrintln("成功取消设置" + s.longID() + "的QQ群提醒")
 	} else {
 		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒")
 	}
-	streamers.Unlock()
 
 	saveLiveConfig()
 	return true

@@ -8,8 +8,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -78,13 +80,24 @@ var config = configData{
 	},
 }
 
+// AcFun用户帐号数据
 type acfunUser struct {
 	Account  string `json:"account"`  // AcFun帐号邮箱或手机号
 	Password string `json:"password"` // AcFun帐号密码
 }
 
-// 将s放进streamers里
-func sets(s streamer) {
+// 从streamers.crt获取streamer
+func getStreamer(uid int) (streamer, bool) {
+	streamers.Lock()
+	defer streamers.Unlock()
+	s, ok := streamers.crt[uid]
+	return s, ok
+}
+
+// 将s放进streamers.crt里
+func setStreamer(s streamer) {
+	streamers.Lock()
+	defer streamers.Unlock()
 	streamers.crt[s.UID] = s
 }
 
@@ -370,4 +383,44 @@ func (s streamer) moveFile(oldFile string) {
 
 		lPrintf("成功将文件 %s 移动到 %s", oldFile, newFile)
 	}
+}
+
+// 设置live.json里类型为bool的值
+func (s streamer) setBoolConfig(tag string, value bool) bool {
+	if v, ok := seekField(&s, tag); ok {
+		if v.Kind() != reflect.Bool {
+			lPrintErrf("%s不是bool类型，设置失败", tag)
+			return false
+		}
+		if v.Bool() == value {
+			lPrintWarnf("%s的%s已经被设置成%v", s.longID(), tag, value)
+			return true
+		}
+		v.SetBool(value)
+		setStreamer(s)
+		lPrintf("成功设置%s的%s为%v", s.longID(), tag, value)
+		saveLiveConfig()
+		return true
+	}
+
+	lPrintErrf("设置里没有%s，设置失败", tag)
+	return false
+}
+
+// 递归寻找tag指定的value
+func seekField(iface interface{}, tag string) (reflect.Value, bool) {
+	ifv := reflect.Indirect(reflect.ValueOf(iface))
+	for i := 0; i < ifv.NumField(); i++ {
+		value := ifv.Field(i)
+		if value.Kind() == reflect.Struct {
+			if v, ok := seekField(value.Addr().Interface(), tag); ok {
+				return v, true
+			}
+		}
+		if t := ifv.Type().Field(i).Tag.Get("json"); strings.ToLower(t) == tag {
+			return value, true
+		}
+	}
+
+	return reflect.Value{}, false
 }

@@ -11,9 +11,21 @@ web API默认本地端口为51880
 
 `http://localhost:51880/startmirai` 利用Mirai发送直播通知到指定QQ或QQ群
 
-`http://localhost:51880/addnotify/23682490` 通知uid为23682490的主播的直播
+`http://localhost:51880/addnotifyon/23682490` 通知uid为23682490的主播的开播
 
-`http://localhost:51880/delnotify/23682490` 取消通知uid为23682490的主播的直播
+`http://localhost:51880/delnotifyon/23682490` 取消通知uid为23682490的主播的开播
+
+`http://localhost:51880/addnotifyoff/23682490` 通知uid为23682490的主播的下播
+
+`http://localhost:51880/delnotifyoff/23682490` 取消通知uid为23682490的主播的下播
+
+`http://localhost:51880/addnotifyrecord/23682490` 通知uid为23682490的主播的直播视频下载
+
+`http://localhost:51880/delnotifyrecord/23682490` 取消通知uid为23682490的主播的直播视频下载
+
+`http://localhost:51880/addnotifydanmu/23682490` 通知uid为23682490的主播的直播弹幕下载
+
+`http://localhost:51880/delnotifydanmu/23682490` 取消通知uid为23682490的主播的直播弹幕下载
 
 `http://localhost:51880/addrecord/23682490` uid为23682490的主播直播时自动下载其直播视频
 
@@ -22,6 +34,10 @@ web API默认本地端口为51880
 `http://localhost:51880/adddanmu/23682490` uid为23682490的主播直播时自动下载其直播弹幕
 
 `http://localhost:51880/deldanmu/23682490` 取消自动下载uid为23682490的主播的直播弹幕
+
+`http://localhost:51880/addkeeponline/23682490` uid为23682490的主播直播时在其直播间里挂机
+
+`http://localhost:51880/delkeeponline/23682490` 取消设置在uid为23682490的主播直播时在其直播间里挂机
 
 `http://localhost:51880/delconfig/23682490` 删除uid为23682490的主播的所有设置
 

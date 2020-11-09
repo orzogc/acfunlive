@@ -30,64 +30,10 @@ var danglingRec struct {
 
 const ffmpegNotExist = "没有找到FFmpeg，停止下载直播视频"
 
-// 设置自动下载指定主播的直播视频
-func addRecord(uid int) bool {
-	isExist := false
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		isExist = true
-		if s.Record {
-			lPrintWarn("已经设置过自动下载" + s.longID() + "的直播视频")
-		} else {
-			s.Record = true
-			s.Notify.NotifyRecord = true
-			sets(s)
-			lPrintln("成功设置自动下载" + s.longID() + "的直播视频")
-		}
-	}
-	streamers.Unlock()
-
-	if !isExist {
-		name := getName(uid)
-		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
-			return false
-		}
-
-		newStreamer := streamer{UID: uid, Name: name, Record: true, Notify: notify{NotifyRecord: true}}
-		streamers.Lock()
-		sets(newStreamer)
-		streamers.Unlock()
-		lPrintln("成功设置自动下载" + newStreamer.longID() + "的直播视频")
-	}
-
-	saveLiveConfig()
-	return true
-}
-
-// 取消自动下载指定主播的直播视频
-func delRecord(uid int) bool {
-	streamers.Lock()
-	if s, ok := streamers.crt[uid]; ok {
-		s.Record = false
-		s.Notify.NotifyRecord = false
-		sets(s)
-		lPrintln("成功取消自动下载" + s.longID() + "的直播视频")
-	} else {
-		lPrintWarn("没有设置过自动下载uid为" + itoa(uid) + "的主播的直播视频")
-	}
-	streamers.Unlock()
-
-	saveLiveConfig()
-	return true
-}
-
 // 临时下载指定主播的直播视频
 func startRec(uid int, danmu bool) bool {
 	var name string
-	streamers.Lock()
-	s, ok := streamers.crt[uid]
-	streamers.Unlock()
+	s, ok := getStreamer(uid)
 	if !ok {
 		name = getName(uid)
 		if name == "" {

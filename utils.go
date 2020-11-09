@@ -92,6 +92,7 @@ var (
 	logger   = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
 	itoa     = strconv.Itoa                          // 将int转换为字符串
 	atoi     = strconv.Atoi                          // 将字符串转换为int
+	boolStr  = strconv.FormatBool                    // 将bool类型转换为字符串
 )
 
 // 检查错误
@@ -181,22 +182,6 @@ func (s streamer) longID() string {
 func longID(uid int) string {
 	return getName(uid) + "（" + itoa(uid) + "）"
 }
-
-// 尝试删除msgMap.msg里的键
-/*
-func deleteMsg(uid int) {
-	streamers.Lock()
-	defer streamers.Unlock()
-	msgMap.Lock()
-	defer msgMap.Unlock()
-	_, oks := streamers.crt[uid]
-	m, okm := msgMap.msg[uid]
-	// 删除临时下载的msg
-	if !oks && okm && !m.isRecording && (m.danmuCancel == nil) {
-		delete(msgMap.msg, uid)
-	}
-}
-*/
 
 // 根据uid获取liveInfo
 func getLiveInfoByUID(uid int) (infoList []liveInfo, ok bool) {
