@@ -15,6 +15,16 @@ func initTray() {
 	*isNoGUI = false
 }
 
+// 运行systray
+func runTray() {
+	go systray.Run(trayOnReady, trayOnExit)
+}
+
+// 退出systray
+func quitTray() {
+	systray.Quit()
+}
+
 // 启动systray
 func trayOnReady() {
 	defer func() {

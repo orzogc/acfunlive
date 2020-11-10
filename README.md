@@ -44,6 +44,7 @@ git clone --recursive https://github.com/orzogc/acfunlive.git
 # Windows下编译没有控制台的gui版本需加上 -tags tray -ldflags -H=windowsgui 参数
 go build
 cd acfunlive-ui
+# 如果不需要webui可以不运行下面的命令
 yarn install
 yarn generate
 ```

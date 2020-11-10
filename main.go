@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/getlantern/systray"
 	"github.com/orzogc/acfundanmu"
 )
 
@@ -247,7 +246,7 @@ func main() {
 		}
 
 		if !*isNoGUI {
-			go systray.Run(trayOnReady, trayOnExit)
+			runTray()
 		}
 
 		for {
@@ -259,7 +258,7 @@ func main() {
 				case quit:
 					// 退出systray
 					if !*isNoGUI {
-						systray.Quit()
+						quitTray()
 					}
 					// 停止web UI服务器
 					if *isWebUI {

@@ -4,6 +4,7 @@ GOCLEAN=$(GOCMD) clean
 GOGET=$(GOCMD) get -d
 GITREPO=github.com/orzogc/acfunlive
 UIDIR=acfunlive-ui
+STATIC=CGO_ENABLED=0
 WINDOWSENV=GOOS=windows GOARCH=amd64
 TAGS=-tags tray
 LDFLAGS=-ldflags -H=windowsgui
@@ -25,7 +26,7 @@ build-gui: deps build-go-gui build-ui
 
 build-go-cli:
 	$(MKDIR) $(BINARY)
-	$(GOBUILD) -o $(BINARY)
+	$(STATIC) $(GOBUILD) -o $(BINARY)
 
 build-go-gui:
 	$(MKDIR) $(BINARY)
@@ -50,10 +51,10 @@ build-windows-gui: deps build-go-windows-gui build-ui
 
 build-go-windows-gui:
 	$(MKDIR) $(BINARY)
-	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(TAGS) $(LDFLAGS)
+	$(STATIC) $(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(TAGS) $(LDFLAGS)
 
 build-windows-cli: deps build-go-windows-cli build-ui
 
 build-go-windows-cli:
 	$(MKDIR) $(BINARY)
-	$(WINDOWSENV) $(GOBUILD) -o $(BINARY)
+	$(STATIC) $(WINDOWSENV) $(GOBUILD) -o $(BINARY)

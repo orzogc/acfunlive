@@ -8,10 +8,14 @@ func initTray() {
 	*isNoGUI = true
 }
 
-// 启动systray
-func trayOnReady() {
-}
+// 运行systray
+func runTray() {}
 
 // 退出systray
-func trayOnExit() {
-}
+func quitTray() {}
+
+// 启动systray
+func trayOnReady() {}
+
+// 退出systray
+func trayOnExit() {}
