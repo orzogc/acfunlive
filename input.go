@@ -13,12 +13,16 @@ import (
 // 正在直播的主播
 type streaming streamer
 
+// json
+type sJSON struct {
+	UID   int    `json:"uid"`
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
 // 实现json.Marshaler接口
 func (s streaming) MarshalJSON() ([]byte, error) {
-	type sJSON struct {
-		UID              int
-		Name, Title, URL string
-	}
 	sj := sJSON{UID: s.UID, Name: s.Name, Title: streamer(s).getTitle(), URL: streamer(s).getURL()}
 	return json.Marshal(sj)
 }
