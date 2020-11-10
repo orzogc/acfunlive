@@ -21,6 +21,6 @@ require (
 	github.com/tidwall/match v1.0.2 // indirect
 	github.com/valyala/fasthttp v1.17.0
 	github.com/valyala/fastjson v1.6.1
-	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102 // indirect
-	golang.org/x/sys v0.0.0-20201107080550-4d91cf3a1aaf // indirect
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
+	golang.org/x/sys v0.0.0-20201109165425-215b40eba54c // indirect
 )

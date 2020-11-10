@@ -99,6 +99,7 @@ func (s streamer) cycle(liveID string) {
 
 					info, _ := getLiveInfo(liveID)
 
+					// 优先级：录播 > 弹幕/挂机
 					if s.Record && !info.isRecording {
 						go s.recordLive(s.Danmu || s.KeepOnline)
 					} else {

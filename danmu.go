@@ -118,9 +118,9 @@ Outer:
 				s.sendMirai(s.longID() + "的直播弹幕下载已经结束")
 			}
 		}
-	}
 
-	s.moveFile(info.assFile)
+		s.moveFile(info.assFile)
+	}
 }
 
 // 退出直播弹幕下载相关操作
@@ -144,8 +144,20 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 	defer dcancel()
 	info, ok := getLiveInfo(liveID)
 	if ok {
-		if info.isDanmu {
-			lPrintWarn("已经在下载" + s.longID() + "的直播弹幕，如要重启下载，请先运行 stopdanmu " + s.itoa())
+		if info.isDanmu && !info.isKeepOnline {
+			if s.Danmu && !s.KeepOnline {
+				lPrintWarn("已经在下载" + s.longID() + "的直播弹幕，如要重启下载，请先运行 stopdanmu " + s.itoa())
+				return
+			}
+			s.Danmu = false
+		} else if !info.isDanmu && info.isKeepOnline {
+			if !s.Danmu && s.KeepOnline {
+				lPrintWarn("已经在" + s.longID() + "的直播间挂机")
+				return
+			}
+			s.KeepOnline = false
+		} else if info.isDanmu && info.isKeepOnline {
+			lPrintWarn("已经在下载" + s.longID() + "的直播弹幕和在其直播间挂机，如要重启下载，请先运行 stopdanmu " + s.itoa())
 			return
 		}
 	} else {

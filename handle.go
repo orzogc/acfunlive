@@ -116,6 +116,7 @@ func handleCmdUID(cmd string, uid int) string {
 		return boolStr(d(uid))
 	}
 
+	// 保持兼容
 	if cmd == "addnotify" || cmd == "delnotify" {
 		cmd = cmd + "on"
 	}

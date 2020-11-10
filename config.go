@@ -335,6 +335,9 @@ func loadNewConfig() {
 
 // 移动文件
 func (s streamer) moveFile(oldFile string) {
+	if oldFile == "" {
+		return
+	}
 	directory := config.Directory
 	if s.Directory != "" {
 		directory = s.Directory
@@ -349,6 +352,10 @@ func (s streamer) moveFile(oldFile string) {
 		}
 
 		_, err = os.Stat(oldFile)
+		if os.IsNotExist(err) {
+			lPrintErrf("文件 %s 不存在", oldFile)
+			return
+		}
 		checkErr(err)
 
 		filename := filepath.Base(oldFile)
