@@ -18,12 +18,12 @@ AcFun直播通知和下载助手
 ### 依赖
 #### 运行依赖
 * ffmpeg（下载直播视频需要，不下载不需要，Windows需要将ffmpeg.exe放在本程序所在文件夹内）
-* gtk3 和 libappindicator3 （Linux下需要）
+* gtk3 和 libappindicator3 （Linux下运行gui版本需要）
 
 #### 编译依赖
 * go
 * yarn
-* gtk3 和 libappindicator3 （Linux下需要）
+* gtk3 和 libappindicator3 （Linux下编译gui版本需要）
 * GNU Make （Linux下可选）
 
 ### 编译
@@ -32,7 +32,7 @@ AcFun直播通知和下载助手
 # 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
 cd acfunlive
-# 编译Windows版本运行 make build-windows-gui 或 make build-windows-cli
+# 编译gui版本运行 make build-gui ，编译Windows版本运行 make build-windows-gui 或 make build-windows-cli
 make
 ```
 编译好的文件在bin文件夹下
@@ -41,13 +41,13 @@ make
 ```
 # 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
-# Windows下编译没有控制台的gui版本需加上 -ldflags -H=windowsgui 参数
+# Windows下编译没有控制台的gui版本需加上 -tags tray -ldflags -H=windowsgui 参数
 go build
 cd acfunlive-ui
 yarn install
 yarn generate
 ```
-在编译好的`acfunlive`或`acfunlive.exe`所在的文件夹下新建webui文件夹，将acfunlive-ui下dist文件夹内的所有文件拷贝到webui文件夹内
+在编译好的`acfunlive`或`acfunlive.exe`所在的文件夹下新建webui文件夹，将acfunlive-ui下dist文件夹内的所有文件复制到webui文件夹内
 
 ### 配置文件详解
 #### live.json
@@ -111,7 +111,7 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 ### 使用方法
 Windows的gui版本直接运行即可，程序会出现在系统托盘那里，可以通过`http://localhost:51890`访问web UI界面。
 
-Windows下如果要使用命令行模式，下载cli版本，运行需要加上`-nogui`参数，具体参数看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
+Windows下如果要使用命令行模式，下载cli版本，具体参数看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
 
 本程序下载的视频和弹幕默认保存在本程序所在文件夹内。
 

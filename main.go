@@ -23,10 +23,9 @@ func argsHandle() {
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令，需要listen参数")
-	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面，需要webapi参数")
-	isNoGUI = flag.Bool("nogui", false, "不使用GUI界面")
-	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群，需要listen参数")
+	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令")
+	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面")
+	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
 	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
 	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
@@ -48,6 +47,10 @@ func argsHandle() {
 			fmt.Println(usageStr)
 			flag.PrintDefaults()
 		}
+	} else if flag.NFlag() == 0 && *isNoGUI {
+		lPrintErr("请输入参数，比如 -listen")
+		fmt.Println(usageStr)
+		flag.PrintDefaults()
 	} else {
 		if *shortHelp || *longHelp {
 			if *isNoGUI {
@@ -61,14 +64,14 @@ func argsHandle() {
 			*isWebUI = true
 		}
 		if *isWebUI {
-			if !*isWebAPI {
-				lPrintErr("webui参数需要和webapi参数一起运行")
-				os.Exit(1)
-			}
+			*isListen = true
+			*isWebAPI = true
 		}
-		if *isWebAPI && !*isListen {
-			lPrintErr("webapi参数需要和listen参数一起运行")
-			os.Exit(1)
+		if *isWebAPI {
+			*isListen = true
+		}
+		if *isMirai {
+			*isListen = true
 		}
 		if *isListLive {
 			listLive()
@@ -132,6 +135,8 @@ func checkConfig() {
 
 // 程序初始化
 func initialize() {
+	initTray()
+
 	// 避免 initialization loop
 	boolDispatch["startwebapi"] = startWebAPI
 	boolDispatch["startwebui"] = startWebUI

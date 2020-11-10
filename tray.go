@@ -1,3 +1,6 @@
+// +build tray
+
+// 系统托盘
 package main
 
 import (
@@ -6,6 +9,11 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
 )
+
+// 初始化tray
+func initTray() {
+	*isNoGUI = false
+}
 
 // 启动systray
 func trayOnReady() {

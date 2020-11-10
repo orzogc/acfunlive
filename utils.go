@@ -1,3 +1,4 @@
+// 部分数据和函数定义
 package main
 
 import (

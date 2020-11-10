@@ -5,6 +5,7 @@ GOGET=$(GOCMD) get -d
 GITREPO=github.com/orzogc/acfunlive
 UIDIR=acfunlive-ui
 WINDOWSENV=GOOS=windows GOARCH=amd64
+TAGS=-tags tray
 LDFLAGS=-ldflags -H=windowsgui
 YARNINSTALL=yarn install
 YARNGENERATE=yarn generate
@@ -19,11 +20,16 @@ BINARY=bin
 WEBUIDIR=webui
 
 all: deps build
-build: build-go build-ui
+build: build-go-cli build-ui
+build-gui: deps build-go-gui build-ui
 
-build-go:
+build-go-cli:
 	$(MKDIR) $(BINARY)
 	$(GOBUILD) -o $(BINARY)
+
+build-go-gui:
+	$(MKDIR) $(BINARY)
+	$(GOBUILD) -o $(BINARY) $(TAGS)
 
 build-ui:
 	$(CD) $(UIDIR) && $(YARNGENERATE)
@@ -44,7 +50,7 @@ build-windows-gui: deps build-go-windows-gui build-ui
 
 build-go-windows-gui:
 	$(MKDIR) $(BINARY)
-	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(LDFLAGS)
+	$(WINDOWSENV) $(GOBUILD) -o $(BINARY) $(TAGS) $(LDFLAGS)
 
 build-windows-cli: deps build-go-windows-cli build-ui
 

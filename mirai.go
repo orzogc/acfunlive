@@ -1,3 +1,4 @@
+// mirai QQ通知
 package main
 
 import (
