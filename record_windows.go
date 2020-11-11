@@ -27,7 +27,7 @@ func transFilename(filename string) string {
 	// 转换文件名不允许的特殊字符
 	re := regexp.MustCompile(`[<>:"/\\|?*]`)
 	filename = re.ReplaceAllString(filename, "-")
-	outFilename := filepath.Join(exeDir, filename)
+	outFilename := filepath.Join(*recordDir, filename)
 	// windows下全路径文件名不能过长
 	if utf8.RuneCountInString(outFilename) > 255 {
 		lPrintErr("全路径文件名太长，取消下载")

@@ -1,7 +1,9 @@
 # 命令行使用方法
 命令行模式需要运行`acfunlive -listen`，下载的视频和弹幕默认保存在本程序所在文件夹内
 
-`acfunlive -listen` 运行监听程序，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
+`acfunlive -listen` 运行程序监听，监听过程中可以输入命令修改设置（运行`help`查看详细命令说明）
+
+`acfunlive -listen -config configDir -record recordDir` 运行程序监听，读取`configDir`里的配置文件，并将录播和弹幕文件保存在`recordDir`
 
 `acfunlive -webui` 启动web UI服务器，可以通过`http://localhost:51890`访问web UI界面
 

@@ -7,6 +7,7 @@ WORKDIR /acfunlive-src
 ENV GO111MODULE=on \
     GOPROXY="https://goproxy.cn" \
     CGO_ENABLED=0
+
 RUN go build
 
 FROM alpine

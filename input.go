@@ -29,23 +29,26 @@ func (s streaming) MarshalJSON() ([]byte, error) {
 
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
-	if *isNoGUI {
-		log.Println("正在直播的主播：")
-	}
 	streamers.Lock()
-	defer streamers.Unlock()
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
-			if *isNoGUI {
-				log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
-			}
 			streamings = append(streamings, streaming(s))
 		}
 	}
+	streamers.Unlock()
 
 	sort.Slice(streamings, func(i, j int) bool {
 		return streamings[i].UID < streamings[j].UID
 	})
+
+	if *isNoGUI {
+		log.Println("正在直播的主播：")
+		for _, l := range streamings {
+			s := streamer(l)
+			log.Println(s.longID() + "：" + s.getTitle() + " " + s.getURL())
+		}
+	}
+
 	return streamings
 }
 

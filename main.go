@@ -36,6 +36,8 @@ func argsHandle() {
 	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
 	startDlDanmu := flag.Uint("startdanmu", 0, "临时下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
 	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的uid（在主播的网页版个人主页查看）")
+	configDir = flag.String("config", "", "设置文件所在文件夹，默认是本程序所在文件夹")
+	recordDir = flag.String("record", "", "下载录播和弹幕文件到该文件夹，默认是本程序所在文件夹")
 	flag.Parse()
 
 	initialize()
@@ -55,6 +57,16 @@ func argsHandle() {
 			if *isNoGUI {
 				fmt.Println(usageStr)
 				flag.PrintDefaults()
+			}
+		}
+		if *recordDir == "" {
+			*recordDir = exeDir
+		} else {
+			info, err := os.Stat(*recordDir)
+			checkErr(err)
+			if !info.IsDir() {
+				lPrintErrf("指定的下载录播和弹幕的文件夹 %s 并不是真正的文件夹", *recordDir)
+				os.Exit(1)
 			}
 		}
 		if !*isNoGUI {
@@ -111,18 +123,18 @@ func argsHandle() {
 // 检查config.json里的配置
 func checkConfig() {
 	if config.Source != "hls" && config.Source != "flv" {
-		lPrintErr(configFile + "里的Source必须是hls或flv")
+		lPrintErr(configFile + "里的source必须是hls或flv")
 		os.Exit(1)
 	}
 	if config.WebPort < 1024 || config.WebPort > 65525 {
-		lPrintErr(configFile + "里的WebPort必须大于1023且少于65526")
+		lPrintErr(configFile + "里的webPort必须大于1023且少于65526")
 		os.Exit(1)
 	}
 	if config.Directory != "" {
 		info, err := os.Stat(config.Directory)
 		checkErr(err)
 		if !info.IsDir() {
-			lPrintErr(configFile + "里的Directory必须是存在的文件夹")
+			lPrintErrf("%s里的directory必须是存在的文件夹：%s", configFile, config.Directory)
 			os.Exit(1)
 		}
 	}
@@ -144,9 +156,19 @@ func initialize() {
 	exePath, err := os.Executable()
 	checkErr(err)
 	exeDir = filepath.Dir(exePath)
-	logoFileLocation = filepath.Join(exeDir, logoFile)
-	liveFileLocation = filepath.Join(exeDir, liveFile)
-	configFileLocation = filepath.Join(exeDir, configFile)
+	if *configDir == "" {
+		*configDir = exeDir
+	} else {
+		info, err := os.Stat(*configDir)
+		checkErr(err)
+		if !info.IsDir() {
+			lPrintErrf("指定的设置文件夹 %s 并不是真正的文件夹", *configDir)
+			os.Exit(1)
+		}
+	}
+	logoFileLocation = filepath.Join(*configDir, logoFile)
+	liveFileLocation = filepath.Join(*configDir, liveFile)
+	configFileLocation = filepath.Join(*configDir, configFile)
 
 	if _, err := os.Stat(logoFileLocation); os.IsNotExist(err) {
 		lPrintln("下载AcFun的logo")

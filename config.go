@@ -139,7 +139,7 @@ func getStreamers() []streamer {
 
 // 查看设置文件是否存在
 func isConfigFileExist(filename string) bool {
-	fileLocation := filepath.Join(exeDir, filename)
+	fileLocation := filepath.Join(*configDir, filename)
 	info, err := os.Stat(fileLocation)
 	if os.IsNotExist(err) {
 		return false

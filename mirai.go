@@ -98,7 +98,7 @@ func initMirai() (result bool) {
 				checkErr(err)
 				continue
 			case client.NeedCaptcha:
-				imageFile := filepath.Join(exeDir, qqCaptchaImage)
+				imageFile := filepath.Join(*configDir, qqCaptchaImage)
 				err = ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
 				checkErr(err)
 				lPrintln("QQ验证码图片保存在：" + imageFile)

@@ -51,6 +51,7 @@ yarn generate
 在编译好的`acfunlive`或`acfunlive.exe`所在的文件夹下新建webui文件夹，将acfunlive-ui下dist文件夹内的所有文件复制到webui文件夹内
 
 ### 配置文件详解
+配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹
 #### live.json
 `live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
@@ -114,7 +115,7 @@ Windows的gui版本直接运行即可，程序会出现在系统托盘那里，�
 
 Windows下如果要使用命令行模式，下载cli版本，具体参数看 [cli.md](https://github.com/orzogc/acfunlive/blob/master/doc/cli.md) 。
 
-本程序下载的视频和弹幕默认保存在本程序所在文件夹内。
+本程序下载的直播视频和弹幕默认保存在本程序所在文件夹内，运行时可用参数`-record`指定下载录播和弹幕的文件夹。
 
 命令行模式运行时可以输入命令控制本程序，运行时输入help查看具体命令。
 

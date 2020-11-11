@@ -28,7 +28,7 @@ func transFilename(filename string) string {
 	if len(filename) >= 250 {
 		filename = filename[:250]
 	}
-	return filepath.Join(exeDir, filename)
+	return filepath.Join(*recordDir, filename)
 }
 
 // Windows下启用GUI时隐藏FFmpeg的cmd窗口
