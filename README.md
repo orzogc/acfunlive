@@ -14,6 +14,7 @@ AcFun直播通知和下载助手
     * [使用方法](#使用方法)
     * [web API](#web-api)
     * [Mirai使用方法](#mirai使用方法)
+    * [Docker](#docker)
 
 ### 依赖
 #### 运行依赖
@@ -41,6 +42,7 @@ make
 ```
 # 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
+cd acfunlive
 # Windows下编译没有控制台的gui版本需加上 -tags tray -ldflags -H=windowsgui 参数
 go build
 cd acfunlive-ui
@@ -52,6 +54,7 @@ yarn generate
 
 ### 配置文件详解
 配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹
+
 #### live.json
 `live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
@@ -130,3 +133,12 @@ Windows下如果要使用命令行模式，下载cli版本，具体参数看 [cl
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
 `config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。
+
+### Docker
+```
+git clone --recursive https://github.com/orzogc/acfunlive.git
+cd acfunlive
+docker build -t acfunlive .
+# configDir是配置文件所在文件夹，recordDir是录播和弹幕下载所在文件夹，-webui可以换成其他参数
+docker run -i -v configDir:/acfunlive/config -v recordDir:/acfunlive/record -p 51880:51880 -p 51890:51890 -u `id -u`:`id -g` acfunlive:latest -webui
+```
