@@ -68,7 +68,7 @@ func stopRec(uid int) bool {
 		if info.isRecording {
 			lPrintf("开始停止下载%s的liveID为%s直播视频", longID(uid), info.LiveID)
 			info.recordCh <- stopRecord
-			io.WriteString(info.ffmpegStdin, "q")
+			_, _ = io.WriteString(info.ffmpegStdin, "q")
 			// 等待20秒强制停止下载，goroutine是为了防止锁住时间过长
 			go func(cancel context.CancelFunc) {
 				time.Sleep(20 * time.Second)

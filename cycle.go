@@ -23,7 +23,7 @@ func (s *streamer) handleMsg(msg controlMsg) {
 		sInfoMap.Unlock()
 	case quit:
 	default:
-		lPrintErr("未知的controlMsg：", msg)
+		lPrintErrf("未知的controlMsg：%+v", msg)
 	}
 }
 

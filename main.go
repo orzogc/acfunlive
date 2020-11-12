@@ -308,7 +308,7 @@ func main() {
 						// 结束下载直播视频
 						if info.isRecording {
 							info.recordCh <- stopRecord
-							io.WriteString(info.ffmpegStdin, "q")
+							_, _ = io.WriteString(info.ffmpegStdin, "q")
 						}
 						// 结束下载弹幕
 						if info.isDanmu {
@@ -325,7 +325,7 @@ func main() {
 					lPrintln("本程序结束运行")
 					return
 				default:
-					lPrintErr("未知controlMsg：", msg)
+					lPrintErrf("未知controlMsg：%+v", msg)
 				}
 			}
 		}
