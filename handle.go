@@ -122,7 +122,12 @@ func handleCmdUID(cmd string, uid int) string {
 	}
 	s, ok := getStreamer(uid)
 	if !ok {
-		s = streamer{UID: uid, Name: getName(uid)}
+		name := getName(uid)
+		if name == "" {
+			lPrintErr("不存在uid为" + itoa(uid) + "的用户")
+			return ""
+		}
+		s = streamer{UID: uid, Name: name}
 	}
 	if strings.HasPrefix(cmd, "add") {
 		if s.setBoolConfig(cmd[3:], true) {

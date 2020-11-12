@@ -43,10 +43,10 @@ make
 # 更新repo需另外运行 git submodule update --remote --merge
 git clone --recursive https://github.com/orzogc/acfunlive.git
 cd acfunlive
-# Windows下编译没有控制台的gui版本需加上 -tags tray -ldflags -H=windowsgui 参数
+# Linux下编译gui版本需加上 -tags tray 参数，Windows下编译没有控制台的gui版本需加上 -tags tray -ldflags -H=windowsgui 参数
 go build
-cd acfunlive-ui
 # 如果不需要webui可以不运行下面的命令
+cd acfunlive-ui
 yarn install
 yarn generate
 ```

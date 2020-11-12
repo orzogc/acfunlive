@@ -118,8 +118,8 @@ func removeDup(s []int64) []int64 {
 
 // 将map[int]streamer转换为[]streamer，按照uid大小排序
 func getStreamers() []streamer {
-	var ss []streamer
 	streamers.Lock()
+	ss := make([]streamer, 0, len(streamers.crt))
 	for _, s := range streamers.crt {
 		if s.SendQQ == nil {
 			s.SendQQ = []int64{}

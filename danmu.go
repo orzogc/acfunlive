@@ -85,7 +85,7 @@ Outer:
 			// 因意外结束弹幕下载时重启下载
 			// 应付AcFun API可能出现的bug
 			if s.isLiveOnByPage() {
-				if newInfo, err := s.getStreamInfo(); err == nil && info.LiveID == newInfo.LiveID {
+				if newLiveID := s.getLiveID(); newLiveID == info.LiveID {
 					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
 					dq, err = acfundanmu.Init(int64(s.UID), cookies)
 					checkErr(err)
@@ -200,10 +200,9 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 
 // 临时下载指定主播的直播弹幕
 func startDanmu(uid int) bool {
-	var name string
 	s, ok := getStreamer(uid)
 	if !ok {
-		name = getName(uid)
+		name := getName(uid)
 		if name == "" {
 			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
 			return false
@@ -213,14 +212,12 @@ func startDanmu(uid int) bool {
 	s.Notify.NotifyDanmu = true
 	s.Danmu = true
 
-	isLive, room, err := tryFetchLiveInfo(s.UID)
-	if err != nil {
-		lPrintErr(err)
+	liveID := s.getLiveID()
+	if liveID == "" {
+		lPrintErr(s.longID() + "不在直播，取消下载直播弹幕")
 		return false
-	} else if !isLive {
-		lPrintWarn(s.longID() + "不在直播，取消下载直播弹幕")
-		return false
-	} else if isDanmu(room.liveID) {
+	}
+	if isDanmu(liveID) {
 		lPrintWarn("已经在下载" + s.longID() + "的直播弹幕，如要重启下载，请先运行 stopdanmu " + s.itoa())
 		return false
 	}
@@ -230,10 +227,10 @@ func startDanmu(uid int) bool {
 	// 查看程序是否处于监听状态
 	if *isListen {
 		// goroutine是为了快速返回
-		go s.initDanmu(mainCtx, room.liveID, filename)
+		go s.initDanmu(mainCtx, liveID, filename)
 	} else {
 		// 程序只在单独下载一个直播弹幕，不用goroutine，防止程序提前结束运行
-		s.initDanmu(mainCtx, room.liveID, filename)
+		s.initDanmu(mainCtx, liveID, filename)
 	}
 	return true
 }

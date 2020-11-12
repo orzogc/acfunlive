@@ -200,7 +200,9 @@ func initialize() {
 		streamers.old[uid] = s
 	}
 
-	fetchAllRooms()
+	if ok := fetchAllRooms(); !ok {
+		os.Exit(1)
+	}
 	liveRooms.rooms = liveRooms.newRooms
 
 	if config.Acfun.Account != "" && config.Acfun.Password != "" {

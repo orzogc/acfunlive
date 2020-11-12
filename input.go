@@ -31,6 +31,7 @@ func (s *streaming) MarshalJSON() ([]byte, error) {
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
 	streamers.Lock()
+	streamings = make([]streaming, 0, len(streamers.crt))
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
 			streamings = append(streamings, streaming(s))
@@ -56,6 +57,7 @@ func listLive() (streamings []streaming) {
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
 	lInfoMap.Lock()
+	recordings = make([]streaming, 0, len(lInfoMap.info))
 	for _, info := range lInfoMap.info {
 		if info.isRecording {
 			recordings = append(recordings, streaming{
@@ -83,6 +85,7 @@ func listRecord() (recordings []streaming) {
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
 	lInfoMap.Lock()
+	danmu = make([]streaming, 0, len(lInfoMap.info))
 	for _, info := range lInfoMap.info {
 		if info.isDanmu {
 			danmu = append(danmu, streaming{

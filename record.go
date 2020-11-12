@@ -11,23 +11,6 @@ import (
 	"time"
 )
 
-// record用来传递下载信息
-/*
-type record struct {
-	stdin  io.WriteCloser     // ffmpeg的stdin
-	cancel context.CancelFunc // 用来强行停止ffmpeg运行
-	ch     chan control       // 下载goroutine的管道
-}
-*/
-
-// 存放某些没在recordMap的下载
-/*
-var danglingRec struct {
-	sync.Mutex // records的锁
-	records    []record
-}
-*/
-
 const ffmpegNotExist = "没有找到FFmpeg，停止下载直播视频"
 
 // 临时下载指定主播的直播视频
@@ -46,13 +29,12 @@ func startRec(uid int, danmu bool) bool {
 	s.Record = true
 	s.Danmu = danmu
 
-	if isLive, room, err := tryFetchLiveInfo(s.UID); err != nil {
-		lPrintErr(err)
+	liveID := s.getLiveID()
+	if liveID == "" {
+		lPrintErr(s.longID() + "不在直播，取消下载直播视频")
 		return false
-	} else if !isLive {
-		lPrintWarn(s.longID() + "不在直播，取消下载直播视频")
-		return false
-	} else if isRecording(room.liveID) {
+	}
+	if isRecording(liveID) {
 		lPrintWarn("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
 		return false
 	}
@@ -150,6 +132,7 @@ func (s streamer) recordLive(danmu bool) {
 		info = existInfo
 		info.streamURL = url
 	}
+	// 只运行一次
 	var once sync.Once
 	q := func() {
 		quitRec(info.LiveID)
@@ -222,10 +205,7 @@ func (s streamer) recordLive(danmu bool) {
 		select {
 		case <-info.recordCh:
 		default:
-			if _, room, err := tryFetchLiveInfo(s.UID); err != nil {
-				lPrintErr(err)
-				return
-			} else if room.liveID == info.LiveID && *isListen {
+			if newLiveID := s.getLiveID(); newLiveID == info.LiveID && *isListen {
 				// 程序处于监听状态时重启下载，否则不重启
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				once.Do(q)

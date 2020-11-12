@@ -377,7 +377,12 @@ func addQQNotify(uid int, qq int64) bool {
 		}
 		s.SendQQ = append(s.SendQQ, qq)
 	} else {
-		s = streamer{UID: uid, Name: getName(uid), SendQQ: []int64{qq}}
+		name := getName(uid)
+		if name == "" {
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			return false
+		}
+		s = streamer{UID: uid, Name: name, SendQQ: []int64{qq}}
 	}
 	setStreamer(s)
 	lPrintf("成功设置将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
@@ -437,7 +442,12 @@ func addQQGroup(uid int, qqGroup int64) bool {
 		}
 		s.SendQQGroup = append(s.SendQQGroup, qqGroup)
 	} else {
-		s = streamer{UID: uid, Name: getName(uid), SendQQGroup: []int64{qqGroup}}
+		name := getName(uid)
+		if name == "" {
+			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			return false
+		}
+		s = streamer{UID: uid, Name: name, SendQQGroup: []int64{qqGroup}}
 	}
 	setStreamer(s)
 	lPrintf("成功设置将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)

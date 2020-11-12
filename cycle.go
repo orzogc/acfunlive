@@ -106,7 +106,7 @@ func (s streamer) cycle(liveID string) {
 						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
 						// 不下载直播视频时下载弹幕
 						if (s.Danmu && !info.isDanmu) || (s.KeepOnline && !info.isKeepOnline) {
-							filename := getTime() + " " + s.Name + " " + s.getTitle()
+							filename := getTime() + " " + s.Name + " " + title
 							go s.initDanmu(mainCtx, liveID, filename)
 						}
 					}
