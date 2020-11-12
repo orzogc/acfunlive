@@ -112,16 +112,14 @@ func (s streamer) cycle(liveID string) {
 					}
 				}
 			} else {
-				if isLive {
+				// 应付AcFun API可能出现的bug：主播没下播但API显示下播
+				if isLive && !s.isLiveOnByPage() {
 					isLive = false
-					// 应付AcFun API可能出现的bug：主播没下播但API显示下播
-					if !s.isLiveOnByPage() {
-						msg := s.longID() + "已经下播"
-						lPrintln(msg)
-						if s.Notify.NotifyOff {
-							desktopNotify(s.Name + "已经下播")
-							s.sendMirai(msg)
-						}
+					msg := s.longID() + "已经下播"
+					lPrintln(msg)
+					if s.Notify.NotifyOff {
+						desktopNotify(s.Name + "已经下播")
+						s.sendMirai(msg)
 					}
 				}
 			}
