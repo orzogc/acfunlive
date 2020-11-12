@@ -334,7 +334,7 @@ func loadNewConfig() {
 }
 
 // 移动文件
-func (s streamer) moveFile(oldFile string) {
+func (s *streamer) moveFile(oldFile string) {
 	if oldFile == "" {
 		return
 	}
