@@ -316,7 +316,7 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 }
 
 // 发送消息
-func (s streamer) sendMirai(text string) {
+func (s *streamer) sendMirai(text string) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in sendMirai(), the error is:", err)

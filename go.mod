@@ -14,7 +14,7 @@ require (
 	github.com/google/go-cmp v0.5.2
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/orzogc/acfundanmu v0.0.0-20201105091041-f08494f8dc36
+	github.com/orzogc/acfundanmu v0.0.0-20201112040316-917fbbb1e67e
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/tidwall/gjson v1.6.3 // indirect
@@ -22,5 +22,5 @@ require (
 	github.com/valyala/fasthttp v1.17.0
 	github.com/valyala/fastjson v1.6.1
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b // indirect
-	golang.org/x/sys v0.0.0-20201109165425-215b40eba54c // indirect
+	golang.org/x/sys v0.0.0-20201112073958-5cba982894dd // indirect
 )

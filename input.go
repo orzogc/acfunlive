@@ -22,8 +22,9 @@ type sJSON struct {
 }
 
 // 实现json.Marshaler接口
-func (s streaming) MarshalJSON() ([]byte, error) {
-	sj := sJSON{UID: s.UID, Name: s.Name, Title: streamer(s).getTitle(), URL: streamer(s).getURL()}
+func (s *streaming) MarshalJSON() ([]byte, error) {
+	st := (*streamer)(s)
+	sj := sJSON{UID: s.UID, Name: s.Name, Title: st.getTitle(), URL: st.getURL()}
 	return json.Marshal(sj)
 }
 

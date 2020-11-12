@@ -7,7 +7,7 @@ import (
 )
 
 // 处理管道信号
-func (s streamer) handleMsg(msg controlMsg) {
+func (s *streamer) handleMsg(msg controlMsg) {
 	switch msg.c {
 	case startCycle:
 		lPrintln("重启监听" + s.longID() + "的直播状态")

@@ -200,7 +200,6 @@ func initialize() {
 		streamers.old[uid] = s
 	}
 
-	getDidCookie()
 	fetchAllRooms()
 	liveRooms.rooms = liveRooms.newRooms
 

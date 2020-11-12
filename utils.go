@@ -172,12 +172,12 @@ func lPrintErrf(format string, a ...interface{}) {
 }
 
 // 将UID转换成字符串
-func (s streamer) itoa() string {
+func (s *streamer) itoa() string {
 	return itoa(s.UID)
 }
 
 // 返回ID（UID）形式的字符串
-func (s streamer) longID() string {
+func (s *streamer) longID() string {
 	return s.Name + "（" + s.itoa() + "）"
 }
 
