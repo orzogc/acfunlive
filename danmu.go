@@ -64,6 +64,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	checkErr(err)
 	_ = dq.StartDanmu(ctx, false)
 	if s.Danmu {
+		defer s.moveFile(info.assFile)
 		dq.WriteASS(ctx, info.cfg, info.assFile, true)
 	} else if s.KeepOnline {
 		for {
@@ -122,20 +123,18 @@ Outer:
 				s.sendMirai(s.longID() + "的直播弹幕下载已经结束")
 			}
 		}
-
-		s.moveFile(info.assFile)
 	}
 }
 
 // 退出直播弹幕下载相关操作
-func quitDanmu(liveID string) {
+func (s streamer) quitDanmu(liveID string) {
 	lInfoMap.Lock()
 	defer lInfoMap.Unlock()
 	if info, ok := lInfoMap.info[liveID]; ok {
-		if info.isDanmu {
+		if s.Danmu {
 			info.isDanmu = false
 		}
-		if info.isKeepOnline {
+		if s.KeepOnline {
 			info.isKeepOnline = false
 		}
 		lInfoMap.info[info.LiveID] = info
@@ -179,13 +178,12 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 			return
 		}
 	}
-	defer quitDanmu(info.LiveID)
 
 	if s.Danmu {
 		info.isDanmu = true
 		info.danmuCancel = dcancel
 	}
-	if s.KeepOnline && !info.isKeepOnline {
+	if s.KeepOnline {
 		info.isKeepOnline = true
 		info.onlineCancel = dcancel
 	}
@@ -198,6 +196,7 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 	info.cfg.Title = filepath.Base(assFile)
 	info.cfg.StartTime = time.Now().UnixNano()
 	setLiveInfo(info)
+	defer s.quitDanmu(info.LiveID)
 
 	s.getDanmu(dctx, info)
 }

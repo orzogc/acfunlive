@@ -194,9 +194,6 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	}
 
 	liveList := v.GetArray("liveList")
-	if len(liveList) == 0 {
-		lPrintWarn("没有人在直播")
-	}
 	rooms = make(map[int]*liveRoom, len(liveList))
 	for _, live := range liveList {
 		uid := live.GetInt("authorId")
@@ -540,6 +537,9 @@ func cycleFetch(ctx context.Context) {
 			return
 		default:
 			if ok := fetchAllRooms(); ok {
+				if len(liveRooms.newRooms) == 0 {
+					lPrintWarn("没有人在直播")
+				}
 				streamers.Lock()
 				notLive := make([]streamer, 0, len(streamers.crt))
 				// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里

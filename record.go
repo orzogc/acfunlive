@@ -132,12 +132,6 @@ func (s streamer) recordLive(danmu bool) {
 		info = existInfo
 		info.streamURL = url
 	}
-	// 只运行一次
-	var once sync.Once
-	q := func() {
-		quitRec(info.LiveID)
-	}
-	defer once.Do(q)
 
 	title := s.getTitle()
 	filename := getTime() + " " + s.Name + " " + title
@@ -182,6 +176,12 @@ func (s streamer) recordLive(danmu bool) {
 	info.recordCancel = cancel
 	info.isRecording = true
 	setLiveInfo(info)
+	// 只运行一次
+	var once sync.Once
+	q := func() {
+		quitRec(info.LiveID)
+	}
+	defer once.Do(q)
 
 	if !*isListen {
 		// 程序单独下载一个直播视频时可以按q键退出（ffmpeg的特性）
@@ -194,11 +194,14 @@ func (s streamer) recordLive(danmu bool) {
 		go s.initDanmu(ctx, info.LiveID, filename)
 	}
 
+	defer s.moveFile(recordFile)
 	err = cmd.Run()
 	if err != nil {
 		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
 
+	// 取消弹幕下载
+	cancel()
 	time.Sleep(10 * time.Second)
 
 	if s.isLiveOnByPage() {
@@ -224,6 +227,4 @@ func (s streamer) recordLive(danmu bool) {
 			s.sendMirai(s.longID() + "的直播视频下载已经结束")
 		}
 	}
-
-	s.moveFile(recordFile)
 }
