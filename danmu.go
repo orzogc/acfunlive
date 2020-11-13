@@ -76,6 +76,8 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 		return
 	}
 
+	time.Sleep(10 * time.Second)
+
 Outer:
 	for {
 		select {
@@ -103,6 +105,8 @@ Outer:
 				} else {
 					break Outer
 				}
+			} else {
+				break Outer
 			}
 		}
 	}
