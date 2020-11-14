@@ -273,6 +273,10 @@ func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 
 // 发送消息到指定的QQ
 func miraiSendQQ(qq int64, text string) {
+	if qq <= 0 {
+		lPrintErrf("QQ号 %d 小于等于0，取消发送消息", qq)
+		return
+	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
@@ -287,6 +291,10 @@ func miraiSendQQ(qq int64, text string) {
 
 // 发送消息到指定的QQ群
 func miraiSendQQGroup(qqGroup int64, text string) {
+	if qqGroup <= 0 {
+		lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
+		return
+	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
@@ -301,6 +309,10 @@ func miraiSendQQGroup(qqGroup int64, text string) {
 
 // 发送消息到指定的QQ群，并@全体成员
 func miraiSendQQGroupAtAll(qqGroup int64, text string) {
+	if qqGroup <= 0 {
+		lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
+		return
+	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))

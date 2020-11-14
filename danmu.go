@@ -64,8 +64,8 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	checkErr(err)
 	_ = dq.StartDanmu(ctx, false)
 	if s.Danmu {
-		defer s.moveFile(info.assFile)
 		dq.WriteASS(ctx, info.cfg, info.assFile, true)
+		defer s.moveFile(info.assFile)
 	} else if s.KeepOnline {
 		for {
 			if danmu := dq.GetDanmu(); danmu == nil {

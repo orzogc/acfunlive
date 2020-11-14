@@ -194,11 +194,11 @@ func (s streamer) recordLive(danmu bool) {
 		go s.initDanmu(ctx, info.LiveID, filename)
 	}
 
-	defer s.moveFile(recordFile)
 	err = cmd.Run()
 	if err != nil {
 		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
 	}
+	defer s.moveFile(recordFile)
 
 	// 取消弹幕下载
 	cancel()
