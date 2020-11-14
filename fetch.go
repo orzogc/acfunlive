@@ -246,17 +246,8 @@ func getTitle(uid int) string {
 	return ""
 }
 
-// 根据uid获取liveID，可能需要检查返回是否为空
+// 根据uid获取liveID，结果准确，可能需要检查返回是否为空
 func getLiveID(uid int) string {
-	liveRooms.Lock()
-	room, ok := liveRooms.rooms[uid]
-	if ok {
-		liveID := room.liveID
-		liveRooms.Unlock()
-		return liveID
-	}
-	liveRooms.Unlock()
-
 	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
 		defer liveRoomPool.Put(room)
 		if isLive {
@@ -287,9 +278,15 @@ func (s *streamer) getTitle() string {
 	return getTitle(s.UID)
 }
 
-// 获取liveID，可能需要检查返回是否为空
+// 获取liveID，由于AcFun的bug，结果不一定准确，可能需要检查返回是否为空
 func (s *streamer) getLiveID() string {
-	return getLiveID(s.UID)
+	liveRooms.Lock()
+	defer liveRooms.Unlock()
+	room, ok := liveRooms.rooms[s.UID]
+	if ok {
+		return room.liveID
+	}
+	return ""
 }
 
 // 查看主播是否在直播，由于AcFun的bug，结果不一定准确

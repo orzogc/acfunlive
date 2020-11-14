@@ -77,7 +77,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 		return
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
 Outer:
 	for {
@@ -88,7 +88,7 @@ Outer:
 			// 因意外结束弹幕下载时重启下载
 			// 应付AcFun API可能出现的bug
 			if s.isLiveOnByPage() {
-				if newLiveID := s.getLiveID(); newLiveID == info.LiveID {
+				if newLiveID := getLiveID(s.UID); newLiveID == info.LiveID {
 					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
 					dq, err = acfundanmu.Init(int64(s.UID), cookies)
 					checkErr(err)
@@ -215,7 +215,7 @@ func startDanmu(uid int) bool {
 	s.Notify.NotifyDanmu = true
 	s.Danmu = true
 
-	liveID := s.getLiveID()
+	liveID := getLiveID(uid)
 	if liveID == "" {
 		lPrintErr(s.longID() + "不在直播，取消下载直播弹幕")
 		return false

@@ -29,7 +29,7 @@ func startRec(uid int, danmu bool) bool {
 	s.Record = true
 	s.Danmu = danmu
 
-	liveID := s.getLiveID()
+	liveID := getLiveID(uid)
 	if liveID == "" {
 		lPrintErr(s.longID() + "不在直播，取消下载直播视频")
 		return false
@@ -208,7 +208,7 @@ func (s streamer) recordLive(danmu bool) {
 		select {
 		case <-info.recordCh:
 		default:
-			if newLiveID := s.getLiveID(); newLiveID == info.LiveID && *isListen {
+			if newLiveID := getLiveID(s.UID); newLiveID == info.LiveID && *isListen {
 				// 程序处于监听状态时重启下载，否则不重启
 				lPrintWarn("因意外结束下载" + s.longID() + "的直播视频，尝试重启下载")
 				once.Do(q)
