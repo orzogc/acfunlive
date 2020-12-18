@@ -60,15 +60,15 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	if s.KeepOnline {
 		cookies = acfunCookies
 	}
-	dq, err := acfundanmu.Init(int64(s.UID), cookies)
+	ac, err := acfundanmu.Init(int64(s.UID), cookies)
 	checkErr(err)
-	_ = dq.StartDanmu(ctx, false)
+	_ = ac.StartDanmu(ctx, false)
 	if s.Danmu {
-		dq.WriteASS(ctx, info.cfg, info.assFile, true)
+		ac.WriteASS(ctx, info.cfg, info.assFile, true)
 		defer s.moveFile(info.assFile)
 	} else if s.KeepOnline {
 		for {
-			if danmu := dq.GetDanmu(); danmu == nil {
+			if danmu := ac.GetDanmu(); danmu == nil {
 				break
 			}
 		}
@@ -90,14 +90,14 @@ Outer:
 			if s.isLiveOnByPage() {
 				if newLiveID := getLiveID(s.UID); newLiveID == info.LiveID {
 					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-					dq, err = acfundanmu.Init(int64(s.UID), cookies)
+					ac, err = acfundanmu.Init(int64(s.UID), cookies)
 					checkErr(err)
-					_ = dq.StartDanmu(ctx, false)
+					_ = ac.StartDanmu(ctx, false)
 					if s.Danmu {
-						dq.WriteASS(ctx, info.cfg, info.assFile, false)
+						ac.WriteASS(ctx, info.cfg, info.assFile, false)
 					} else if s.KeepOnline {
 						for {
-							if danmu := dq.GetDanmu(); danmu == nil {
+							if danmu := ac.GetDanmu(); danmu == nil {
 								break
 							}
 						}
