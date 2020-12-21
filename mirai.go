@@ -80,6 +80,7 @@ func initMirai() (result bool) {
 		})
 	*/
 
+	miraiClient.AllowSlider = true
 	resp, err := miraiClient.Login()
 	checkErr(err)
 
@@ -89,6 +90,7 @@ func initMirai() (result bool) {
 			case client.SliderNeededError:
 				if client.SystemDeviceInfo.Protocol == client.AndroidPhone {
 					lPrintWarn("Android Phone强制要求暂不支持的滑条验证码, 请开启设备锁或切换到Watch协议验证通过后再使用。")
+					miraiClient.AllowSlider = false
 					miraiClient.Disconnect()
 					return false
 				}
