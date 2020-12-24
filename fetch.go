@@ -129,10 +129,24 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 		req.Header.SetReferer(c.referer)
 	}
 
+	req.Header.Set("Accept-Encoding", "gzip")
+
 	err := c.client.Do(req, resp)
 	checkErr(err)
 
 	return resp, nil
+}
+
+// 获取响应body
+func getBody(resp *fasthttp.Response) []byte {
+	if string(resp.Header.Peek("content-encoding")) == "gzip" || string(resp.Header.Peek("Content-Encoding")) == "gzip" {
+		body, err := resp.BodyGunzip()
+		if err == nil {
+			return body
+		}
+	}
+
+	return resp.Body()
 }
 
 // 获取全部AcFun直播间
@@ -178,7 +192,7 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
-	body := resp.Body()
+	body := getBody(resp)
 
 	p := fetchRoomPool.Get()
 	defer fetchRoomPool.Put(p)
@@ -315,7 +329,7 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
-	body := resp.Body()
+	body := getBody(resp)
 
 	p := fetchLiveInfoPool.Get()
 	defer fetchLiveInfoPool.Put(p)
@@ -371,7 +385,7 @@ func (s *streamer) isLiveOnByPage() (isLive bool) {
 	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
-	body := resp.Body()
+	body := getBody(resp)
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	checkErr(err)
@@ -392,7 +406,7 @@ func fetchAcLogo() {
 	resp, err := client.doRequest()
 	checkErr(err)
 	defer fasthttp.ReleaseResponse(resp)
-	body := resp.Body()
+	body := getBody(resp)
 
 	newLogoFile, err := os.Create(logoFileLocation)
 	checkErr(err)
