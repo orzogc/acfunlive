@@ -10,7 +10,7 @@ import (
 )
 
 // AcFun帐号的cookies
-var acfunCookies []string
+var acfunCookies acfundanmu.Cookies
 
 // 不同的视频分辨率对应的弹幕字幕设置
 var subConfigs = map[int]acfundanmu.SubConfig{
@@ -56,11 +56,11 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 		}
 	}
 
-	var cookies []string
+	var cookies acfundanmu.Cookies
 	if s.KeepOnline {
 		cookies = acfunCookies
 	}
-	ac, err := acfundanmu.Init(int64(s.UID), cookies)
+	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)), acfundanmu.SetCookies(cookies))
 	checkErr(err)
 	_ = ac.StartDanmu(ctx, false)
 	if s.Danmu {
@@ -90,7 +90,7 @@ Outer:
 			if s.isLiveOnByPage() {
 				if newLiveID := getLiveID(s.UID); newLiveID == info.LiveID {
 					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
-					ac, err = acfundanmu.Init(int64(s.UID), cookies)
+					ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)), acfundanmu.SetCookies(cookies))
 					checkErr(err)
 					_ = ac.StartDanmu(ctx, false)
 					if s.Danmu {

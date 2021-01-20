@@ -424,9 +424,9 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 		}
 	}()
 
-	dq, err := acfundanmu.Init(int64(s.UID), nil)
+	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)))
 	checkErr(err)
-	sInfo := dq.GetStreamInfo()
+	sInfo := ac.GetStreamInfo()
 	info.StreamInfo = *sInfo
 
 	index := 0
