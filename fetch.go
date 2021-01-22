@@ -151,7 +151,7 @@ func getBody(resp *fasthttp.Response) []byte {
 
 // 获取全部AcFun直播间
 func fetchAllRooms() bool {
-	for count := 1000; count < 1e8; count *= 10 {
+	for count := 10000; count < 1e9; count *= 10 {
 		rooms, all, err := fetchLiveRoom(count)
 		if err != nil {
 			lPrintErr(err)
@@ -161,7 +161,7 @@ func fetchAllRooms() bool {
 			liveRooms.newRooms = rooms
 			return true
 		}
-		if count == 1e7 {
+		if count == 1e8 {
 			lPrintErr("获取正在直播的直播间列表失败")
 		}
 	}
@@ -202,8 +202,7 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 		panic(fmt.Errorf("无法获取AcFun直播间列表，响应为：%s", string(body)))
 	}
 
-	pcursor := string(v.GetStringBytes("pcursor"))
-	if pcursor != "no_more" {
+	if string(v.GetStringBytes("pcursor")) != "no_more" {
 		return nil, false, nil
 	}
 
@@ -519,6 +518,7 @@ func printStreamURL(uid int) (string, string) {
 }
 
 // 通过用户直播相关信息并行查看主播是否在直播
+/*
 func getLiveOnByInfo(ss []streamer) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -539,6 +539,7 @@ func getLiveOnByInfo(ss []streamer) {
 	}
 	wg.Wait()
 }
+*/
 
 // 循环获取AcFun直播间数据
 func cycleFetch(ctx context.Context) {
@@ -551,27 +552,29 @@ func cycleFetch(ctx context.Context) {
 				if len(liveRooms.newRooms) == 0 {
 					lPrintWarn("没有人在直播")
 				}
-				streamers.Lock()
-				notLive := make([]streamer, 0, len(streamers.crt))
-				// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
-				for _, s := range streamers.crt {
-					if _, ok := liveRooms.newRooms[s.UID]; !ok {
-						notLive = append(notLive, s)
+				/*
+					streamers.Lock()
+					notLive := make([]streamer, 0, len(streamers.crt))
+					// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
+					for _, s := range streamers.crt {
+						if _, ok := liveRooms.newRooms[s.UID]; !ok {
+							notLive = append(notLive, s)
+						}
 					}
-				}
-				streamers.Unlock()
+					streamers.Unlock()
 
-				// 并行的请求不能太多
-				const num = 10
-				length := len(notLive)
-				q := length / num
-				r := length % num
-				for i := 0; i < q; i++ {
-					getLiveOnByInfo(notLive[i*num : (i+1)*num])
-				}
-				if r != 0 {
-					getLiveOnByInfo(notLive[length-r : length])
-				}
+					// 并行的请求不能太多
+					const num = 10
+					length := len(notLive)
+					q := length / num
+					r := length % num
+					for i := 0; i < q; i++ {
+						getLiveOnByInfo(notLive[i*num : (i+1)*num])
+					}
+					if r != 0 {
+						getLiveOnByInfo(notLive[length-r : length])
+					}
+				*/
 
 				liveRooms.Lock()
 				for _, room := range liveRooms.rooms {

@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.14
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20210118164518-b007a4d0d68c
+	github.com/Mrs4s/MiraiGo v0.0.0-20210120152724-83f2eb02e6be
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
@@ -17,12 +17,12 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210118133745-689a85015fe4
+	github.com/orzogc/acfundanmu v0.0.0-20210122152743-bc2b158a21de
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.19.0
 	github.com/valyala/fastjson v1.6.3
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777 // indirect
-	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4 // indirect
+	golang.org/x/sys v0.0.0-20210122093101-04d7465088b8 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
