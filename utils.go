@@ -252,9 +252,11 @@ func isDanmu(liveID string) bool {
 }
 
 // 根据liveID查询是否正在直播间挂机
+/*
 func isKeepOnline(liveID string) bool {
 	if info, ok := getLiveInfo(liveID); ok {
 		return info.isKeepOnline
 	}
 	return false
 }
+*/

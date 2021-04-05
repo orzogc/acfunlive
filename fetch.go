@@ -388,10 +388,7 @@ func (s *streamer) isLiveOnByPage() (isLive bool) {
 
 	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
 	checkErr(err)
-	if doc.Find("p.closed-tip").Text() == "直播已结束" {
-		return false
-	}
-	return true
+	return doc.Find("p.closed-tip").Text() != "直播已结束"
 }
 
 // 获取AcFun的logo

@@ -15,7 +15,7 @@ func runTray() {}
 func quitTray() {}
 
 // 启动systray
-func trayOnReady() {}
+//func trayOnReady() {}
 
 // 退出systray
-func trayOnExit() {}
+//func trayOnExit() {}

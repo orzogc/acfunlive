@@ -88,15 +88,13 @@ func initMirai() (result bool) {
 		if !resp.Success {
 			switch resp.Error {
 			case client.SliderNeededError:
-				if client.SystemDeviceInfo.Protocol == client.AndroidPhone {
-					lPrintWarn("Android Phone强制要求暂不支持的滑条验证码, 请开启设备锁或切换到Watch协议验证通过后再使用。")
-					miraiClient.AllowSlider = false
-					miraiClient.Disconnect()
-					return false
-				}
-				miraiClient.AllowSlider = false
-				miraiClient.Disconnect()
-				resp, err = miraiClient.Login()
+				lPrintWarn("登录需要滑条验证码，请参考文档 https://github.com/Mrs4s/go-cqhttp/blob/master/docs/slider.md 抓包获取 Ticket")
+				lPrintWarnf("请用浏览器打开 %v 并获取Ticket", resp.VerifyUrl)
+				lPrintln("请输入Ticket，按回车提交：")
+				console := bufio.NewReader(os.Stdin)
+				ticket, err := console.ReadString('\n')
+				checkErr(err)
+				resp, err = miraiClient.SubmitTicket(strings.ReplaceAll(ticket, "\n", ""))
 				checkErr(err)
 				continue
 			case client.NeedCaptcha:
@@ -153,8 +151,15 @@ func initMirai() (result bool) {
 				lPrintWarnf("QQ账号已开启设备锁，请前往 %s 验证并重启本程序", resp.VerifyUrl)
 				miraiClient.Disconnect()
 				return false
-			case client.OtherLoginError, client.UnknownLoginError:
-				lPrintErrf("QQ登陆失败：%s", resp.ErrorMessage)
+			case client.OtherLoginError, client.UnknownLoginError, client.TooManySMSRequestError:
+				msg := resp.ErrorMessage
+				if strings.Contains(msg, "版本") {
+					msg = "密码错误或账号被冻结"
+				}
+				if strings.Contains(msg, "冻结") {
+					msg = "账号被冻结"
+				}
+				lPrintErrf("QQ登陆失败：%s", msg)
 				miraiClient.Disconnect()
 				return false
 			default:

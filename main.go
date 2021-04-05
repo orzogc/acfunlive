@@ -272,62 +272,61 @@ func main() {
 			runTray()
 		}
 
-		for {
-			select {
-			case msg := <-mainCh:
-				switch msg.c {
-				case startCycle:
-					go msg.s.cycle(msg.liveID)
-				case quit:
-					// 退出systray
-					if !*isNoGUI {
-						quitTray()
-					}
-					// 停止web UI服务器
-					if *isWebUI {
-						stopWebUI()
-					}
-					// 停止web API服务器
-					if *isWebAPI {
-						stopWebAPI()
-					}
-					// 结束所有mainCtx的子ctx
-					cancel()
-					// 结束cycle()
-					lPrintln("正在退出各主播的循环")
-					sInfoMap.Lock()
-					for _, info := range sInfoMap.info {
-						// 退出各主播的循环
-						if info.ch != nil {
-							info.ch <- msg
-						}
-					}
-					sInfoMap.Unlock()
-					lInfoMap.Lock()
-					for _, info := range lInfoMap.info {
-						// 结束下载直播视频
-						if info.isRecording {
-							info.recordCh <- stopRecord
-							_, _ = io.WriteString(info.ffmpegStdin, "q")
-						}
-						// 结束下载弹幕
-						if info.isDanmu {
-							info.danmuCancel()
-						}
-						// 结束直播间挂机
-						if info.isKeepOnline {
-							info.onlineCancel()
-						}
-					}
-					lInfoMap.Unlock()
-					// 等待20秒，等待其他goroutine结束
-					time.Sleep(20 * time.Second)
-					lPrintln("本程序结束运行")
-					return
-				default:
-					lPrintErrf("未知controlMsg：%+v", msg)
+	Outer:
+		for msg := range mainCh {
+			switch msg.c {
+			case startCycle:
+				go msg.s.cycle(msg.liveID)
+			case quit:
+				// 退出systray
+				if !*isNoGUI {
+					quitTray()
 				}
+				// 停止web UI服务器
+				if *isWebUI {
+					stopWebUI()
+				}
+				// 停止web API服务器
+				if *isWebAPI {
+					stopWebAPI()
+				}
+				// 结束所有mainCtx的子ctx
+				cancel()
+				// 结束cycle()
+				lPrintln("正在退出各主播的循环")
+				sInfoMap.Lock()
+				for _, info := range sInfoMap.info {
+					// 退出各主播的循环
+					if info.ch != nil {
+						info.ch <- msg
+					}
+				}
+				sInfoMap.Unlock()
+				lInfoMap.Lock()
+				for _, info := range lInfoMap.info {
+					// 结束下载直播视频
+					if info.isRecording {
+						info.recordCh <- stopRecord
+						_, _ = io.WriteString(info.ffmpegStdin, "q")
+					}
+					// 结束下载弹幕
+					if info.isDanmu {
+						info.danmuCancel()
+					}
+					// 结束直播间挂机
+					if info.isKeepOnline {
+						info.onlineCancel()
+					}
+				}
+				lInfoMap.Unlock()
+				// 等待20秒，等待其他goroutine结束
+				time.Sleep(20 * time.Second)
+				break Outer
+			default:
+				lPrintErrf("未知controlMsg：%+v", msg)
 			}
 		}
 	}
+
+	lPrintln("本程序结束运行")
 }
