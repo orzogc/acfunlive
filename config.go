@@ -316,6 +316,7 @@ func loadNewConfig() {
 			stop := controlMsg{s: olds, c: stopCycle}
 			sInfoMap.Lock()
 			if m, ok := sInfoMap.info[olds.UID]; ok {
+				m.modify = true
 				m.ch <- stop
 			} else {
 				lPrintErr("sInfoMap没有%s的key", olds.longID())

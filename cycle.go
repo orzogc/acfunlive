@@ -40,9 +40,12 @@ func (s streamer) cycle(liveID string) {
 	}()
 
 	ch := make(chan controlMsg, 20)
+	var modify bool
 	sInfoMap.Lock()
 	if m, ok := sInfoMap.info[s.UID]; ok {
 		m.ch = ch
+		modify = m.modify
+		m.modify = false
 	} else {
 		sInfoMap.info[s.UID] = &streamerInfo{ch: ch}
 	}
@@ -67,16 +70,6 @@ func (s streamer) cycle(liveID string) {
 			s.handleMsg(msg)
 			return
 		default:
-			var modify bool
-			sInfoMap.Lock()
-			if m, ok := sInfoMap.info[s.UID]; ok {
-				modify = m.modify
-				m.modify = false
-			} else {
-				lPrintErr("sInfoMap没有%s的key", s.longID())
-			}
-			sInfoMap.Unlock()
-
 			if s.isLiveOn() {
 				isLive = true
 				newLiveID := s.getLiveID()
@@ -88,6 +81,7 @@ func (s streamer) cycle(liveID string) {
 
 				if liveID != newLiveID || modify {
 					liveID = newLiveID
+					modify = false
 					title := s.getTitle()
 					lPrintln(s.longID() + "正在直播：" + title)
 					lPrintln(s.Name + "的直播观看地址：" + s.getURL())
