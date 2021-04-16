@@ -16,7 +16,7 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/gopherjs/gopherjs v0.0.0-20210413103415-7d3cbed7d026 // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/orzogc/acfundanmu v0.0.0-20210416011204-9e11057f9221
+	github.com/orzogc/acfundanmu v0.0.0-20210416021702-5719e6a2b06a
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.23.0
