@@ -5,9 +5,7 @@ go 1.14
 require (
 	github.com/Mrs4s/MiraiGo v0.0.0-20210512052445-102a5ab01aad
 	github.com/PuerkitoBio/goquery v1.6.1
-	github.com/andybalholm/brotli v1.0.2 // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
-	github.com/dgrr/fastws v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gen2brain/beeep v0.0.0-20200526185328-e9c15c258e28
 	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9 // indirect
@@ -19,9 +17,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20210503212227-fb464eba2686 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/klauspost/compress v1.12.2 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210416132515-ef9465edb353
-	github.com/qiniu/go-sdk/v7 v7.9.5 // indirect
+	github.com/orzogc/acfundanmu v0.0.0-20210513094423-a0b4c0eb988b
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.24.0
