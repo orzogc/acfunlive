@@ -17,11 +17,11 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20210503212227-fb464eba2686 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210513094423-a0b4c0eb988b
+	github.com/orzogc/acfundanmu v0.0.0-20210516025811-d1b39f646dd6
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.24.0
 	github.com/valyala/fastjson v1.6.3
 	golang.org/x/net v0.0.0-20210510120150-4163338589ed // indirect
-	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744 // indirect
+	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
 )

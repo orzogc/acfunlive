@@ -98,6 +98,7 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
         "account": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
         "password": "" // AcFun帐号密码
     },
+    "autoKeepOnline": true, // 是否自动在有守护徽章的直播间挂机，需要设置AcFun帐号和密码
     "mirai": {
         "adminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
         "botQQ": 123456,         // QQ机器人的QQ号

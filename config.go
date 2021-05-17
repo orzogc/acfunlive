@@ -53,12 +53,13 @@ var streamers struct {
 
 // 设置数据
 type configData struct {
-	Source    string    `json:"source"`    // 直播源，有hls和flv两种
-	Output    string    `json:"output"`    // 直播下载视频格式的后缀名
-	WebPort   int       `json:"webPort"`   // web API的本地端口
-	Directory string    `json:"directory"` // 直播视频和弹幕下载结束后会被移动到该文件夹，会被live.json里的设置覆盖
-	Acfun     acfunUser `json:"acfun"`     // AcFun帐号相关
-	Mirai     miraiData `json:"mirai"`     // Mirai相关设置
+	Source         string    `json:"source"`         // 直播源，有hls和flv两种
+	Output         string    `json:"output"`         // 直播下载视频格式的后缀名
+	WebPort        int       `json:"webPort"`        // web API的本地端口
+	Directory      string    `json:"directory"`      // 直播视频和弹幕下载结束后会被移动到该文件夹，会被live.json里的设置覆盖
+	Acfun          acfunUser `json:"acfun"`          // AcFun帐号相关
+	AutoKeepOnline bool      `json:"autoKeepOnline"` // 是否自动在有守护徽章的直播间挂机
+	Mirai          miraiData `json:"mirai"`          // Mirai相关设置
 }
 
 // 默认设置
@@ -71,6 +72,7 @@ var config = configData{
 		Account:  "",
 		Password: "",
 	},
+	AutoKeepOnline: false,
 	Mirai: miraiData{
 		AdminQQ:       0,
 		BotQQ:         0,

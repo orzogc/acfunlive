@@ -272,6 +272,10 @@ func main() {
 			runTray()
 		}
 
+		if config.AutoKeepOnline {
+			go cycleGetMedals(ctx)
+		}
+
 	Outer:
 		for msg := range mainCh {
 			switch msg.c {

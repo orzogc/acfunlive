@@ -4,6 +4,8 @@ package main
 import (
 	"context"
 	"time"
+
+	"github.com/orzogc/acfundanmu"
 )
 
 // 处理管道信号
@@ -137,6 +139,61 @@ func cycleDelKey(ctx context.Context) {
 				}
 			}
 			lInfoMap.Unlock()
+
+			// 每分钟循环一次
+			time.Sleep(time.Minute)
+		}
+	}
+}
+
+func cycleGetMedals(ctx context.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			lPrintErr("Recovering from panic in cycleGetMedals(), the error is:", err)
+			lPrintErr("自动挂机出现错误，取消自动挂机")
+		}
+	}()
+
+	if len(acfunCookies) == 0 {
+		lPrintErr("没有登陆AcFun帐号，取消自动挂机")
+		return
+	}
+
+	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetCookies(acfunCookies))
+	checkErr(err)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			list, err := ac.GetMedalList(0)
+			if err == nil {
+				var isChange bool
+				streamers.Lock()
+				for _, m := range list.MedalList {
+					if s, ok := streamers.crt[int(m.UperID)]; ok {
+						if !s.KeepOnline {
+							s.KeepOnline = true
+							streamers.crt[s.UID] = s
+							isChange = true
+						}
+					} else {
+						s := streamer{
+							UID:        int(m.UperID),
+							Name:       m.UperName,
+							KeepOnline: true,
+						}
+						streamers.crt[s.UID] = s
+						isChange = true
+					}
+				}
+				streamers.Unlock()
+
+				if isChange {
+					saveLiveConfig()
+				}
+			}
 
 			// 每分钟循环一次
 			time.Sleep(time.Minute)
