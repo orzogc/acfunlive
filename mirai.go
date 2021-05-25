@@ -89,7 +89,7 @@ func initMirai() (result bool) {
 			switch resp.Error {
 			case client.SliderNeededError:
 				lPrintWarn("登录需要滑条验证码，请参考文档 https://github.com/Mrs4s/go-cqhttp/blob/master/docs/slider.md 抓包获取 Ticket")
-				lPrintWarnf("请用浏览器打开 %v 并获取Ticket", resp.VerifyUrl)
+				lPrintWarnf("请用浏览器打开 %s 并获取Ticket", resp.VerifyUrl)
 				lPrintln("请输入Ticket，按回车提交：")
 				console := bufio.NewReader(os.Stdin)
 				ticket, err := console.ReadString('\n')
@@ -110,7 +110,7 @@ func initMirai() (result bool) {
 				checkErr(err)
 				continue
 			case client.SMSNeededError:
-				lPrintWarnf("QQ账号已开启设备锁, 向手机 %v 发送短信验证码", resp.SMSPhone)
+				lPrintWarnf("QQ账号已开启设备锁, 向手机 %s 发送短信验证码", resp.SMSPhone)
 				if !miraiClient.RequestSMS() {
 					lPrintWarn("发送短信验证码失败，可能是请求过于频繁")
 					miraiClient.Disconnect()
@@ -125,7 +125,7 @@ func initMirai() (result bool) {
 				continue
 			case client.SMSOrVerifyNeededError:
 				lPrintWarn("QQ账号已开启设备锁，请选择验证方式：")
-				lPrintf("1. 向手机 %v 发送短信验证码", resp.SMSPhone)
+				lPrintf("1. 向手机 %s 发送短信验证码", resp.SMSPhone)
 				lPrintln("2. 使用手机QQ扫码验证")
 				lPrintln("请输入1或2，按回车提交：")
 				console := bufio.NewReader(os.Stdin)

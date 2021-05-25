@@ -169,14 +169,14 @@ func cycleGetMedals(ctx context.Context) {
 		default:
 			list, err := ac.GetMedalList(0)
 			if err == nil {
-				var isChange bool
+				var isChanged bool
 				streamers.Lock()
 				for _, m := range list.MedalList {
 					if s, ok := streamers.crt[int(m.UperID)]; ok {
 						if !s.KeepOnline {
 							s.KeepOnline = true
 							streamers.crt[s.UID] = s
-							isChange = true
+							isChanged = true
 						}
 					} else {
 						s := streamer{
@@ -185,12 +185,12 @@ func cycleGetMedals(ctx context.Context) {
 							KeepOnline: true,
 						}
 						streamers.crt[s.UID] = s
-						isChange = true
+						isChanged = true
 					}
 				}
 				streamers.Unlock()
 
-				if isChange {
+				if isChanged {
 					saveLiveConfig()
 				}
 			}

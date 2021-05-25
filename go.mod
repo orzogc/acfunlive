@@ -1,9 +1,9 @@
 module github.com/orzogc/acfunlive
 
-go 1.14
+go 1.16
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20210512052445-102a5ab01aad
+	github.com/Mrs4s/MiraiGo v0.0.0-20210525010101-8f0cd9494d64
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
@@ -13,15 +13,16 @@ require (
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 // indirect
 	github.com/getlantern/systray v1.1.0
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.5
-	github.com/gopherjs/gopherjs v0.0.0-20210503212227-fb464eba2686 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20210519211817-2312de329ae4 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210516025811-d1b39f646dd6
+	github.com/orzogc/acfundanmu v0.0.0-20210524041416-093d4b5892d0
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/valyala/fasthttp v1.24.0
+	github.com/valyala/fasthttp v1.25.0
 	github.com/valyala/fastjson v1.6.3
-	golang.org/x/net v0.0.0-20210510120150-4163338589ed // indirect
-	golang.org/x/sys v0.0.0-20210514084401-e8d321eab015 // indirect
+	golang.org/x/net v0.0.0-20210521195947-fe42d452be8f // indirect
+	golang.org/x/sys v0.0.0-20210521203332-0cec03c779c1 // indirect
 )
