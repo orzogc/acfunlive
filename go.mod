@@ -14,13 +14,13 @@ require (
 	github.com/getlantern/systray v1.1.0
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/google/go-cmp v0.5.6
-	github.com/gopherjs/gopherjs v0.0.0-20210614142143-03070f63dd63 // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20210621113107-84c6004145de // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/orzogc/acfundanmu v0.0.0-20210615123806-062f5d3e0a8c
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/valyala/fasthttp v1.26.0
+	github.com/valyala/fasthttp v1.27.0
 	github.com/valyala/fastjson v1.6.3
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect

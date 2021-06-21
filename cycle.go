@@ -4,8 +4,6 @@ package main
 import (
 	"context"
 	"time"
-
-	"github.com/orzogc/acfundanmu"
 )
 
 // 处理管道信号
@@ -159,20 +157,17 @@ func cycleGetMedals(ctx context.Context) {
 		return
 	}
 
-	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetCookies(acfunCookies))
-	checkErr(err)
-
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			list, err := ac.GetMedalList(0)
+			list, err := fetchMedalList()
 			if err == nil {
 				var isChanged bool
 				streamers.Lock()
-				for _, m := range list.MedalList {
-					if s, ok := streamers.crt[int(m.UperID)]; ok {
+				for _, m := range list {
+					if s, ok := streamers.crt[int(m.uid)]; ok {
 						if !s.KeepOnline {
 							s.KeepOnline = true
 							streamers.crt[s.UID] = s
@@ -180,13 +175,14 @@ func cycleGetMedals(ctx context.Context) {
 						}
 					} else {
 						s := streamer{
-							UID:        int(m.UperID),
-							Name:       m.UperName,
+							UID:        int(m.uid),
+							Name:       m.name,
 							KeepOnline: true,
 						}
 						streamers.crt[s.UID] = s
 						isChanged = true
 					}
+					medalInfoPool.Put(m)
 				}
 				streamers.Unlock()
 

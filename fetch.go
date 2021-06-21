@@ -40,8 +40,9 @@ var defaultClient = &fasthttp.Client{
 }
 
 var (
-	fetchRoomPool     fastjson.ParserPool
-	fetchLiveInfoPool fastjson.ParserPool
+	fetchRoomPool      fastjson.ParserPool
+	fetchLiveInfoPool  fastjson.ParserPool
+	fetchMedalListPool fastjson.ParserPool
 )
 
 // 直播间的数据结构
@@ -51,6 +52,12 @@ type liveRoom struct {
 	liveID string // 直播ID
 }
 
+// 守护徽章信息
+type medalInfo struct {
+	uid  int64  // 主播uid
+	name string // 主播名字
+}
+
 // liveRoom的map
 var liveRooms struct {
 	sync.Mutex                   // rooms的锁
@@ -58,9 +65,17 @@ var liveRooms struct {
 	newRooms   map[int]*liveRoom // 新的liveRoom
 }
 
+// liveRoom的pool
 var liveRoomPool = &sync.Pool{
 	New: func() interface{} {
 		return new(liveRoom)
+	},
+}
+
+// medalInfo的pool
+var medalInfoPool = &sync.Pool{
+	New: func() interface{} {
+		return new(medalInfo)
 	},
 }
 
@@ -353,6 +368,51 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	room.name = string(v.GetStringBytes("user", "name"))
 
 	return isLive, room, nil
+}
+
+// 获取登陆用户的守护徽章列表
+func fetchMedalList() (medalList []*medalInfo, e error) {
+	defer func() {
+		if err := recover(); err != nil {
+			e = fmt.Errorf("fetchMedalList() error: %w", err)
+		}
+	}()
+
+	const medalListURL = "https://api-new.app.acfun.cn/rest/app/fansClub/live/medalInfo?uperId=0"
+
+	if len(acfunCookies) == 0 {
+		return nil, fmt.Errorf("没有登陆AcFun帐号")
+	}
+
+	client := &httpClient{
+		url:     medalListURL,
+		method:  fasthttp.MethodGet,
+		cookies: acfunCookies,
+	}
+	resp, err := client.doRequest()
+	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body := getBody(resp)
+
+	p := fetchMedalListPool.Get()
+	defer fetchMedalListPool.Put(p)
+	v, err := p.ParseBytes(body)
+	checkErr(err)
+
+	if !v.Exists("result") || v.GetInt("result") != 0 {
+		return nil, fmt.Errorf("获取登陆帐号拥有的守护徽章列表失败，响应为 %s", string(body))
+	}
+
+	list := v.GetArray("medalList")
+	medalList = make([]*medalInfo, 0, len(list))
+	for _, l := range list {
+		medal := medalInfoPool.Get().(*medalInfo)
+		medal.uid = l.GetInt64("uperId")
+		medal.name = string(l.GetStringBytes("uperName"))
+		medalList = append(medalList, medal)
+	}
+
+	return medalList, nil
 }
 
 // 获取用户直播相关信息，可能要将room放回liveRoomPool
