@@ -194,7 +194,11 @@ func (s streamer) initDanmu(ctx context.Context, liveID, filename string) {
 	}
 	info.assFile = assFile + ".ass"
 	info.cfg.Title = filepath.Base(assFile)
-	info.cfg.StartTime = time.Now().UnixNano()
+	if startTime := getStartTime(s.UID); startTime != 0 {
+		info.cfg.StartTime = startTime * 1e6
+	} else {
+		info.cfg.StartTime = time.Now().UnixNano()
+	}
 	setLiveInfo(info)
 	defer s.quitDanmu(info.LiveID)
 

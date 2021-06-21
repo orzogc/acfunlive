@@ -46,9 +46,10 @@ var (
 
 // 直播间的数据结构
 type liveRoom struct {
-	name   string // 主播名字
-	title  string // 直播间标题
-	liveID string // 直播ID
+	name      string // 主播名字
+	title     string // 直播间标题
+	liveID    string // 直播ID
+	startTime int64  // 直播开始时间
 }
 
 // liveRoom的map
@@ -214,6 +215,7 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 		room.name = string(live.GetStringBytes("user", "name"))
 		room.title = string(live.GetStringBytes("title"))
 		room.liveID = string(live.GetStringBytes("liveId"))
+		room.startTime = live.GetInt64("createTime")
 		rooms[uid] = room
 	}
 
@@ -268,6 +270,26 @@ func getLiveID(uid int) string {
 		}
 	}
 	return ""
+}
+
+// 根据uid获取直播开始时间，可能需要检查返回是否为0
+func getStartTime(uid int) int64 {
+	liveRooms.Lock()
+	room, ok := liveRooms.rooms[uid]
+	if ok {
+		startTime := room.startTime
+		liveRooms.Unlock()
+		return startTime
+	}
+	liveRooms.Unlock()
+
+	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
+		defer liveRoomPool.Put(room)
+		if isLive {
+			return room.startTime
+		}
+	}
+	return 0
 }
 
 // 根据uid查看主播是否正在直播
@@ -344,10 +366,12 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		isLive = true
 		room.title = string(v.GetStringBytes("title"))
 		room.liveID = string(v.GetStringBytes("liveId"))
+		room.startTime = v.GetInt64("createTime")
 	} else {
 		isLive = false
 		room.title = ""
 		room.liveID = ""
+		room.startTime = 0
 	}
 
 	room.name = string(v.GetStringBytes("user", "name"))
