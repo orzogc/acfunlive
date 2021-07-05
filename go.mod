@@ -17,7 +17,7 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20210621113107-84c6004145de // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210705085314-c39b096b2702
+	github.com/orzogc/acfundanmu v0.0.0-20210705165001-a3e934e21512
 	github.com/rs/cors v1.8.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.28.0
