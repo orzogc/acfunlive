@@ -189,6 +189,8 @@ func cycleGetMedals(ctx context.Context) {
 				if isChanged {
 					saveLiveConfig()
 				}
+			} else {
+				lPrintErrf("%+v", err)
 			}
 
 			// 每分钟循环一次

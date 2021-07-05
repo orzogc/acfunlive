@@ -191,12 +191,18 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 		}
 	}()
 
-	//const liveListURL = "https://api-new.app.acfun.cn/rest/app/live/channel"
-	const liveListURL = "https://live.acfun.cn/api/channel/list?count=%d&pcursor=0"
+	const liveListURL = "https://live.acfun.cn/rest/pc-direct/live/channel"
+	//const liveListURL = "https://live.acfun.cn/api/channel/list?count=%d&pcursor=0"
 
+	form := fasthttp.AcquireArgs()
+	defer fasthttp.ReleaseArgs(form)
+	form.Set("count", itoa(count))
+	form.Set("pcursor", "0")
 	client := &httpClient{
-		url:    fmt.Sprintf(liveListURL, count),
-		method: fasthttp.MethodGet,
+		url:         liveListURL,
+		body:        form.QueryString(),
+		method:      fasthttp.MethodPost,
+		contentType: "application/x-www-form-urlencoded",
 	}
 	resp, err := client.doRequest()
 	checkErr(err)
@@ -207,7 +213,6 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	defer fetchRoomPool.Put(p)
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-	v = v.Get("channelListData")
 	if !v.Exists("result") || v.GetInt("result") != 0 {
 		panic(fmt.Errorf("无法获取AcFun直播间列表，响应为：%s", string(body)))
 	}
@@ -373,7 +378,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 		}
 	}()
 
-	const medalListURL = "https://api-new.app.acfun.cn/rest/app/fansClub/live/medalInfo?uperId=0"
+	const medalListURL = "https://live.acfun.cn/rest/pc-direct/fansClub/fans/medal/list"
 
 	if len(acfunCookies) == 0 {
 		return nil, fmt.Errorf("没有登陆AcFun帐号")
