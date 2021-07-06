@@ -355,12 +355,17 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		}
 	}()
 
-	const acLiveInfo = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
+	const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/live/info"
 	//const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
 
+	form := fasthttp.AcquireArgs()
+	defer fasthttp.ReleaseArgs(form)
+	form.Set("authorId", itoa(uid))
 	client := &httpClient{
-		url:    fmt.Sprintf(acLiveInfo, uid),
-		method: fasthttp.MethodGet,
+		url:         acLiveInfo,
+		body:        form.QueryString(),
+		method:      fasthttp.MethodPost,
+		contentType: "application/x-www-form-urlencoded",
 	}
 	resp, err := client.doRequest()
 	checkErr(err)
