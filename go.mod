@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.16
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20210611062429-4f967b0a6264
+	github.com/Mrs4s/MiraiGo v0.0.0-20210709025048-8748b9b30dc5
 	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
@@ -14,10 +14,10 @@ require (
 	github.com/getlantern/systray v1.1.0
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/google/go-cmp v0.5.6
-	github.com/gopherjs/gopherjs v0.0.0-20210621113107-84c6004145de // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20210707094841-eea289f08d45 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/json-iterator/go v1.1.11 // indirect
-	github.com/orzogc/acfundanmu v0.0.0-20210705165001-a3e934e21512
+	github.com/orzogc/acfundanmu v0.0.0-20210711071126-a5270ff81694
 	github.com/rs/cors v1.8.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.28.0

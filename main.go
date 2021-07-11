@@ -183,7 +183,7 @@ func initialize() {
 	if !isConfigFileExist(configFile) {
 		data, err := json.MarshalIndent(config, "", "    ")
 		checkErr(err)
-		err = ioutil.WriteFile(configFileLocation, data, 0644)
+		err = ioutil.WriteFile(configFileLocation, data, 0600)
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
