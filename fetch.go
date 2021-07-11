@@ -191,18 +191,12 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 		}
 	}()
 
-	const liveListURL = "https://live.acfun.cn/rest/pc-direct/live/channel"
-	//const liveListURL = "https://live.acfun.cn/api/channel/list?count=%d&pcursor=0"
+	//const liveListURL = "https://live.acfun.cn/rest/pc-direct/live/channel"
+	const liveListURL = "https://live.acfun.cn/api/channel/list?count=%d&pcursor=0"
 
-	form := fasthttp.AcquireArgs()
-	defer fasthttp.ReleaseArgs(form)
-	form.Set("count", itoa(count))
-	form.Set("pcursor", "0")
 	client := &httpClient{
-		url:         liveListURL,
-		body:        form.QueryString(),
-		method:      fasthttp.MethodPost,
-		contentType: "application/x-www-form-urlencoded",
+		url:    fmt.Sprintf(liveListURL, count),
+		method: fasthttp.MethodGet,
 	}
 	resp, err := client.doRequest()
 	checkErr(err)
@@ -213,6 +207,7 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	defer fetchRoomPool.Put(p)
 	v, err := p.ParseBytes(body)
 	checkErr(err)
+	v = v.Get("channelListData")
 	if !v.Exists("result") || v.GetInt("result") != 0 {
 		panic(fmt.Errorf("无法获取AcFun直播间列表，响应为：%s", string(body)))
 	}
@@ -268,7 +263,9 @@ func getTitle(uid int) string {
 	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
 		defer liveRoomPool.Put(room)
 		if isLive {
-			return room.title
+			if ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(uid))); err == nil {
+				return ac.GetStreamInfo().Title
+			}
 		}
 	}
 	return ""
@@ -325,7 +322,7 @@ func (s *streamer) isLiveOn() bool {
 	return ok
 }
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool
+// 获取用户直播相关信息，可能要将room放回liveRoomPool，由于接口问题，返回的room没有title
 func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -333,17 +330,13 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		}
 	}()
 
-	const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/live/info"
+	//const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/live/info"
 	//const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
+	const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 
-	form := fasthttp.AcquireArgs()
-	defer fasthttp.ReleaseArgs(form)
-	form.Set("authorId", itoa(uid))
 	client := &httpClient{
-		url:         acLiveInfo,
-		body:        form.QueryString(),
-		method:      fasthttp.MethodPost,
-		contentType: "application/x-www-form-urlencoded",
+		url:    fmt.Sprintf(acLiveInfo, uid),
+		method: fasthttp.MethodGet,
 	}
 	resp, err := client.doRequest()
 	checkErr(err)
@@ -354,15 +347,15 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	defer fetchLiveInfoPool.Put(p)
 	v, err := p.ParseBytes(body)
 	checkErr(err)
-
 	if !v.Exists("result") || v.GetInt("result") != 0 {
 		return false, nil, fmt.Errorf("无法获取uid为%d的主播的直播信息，响应为：%s", uid, string(body))
 	}
 
+	v = v.Get("profile")
 	room = liveRoomPool.Get().(*liveRoom)
 	if v.Exists("liveId") {
 		isLive = true
-		room.title = string(v.GetStringBytes("title"))
+		room.title = ""
 		room.liveID = string(v.GetStringBytes("liveId"))
 	} else {
 		isLive = false
@@ -370,7 +363,7 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		room.liveID = ""
 	}
 
-	room.name = string(v.GetStringBytes("user", "name"))
+	room.name = string(v.GetStringBytes("name"))
 
 	return isLive, room, nil
 }
@@ -420,7 +413,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 	return medalList, nil
 }
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool
+// 获取用户直播相关信息，可能要将room放回liveRoomPool，由于接口问题，返回的room没有title
 func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {
 	err = run(func() (err error) {
 		isLive, room, err = fetchLiveInfo(uid)
