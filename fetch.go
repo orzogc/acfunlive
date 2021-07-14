@@ -265,9 +265,7 @@ func getTitle(uid int) string {
 	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
 		defer liveRoomPool.Put(room)
 		if isLive {
-			if ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(uid))); err == nil {
-				return ac.GetStreamInfo().Title
-			}
+			return room.title
 		}
 	}
 	return ""
@@ -344,7 +342,7 @@ func (s *streamer) isLiveOn() bool {
 	return ok
 }
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool，由于接口问题，返回的room没有title
+// 获取用户直播相关信息，可能要将room放回liveRoomPool
 func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -354,7 +352,8 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 
 	//const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/live/info"
 	//const acLiveInfo = "https://api-new.acfunchina.com/rest/app/live/info?authorId=%d"
-	const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
+	//const acLiveInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
+	const acLiveInfo = "https://live.acfun.cn/api/live/info?authorId=%d"
 
 	client := &httpClient{
 		url:    fmt.Sprintf(acLiveInfo, uid),
@@ -373,11 +372,10 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		return false, nil, fmt.Errorf("无法获取uid为%d的主播的直播信息，响应为：%s", uid, string(body))
 	}
 
-	v = v.Get("profile")
 	room = liveRoomPool.Get().(*liveRoom)
 	if v.Exists("liveId") {
 		isLive = true
-		room.title = ""
+		room.title = string(v.GetStringBytes("title"))
 		room.liveID = string(v.GetStringBytes("liveId"))
 		room.startTime = v.GetInt64("createTime")
 	} else {
@@ -387,7 +385,7 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 		room.startTime = 0
 	}
 
-	room.name = string(v.GetStringBytes("name"))
+	room.name = string(v.GetStringBytes("user", "name"))
 
 	return isLive, room, nil
 }
@@ -400,7 +398,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 		}
 	}()
 
-	const medalListURL = "https://live.acfun.cn/rest/pc-direct/fansClub/fans/medal/list"
+	const medalListURL = "https://www.acfun.cn/rest/pc-direct/fansClub/fans/medal/list"
 
 	if len(acfunCookies) == 0 {
 		return nil, fmt.Errorf("没有登陆AcFun帐号")
@@ -437,7 +435,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 	return medalList, nil
 }
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool，由于接口问题，返回的room没有title
+// 获取用户直播相关信息，可能要将room放回liveRoomPool
 func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {
 	err = run(func() (err error) {
 		isLive, room, err = fetchLiveInfo(uid)
