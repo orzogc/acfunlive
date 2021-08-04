@@ -107,15 +107,16 @@ func checkErr(err error) {
 
 // 尝试运行，三次出错后结束运行
 func run(f func() error) error {
+	var err error
 	for retry := 0; retry < 3; retry++ {
-		if err := f(); err != nil {
+		if err = f(); err != nil {
 			log.Printf("%v", err)
 		} else {
 			return nil
 		}
 		time.Sleep(2 * time.Second)
 	}
-	return fmt.Errorf("运行三次都出现错误，停止运行")
+	return fmt.Errorf("运行三次都出现错误：%v", err)
 }
 
 // 获取时间
