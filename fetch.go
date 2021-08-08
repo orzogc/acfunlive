@@ -500,7 +500,12 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 		}
 	}()
 
-	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)))
+	var ac *acfundanmu.AcFunLive
+	var err error
+	err = run(func() error {
+		ac, err = acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)))
+		return err
+	})
 	checkErr(err)
 	sInfo := ac.GetStreamInfo()
 	info.StreamInfo = *sInfo
