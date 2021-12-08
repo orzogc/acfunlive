@@ -3,7 +3,7 @@ module github.com/orzogc/acfunlive
 go 1.16
 
 require (
-	github.com/Mrs4s/MiraiGo v0.0.0-20211208054742-2caf71a0bb47
+	github.com/Mrs4s/MiraiGo v0.0.0-20211208080234-25c67a3ee1c1
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gen2brain/beeep v0.0.0-20210529141713-5586760f0cc1

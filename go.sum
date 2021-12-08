@@ -41,8 +41,8 @@ facette.io/natsort v0.0.0-20181210072756-2cd4dd1e2dcb h1:1pSweJFeR3Pqx7uoelppkze
 facette.io/natsort v0.0.0-20181210072756-2cd4dd1e2dcb/go.mod h1:npRYmtaITVom7rcSo+pRURltHSG2r4TQM1cdqJ2dUB0=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/Mrs4s/MiraiGo v0.0.0-20211208054742-2caf71a0bb47 h1:A3oKsmP6vPaRUK6KKASpm80TrWZHggLQAI1Q41ENwnk=
-github.com/Mrs4s/MiraiGo v0.0.0-20211208054742-2caf71a0bb47/go.mod h1:YD9gBKkxC9lPPtx3doYXRG26VBkK6YXjrS76cv01C5w=
+github.com/Mrs4s/MiraiGo v0.0.0-20211208080234-25c67a3ee1c1 h1:UipCzEST10GzJnvlhHsY4g39xzwVzSHE+5Go9d0dTPY=
+github.com/Mrs4s/MiraiGo v0.0.0-20211208080234-25c67a3ee1c1/go.mod h1:YD9gBKkxC9lPPtx3doYXRG26VBkK6YXjrS76cv01C5w=
 github.com/PuerkitoBio/goquery v1.8.0 h1:PJTF7AmFCFKk1N6V6jmKfrNH9tV5pNE6lZMkG0gta/U=
 github.com/PuerkitoBio/goquery v1.8.0/go.mod h1:ypIiRMtY7COPGk+I/YbZLbxsxn9g5ejnI2HSMtkjZvI=
 github.com/RomiChan/protobuf v0.0.0-20211204042931-ff4f35848737 h1:p4o7/eSoP39jwnGZz08N1IpH/mNzg9SdCn7kPM9A9BE=
