@@ -344,6 +344,9 @@ func (s *streamer) sendMirai(text string) {
 	}()
 
 	if *isMirai && miraiClient != nil {
+		text = strings.ReplaceAll(text, "（", "(")
+		text = strings.ReplaceAll(text, "）", ")")
+
 		sendQQ := config.Mirai.SendQQ
 		if len(s.SendQQ) != 0 {
 			sendQQ = s.SendQQ

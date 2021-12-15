@@ -95,7 +95,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErrf("Recovering from panic in doRequest(), the error is: %v", err)
-			e = fmt.Errorf("请求 %s 时出错，错误为 %w", c.url, err)
+			e = fmt.Errorf("请求 %s 时出错，错误为 %v", c.url, err)
 			fasthttp.ReleaseResponse(resp)
 		}
 	}()
@@ -187,7 +187,7 @@ func fetchAllRooms() bool {
 func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("fetchLiveRoom() error: %w", err)
+			e = fmt.Errorf("fetchLiveRoom() error: %v", err)
 		}
 	}()
 
@@ -324,7 +324,7 @@ func (s *streamer) isLiveOn() bool {
 func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("fetchLiveInfo() error: %w", err)
+			e = fmt.Errorf("fetchLiveInfo() error: %v", err)
 		}
 	}()
 
@@ -370,7 +370,7 @@ func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 func fetchMedalList() (medalList []*medalInfo, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("fetchMedalList() error: %w", err)
+			e = fmt.Errorf("fetchMedalList() error: %v", err)
 		}
 	}()
 
@@ -472,7 +472,7 @@ func fetchAcLogo() {
 func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("getStreamURL() error: %w", err)
+			e = fmt.Errorf("getStreamURL() error: %v", err)
 		}
 	}()
 
@@ -526,7 +526,7 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 func (s *streamer) getLiveInfo() (info liveInfo, e error) {
 	defer func() {
 		if err := recover(); err != nil {
-			e = fmt.Errorf("getLiveInfo() error: %w", err)
+			e = fmt.Errorf("getLiveInfo() error: %v", err)
 		}
 	}()
 
