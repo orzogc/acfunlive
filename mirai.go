@@ -184,7 +184,7 @@ func initMirai() (result bool) {
 
 	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
 		if miraiClient != nil {
-			if miraiClient.Online {
+			if miraiClient.Online.Load() {
 				lPrintWarn("QQ帐号已登陆，无需重连")
 				return
 			}
