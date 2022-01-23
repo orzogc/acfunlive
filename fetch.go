@@ -16,7 +16,6 @@ import (
 	"github.com/valyala/fastjson"
 )
 
-//const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36"
 //const acUserInfo = "https://live.acfun.cn/rest/pc-direct/user/userInfo?userId=%d"
 //const acAuthorID = "https://api-new.app.acfun.cn/rest/app/live/info?authorId=%d"
 //const acLiveChannel = "https://api-plus.app.acfun.cn/rest/app/live/channel"
@@ -132,8 +131,12 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 		}
 	}
 
+	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+
 	if c.userAgent != "" {
 		req.Header.SetUserAgent(c.userAgent)
+	} else {
+		req.Header.SetUserAgent(userAgent)
 	}
 
 	if c.contentType != "" {
@@ -430,12 +433,12 @@ func (s *streamer) isLiveOnByPage() (isLive bool) {
 	}()
 
 	const acLivePage = "https://m.acfun.cn/live/detail/"
-	const userAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
+	const mobileUserAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
 	client := &httpClient{
 		url:       acLivePage + itoa(s.UID),
 		method:    fasthttp.MethodGet,
-		userAgent: userAgent,
+		userAgent: mobileUserAgent,
 	}
 	resp, err := client.doRequest()
 	checkErr(err)
