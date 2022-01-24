@@ -416,7 +416,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 
 // 获取用户直播相关信息，可能要将room放回liveRoomPool
 func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {
-	err = run(func() (err error) {
+	err = runThrice(func() (err error) {
 		isLive, room, err = fetchLiveInfo(uid)
 		return err
 	})
@@ -481,7 +481,7 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 
 	var ac *acfundanmu.AcFunLive
 	var err error
-	err = run(func() error {
+	err = runThrice(func() error {
 		ac, err = acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)))
 		return err
 	})

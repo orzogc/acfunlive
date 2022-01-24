@@ -106,7 +106,7 @@ func checkErr(err error) {
 }
 
 // 尝试运行，三次出错后结束运行
-func run(f func() error) error {
+func runThrice(f func() error) error {
 	var err error
 	for retry := 0; retry < 3; retry++ {
 		if err = f(); err != nil {
