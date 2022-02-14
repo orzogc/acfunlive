@@ -139,6 +139,10 @@ func lPrintln(msg ...interface{}) {
 	// 同时输出日志到web服务
 	logString.Lock()
 	defer logString.Unlock()
+	// 防止内存泄漏
+	if logString.str.Len() > 1000000 {
+		logString.str.Reset()
+	}
 	fmt.Fprint(&logString.str, getLogTime()+" ")
 	fmt.Fprintln(&logString.str, msg...)
 }
