@@ -306,7 +306,7 @@ func main() {
 					}
 				}
 				sInfoMap.Unlock()
-				lInfoMap.Lock()
+				lInfoMap.RLock()
 				for _, info := range lInfoMap.info {
 					// 结束下载直播视频
 					if info.isRecording {
@@ -322,7 +322,7 @@ func main() {
 						info.onlineCancel()
 					}
 				}
-				lInfoMap.Unlock()
+				lInfoMap.RUnlock()
 				// 等待20秒，等待其他goroutine结束
 				time.Sleep(20 * time.Second)
 				break Outer

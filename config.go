@@ -46,9 +46,9 @@ type streamer struct {
 
 // 存放主播的设置数据
 var streamers struct {
-	sync.Mutex                  // crt的锁
-	crt        map[int]streamer // 现在的主播的设置数据
-	old        map[int]streamer // 旧的主播的设置数据
+	sync.RWMutex                  // crt的锁
+	crt          map[int]streamer // 现在的主播的设置数据
+	old          map[int]streamer // 旧的主播的设置数据
 }
 
 // 设置数据
@@ -90,8 +90,8 @@ type acfunUser struct {
 
 // 从streamers.crt获取streamer
 func getStreamer(uid int) (streamer, bool) {
-	streamers.Lock()
-	defer streamers.Unlock()
+	streamers.RLock()
+	defer streamers.RUnlock()
 	s, ok := streamers.crt[uid]
 	return s, ok
 }
@@ -120,7 +120,7 @@ func removeDup(s []int64) []int64 {
 
 // 将map[int]streamer转换为[]streamer，按照uid大小排序
 func getStreamers() []streamer {
-	streamers.Lock()
+	streamers.RLock()
 	ss := make([]streamer, 0, len(streamers.crt))
 	for _, s := range streamers.crt {
 		if s.SendQQ == nil {
@@ -131,7 +131,7 @@ func getStreamers() []streamer {
 		}
 		ss = append(ss, s)
 	}
-	streamers.Unlock()
+	streamers.RUnlock()
 	// 按uid大小排序
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].UID < ss[j].UID
@@ -327,11 +327,12 @@ func loadNewConfig() {
 		}
 	}
 
-	oldstreamers := make(map[int]streamer)
-	for uid, s := range streamers.crt {
-		oldstreamers[uid] = s
+	for uid := range streamers.old {
+		delete(streamers.old, uid)
 	}
-	streamers.old = oldstreamers
+	for uid, s := range streamers.crt {
+		streamers.old[uid] = s
+	}
 
 	streamers.Unlock()
 }

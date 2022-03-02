@@ -144,6 +144,34 @@ func cycleDelKey(ctx context.Context) {
 	}
 }
 
+// 循环获取AcFun直播间数据
+func cycleFetch(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if ok := fetchAllRooms(); ok {
+				if len(liveRooms.newRooms) == 0 {
+					lPrintWarn("没有人在直播")
+				}
+
+				liveRooms.Lock()
+				for uid, room := range liveRooms.rooms {
+					delete(liveRooms.rooms, uid)
+					liveRoomPool.Put(room)
+				}
+				liveRooms.rooms = liveRooms.newRooms
+				liveRooms.Unlock()
+			}
+
+			// 每10秒循环一次
+			time.Sleep(10 * time.Second)
+		}
+	}
+}
+
+// 循环获取登陆帐号拥有的徽章列表
 func cycleGetMedals(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -164,6 +192,11 @@ func cycleGetMedals(ctx context.Context) {
 		default:
 			list, err := fetchMedalList()
 			if err == nil {
+				// 守护徽章列表最多只有300个
+				if len(list) >= 300 {
+					_ = needMdealInfo.CAS(false, true)
+				}
+
 				var isChanged bool
 				streamers.Lock()
 				for _, m := range list {

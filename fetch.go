@@ -3,7 +3,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -42,6 +41,7 @@ var (
 	fetchRoomPool      fastjson.ParserPool
 	fetchLiveInfoPool  fastjson.ParserPool
 	fetchMedalListPool fastjson.ParserPool
+	fetchMedalInfoPool fastjson.ParserPool
 )
 
 // 直播间的数据结构
@@ -59,9 +59,9 @@ type medalInfo struct {
 
 // liveRoom的map
 var liveRooms struct {
-	sync.Mutex                   // rooms的锁
-	rooms      map[int]*liveRoom // 现在的liveRoom
-	newRooms   map[int]*liveRoom // 新的liveRoom
+	sync.RWMutex                   // rooms的锁
+	rooms        map[int]*liveRoom // 现在的liveRoom
+	newRooms     map[int]*liveRoom // 新的liveRoom
 }
 
 // liveRoom的pool
@@ -235,14 +235,14 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 
 // 根据uid获取主播的名字，可能需要检查返回是否为空
 func getName(uid int) string {
-	liveRooms.Lock()
+	liveRooms.RLock()
 	room, ok := liveRooms.rooms[uid]
 	if ok {
 		name := room.name
-		liveRooms.Unlock()
+		liveRooms.RUnlock()
 		return name
 	}
-	liveRooms.Unlock()
+	liveRooms.RUnlock()
 
 	_, room, err := tryFetchLiveInfo(uid)
 	if err != nil {
@@ -254,14 +254,14 @@ func getName(uid int) string {
 
 // 根据uid获取主播直播间的标题
 func getTitle(uid int) string {
-	liveRooms.Lock()
+	liveRooms.RLock()
 	room, ok := liveRooms.rooms[uid]
 	if ok {
 		title := room.title
-		liveRooms.Unlock()
+		liveRooms.RUnlock()
 		return title
 	}
-	liveRooms.Unlock()
+	liveRooms.RUnlock()
 
 	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
 		defer liveRoomPool.Put(room)
@@ -285,9 +285,9 @@ func getLiveID(uid int) string {
 
 // 根据uid查看主播是否正在直播
 func isLiveOn(uid int) bool {
-	liveRooms.Lock()
+	liveRooms.RLock()
 	_, ok := liveRooms.rooms[uid]
-	liveRooms.Unlock()
+	liveRooms.RUnlock()
 	if ok {
 		return true
 	}
@@ -306,8 +306,8 @@ func (s *streamer) getTitle() string {
 
 // 获取liveID，由于AcFun的bug，结果不一定准确，可能需要检查返回是否为空
 func (s *streamer) getLiveID() string {
-	liveRooms.Lock()
-	defer liveRooms.Unlock()
+	liveRooms.RLock()
+	defer liveRooms.RUnlock()
 	room, ok := liveRooms.rooms[s.UID]
 	if ok {
 		return room.liveID
@@ -317,8 +317,8 @@ func (s *streamer) getLiveID() string {
 
 // 查看主播是否在直播，由于AcFun的bug，结果不一定准确
 func (s *streamer) isLiveOn() bool {
-	liveRooms.Lock()
-	defer liveRooms.Unlock()
+	liveRooms.RLock()
+	defer liveRooms.RUnlock()
 	_, ok := liveRooms.rooms[s.UID]
 	return ok
 }
@@ -412,6 +412,42 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 	}
 
 	return medalList, nil
+}
+
+// 获取登陆帐号是否拥有指定主播的守护徽章
+func fetchMedalInfo(uid int) (hasMedal bool, e error) {
+	defer func() {
+		if err := recover(); err != nil {
+			e = fmt.Errorf("fetchMedalInfo() error: %v", err)
+		}
+	}()
+
+	const medalInfoURL = "https://live.acfun.cn/rest/pc-direct/fansClub/fans/medal/detail?uperId=%d"
+
+	if len(acfunCookies) == 0 {
+		return false, fmt.Errorf("没有登陆AcFun帐号")
+	}
+
+	client := &httpClient{
+		url:     fmt.Sprintf(medalInfoURL, uid),
+		method:  fasthttp.MethodGet,
+		cookies: acfunCookies,
+	}
+	resp, err := client.doRequest()
+	checkErr(err)
+	defer fasthttp.ReleaseResponse(resp)
+	body := getBody(resp)
+
+	p := fetchMedalInfoPool.Get()
+	defer fetchMedalInfoPool.Put(p)
+	v, err := p.ParseBytes(body)
+	checkErr(err)
+
+	if !v.Exists("result") || v.GetInt("result") != 0 {
+		return false, fmt.Errorf("获取登陆帐号是否拥有指定主播的守护徽章失败，响应为 %s", string(body))
+	}
+
+	return v.GetInt("medal", "level") > 0, nil
 }
 
 // 获取用户直播相关信息，可能要将room放回liveRoomPool
@@ -576,77 +612,4 @@ func printStreamURL(uid int) (string, string) {
 
 	lPrintln(s.longID() + "不在直播")
 	return "", ""
-}
-
-// 通过用户直播相关信息并行查看主播是否在直播
-/*
-func getLiveOnByInfo(ss []streamer) {
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	for _, s := range ss {
-		wg.Add(1)
-		go func(uid int) {
-			defer wg.Done()
-			if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
-				if isLive {
-					mu.Lock()
-					liveRooms.newRooms[uid] = room
-					mu.Unlock()
-				} else {
-					liveRoomPool.Put(room)
-				}
-			}
-		}(s.UID)
-	}
-	wg.Wait()
-}
-*/
-
-// 循环获取AcFun直播间数据
-func cycleFetch(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			if ok := fetchAllRooms(); ok {
-				if len(liveRooms.newRooms) == 0 {
-					lPrintWarn("没有人在直播")
-				}
-				/*
-					streamers.Lock()
-					notLive := make([]streamer, 0, len(streamers.crt))
-					// 应付AcFun的API的bug：虚拟偶像区的主播开播几分钟才会出现在channel里
-					for _, s := range streamers.crt {
-						if _, ok := liveRooms.newRooms[s.UID]; !ok {
-							notLive = append(notLive, s)
-						}
-					}
-					streamers.Unlock()
-
-					// 并行的请求不能太多
-					const num = 10
-					length := len(notLive)
-					q := length / num
-					r := length % num
-					for i := 0; i < q; i++ {
-						getLiveOnByInfo(notLive[i*num : (i+1)*num])
-					}
-					if r != 0 {
-						getLiveOnByInfo(notLive[length-r : length])
-					}
-				*/
-
-				liveRooms.Lock()
-				for _, room := range liveRooms.rooms {
-					liveRoomPool.Put(room)
-				}
-				liveRooms.rooms = liveRooms.newRooms
-				liveRooms.Unlock()
-			}
-
-			// 每10秒循环一次
-			time.Sleep(10 * time.Second)
-		}
-	}
 }

@@ -30,14 +30,14 @@ func (s *streaming) MarshalJSON() ([]byte, error) {
 
 // 列出正在直播的主播
 func listLive() (streamings []streaming) {
-	streamers.Lock()
+	streamers.RLock()
 	streamings = make([]streaming, 0, len(streamers.crt))
 	for _, s := range streamers.crt {
 		if s.isLiveOn() {
 			streamings = append(streamings, streaming(s))
 		}
 	}
-	streamers.Unlock()
+	streamers.RUnlock()
 
 	sort.Slice(streamings, func(i, j int) bool {
 		return streamings[i].UID < streamings[j].UID
@@ -56,7 +56,7 @@ func listLive() (streamings []streaming) {
 
 // 列出正在下载的直播视频
 func listRecord() (recordings []streaming) {
-	lInfoMap.Lock()
+	lInfoMap.RLock()
 	recordings = make([]streaming, 0, len(lInfoMap.info))
 	for _, info := range lInfoMap.info {
 		if info.isRecording {
@@ -66,7 +66,7 @@ func listRecord() (recordings []streaming) {
 			})
 		}
 	}
-	lInfoMap.Unlock()
+	lInfoMap.RUnlock()
 
 	sort.Slice(recordings, func(i, j int) bool {
 		return recordings[i].UID < recordings[j].UID
@@ -84,7 +84,7 @@ func listRecord() (recordings []streaming) {
 
 // 列出正在下载的直播弹幕
 func listDanmu() (danmu []streaming) {
-	lInfoMap.Lock()
+	lInfoMap.RLock()
 	danmu = make([]streaming, 0, len(lInfoMap.info))
 	for _, info := range lInfoMap.info {
 		if info.isDanmu {
@@ -94,7 +94,7 @@ func listDanmu() (danmu []streaming) {
 			})
 		}
 	}
-	lInfoMap.Unlock()
+	lInfoMap.RUnlock()
 
 	sort.Slice(danmu, func(i, j int) bool {
 		return danmu[i].UID < danmu[j].UID
