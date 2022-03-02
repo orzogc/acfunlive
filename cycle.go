@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"time"
 )
 
@@ -157,6 +158,52 @@ func cycleFetch(ctx context.Context) {
 				}
 
 				liveRooms.Lock()
+				if config.AutoKeepOnline && len(acfunCookies) != 0 && needMdealInfo.Load() {
+					for uid, room := range liveRooms.newRooms {
+						// 这样可以防止请求过多，但是要下一场直播才会自动挂牌子
+						if _, ok := liveRooms.rooms[uid]; !ok {
+							go func(uid int, name string) {
+								rand.Seed(time.Now().UnixNano())
+								n := rand.Intn(10000)
+								time.Sleep(time.Duration(n) * time.Millisecond)
+
+								var isChanged bool
+								streamers.Lock()
+								if s, ok := streamers.crt[uid]; ok {
+									if !s.KeepOnline {
+										hasMedal, err := fetchMedalInfo(uid)
+										if err != nil {
+											lPrintErr("%+v", err)
+										} else if hasMedal {
+											s.KeepOnline = true
+											streamers.crt[s.UID] = s
+											isChanged = true
+										}
+									}
+								} else {
+									hasMedal, err := fetchMedalInfo(uid)
+									if err != nil {
+										lPrintErr("%+v", err)
+									} else if hasMedal {
+										s := streamer{
+											UID:        uid,
+											Name:       name,
+											KeepOnline: true,
+										}
+										streamers.crt[s.UID] = s
+										isChanged = true
+									}
+								}
+								streamers.Unlock()
+
+								if isChanged {
+									saveLiveConfig()
+								}
+							}(uid, room.name)
+						}
+					}
+				}
+
 				for uid, room := range liveRooms.rooms {
 					delete(liveRooms.rooms, uid)
 					liveRoomPool.Put(room)
