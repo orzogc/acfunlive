@@ -239,10 +239,7 @@ func cycleGetMedals(ctx context.Context) {
 		default:
 			list, err := fetchMedalList()
 			if err == nil {
-				// 守护徽章列表最多只有300个
-				if len(list) >= 300 {
-					_ = needMdealInfo.CAS(false, true)
-				}
+				length := len(list)
 
 				var isChanged bool
 				streamers.Lock()
@@ -268,6 +265,12 @@ func cycleGetMedals(ctx context.Context) {
 
 				if isChanged {
 					saveLiveConfig()
+				}
+
+				// 守护徽章列表最多只有300个
+				if length >= 300 {
+					_ = needMdealInfo.CAS(false, true)
+					return
 				}
 			} else {
 				lPrintErrf("%+v", err)
