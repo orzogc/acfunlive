@@ -53,33 +53,37 @@ yarn generate
 在编译好的`acfunlive`或`acfunlive.exe`所在的文件夹下新建webui文件夹，将acfunlive-ui下dist文件夹内的所有文件复制到webui文件夹内
 
 ### 配置文件详解
-配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹
+可以先运行一次本程序以生成配置文件。
+
+配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹。
 
 #### live.json
 `live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
 ```
-{
-    "uid": 23682490,    // 主播的uid
-    "name": "AC娘本体", // 主播的昵称
-    "notify": {
-        "notifyOn": true,     // 主播开播通知
-        "notifyOff": false,   // 主播下播通知
-        "notifyRecord": true, // 下载主播直播相关的通知
-        "notifyDanmu": false  // 下载主播直播弹幕相关的通知
-        },
-    "record": true,     // 是否下载直播视频
-    "danmu": true,      // 是否下载直播弹幕
-    "keepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
-    "bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
-    "directory": "",    // 直播视频和弹幕下载结束后会被移动到该文件夹，其值最好是绝对路径，会覆盖config.json里的设置，需自行手动修改设置
-    "sendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友），会覆盖config.json里的设置，QQ号小于等于0会取消通知QQ
-        12345,
-        123456
-    ],
-    "sendQQGroup": [ // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员），会覆盖config.json里的设置，QQ群号小于等于0会取消通知QQ群
-        1234567
-    ]
-}
+[
+    {
+        "uid": 23682490,    // 主播的uid
+        "name": "AC娘本体", // 主播的昵称
+        "notify": {
+            "notifyOn": true,     // 主播开播通知
+            "notifyOff": false,   // 主播下播通知
+            "notifyRecord": true, // 下载主播直播相关的通知
+            "notifyDanmu": false  // 下载主播直播弹幕相关的通知
+            },
+        "record": true,     // 是否下载直播视频
+        "danmu": true,      // 是否下载直播弹幕
+        "keepOnline": true, // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
+        "bitrate": 0,       // 设置要下载的直播源的最高码率（Kbps），需自行手动修改设置
+        "directory": "",    // 直播视频和弹幕下载结束后会被移动到该文件夹，其值最好是绝对路径，会覆盖config.json里的设置，需自行手动修改设置
+        "sendQQ": [         // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友），会覆盖config.json里的设置，QQ号小于等于0会取消通知QQ
+            12345,
+            123456
+        ],
+        "sendQQGroup": [ // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员），会覆盖config.json里的设置，QQ群号小于等于0会取消通知QQ群
+            1234567
+        ]
+    }
+]
 ```
 Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate的条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：
 | 直播源名字 | 高清 | 超清 | 蓝光 4M | 蓝光 5M | 蓝光 6M | 蓝光 7M | 蓝光 8M |
