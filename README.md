@@ -53,9 +53,7 @@ yarn generate
 在编译好的`acfunlive`或`acfunlive.exe`所在的文件夹下新建webui文件夹，将acfunlive-ui下dist文件夹内的所有文件复制到webui文件夹内
 
 ### 配置文件详解
-可以先运行一次本程序以生成配置文件。
-
-配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹。
+配置文件`config.json`和`live.json`默认保存在本程序所在文件夹内，运行时可用参数`-config`指定配置文件所在文件夹
 
 #### live.json
 `live.json`的内容可以手动修改，本程序会自动读取更改后的设置，无需重新启动本程序
@@ -91,31 +89,29 @@ Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置
 #### config.json
 `config.json`的内容手动修改后需要重新启动本程序以生效
 ```
-[
-    {
-        "source": "flv",  // 直播源，有hls和flv两种，默认是flv
-        "output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
-        "webPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
-        "directory": "",  // 直播视频和弹幕下载结束后会被移动到该文件夹，其值最好是绝对路径，会被live.json里的设置覆盖
-        "acfun": {
-            "account": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
-            "password": "" // AcFun帐号密码
-        },
-        "autoKeepOnline": true, // 是否自动在有守护徽章的直播间挂机，需要设置AcFun帐号和密码
-        "mirai": {
-            "adminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
-            "botQQ": 123456,         // QQ机器人的QQ号
-            "botQQPassword": "abcde" // QQ机器人QQ号的密码
-            "sendQQ": [              // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友），会被live.json里的设置覆盖
-                12345,
-                123456
-            ],
-            "sendQQGroup": [        // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员），会被live.json里的设置覆盖
-                1234567
-            ]
-        }
+{
+    "source": "flv",  // 直播源，有hls和flv两种，默认是flv
+    "output": "mp4",  // 下载的直播视频的格式，必须是有效的视频格式后缀名
+    "webPort": 51880, // web API的本地端口，使用web UI的话不能修改这个端口
+    "directory": "",  // 直播视频和弹幕下载结束后会被移动到该文件夹，其值最好是绝对路径，会被live.json里的设置覆盖
+    "acfun": {
+        "account": "", // AcFun帐号邮箱或手机号，目前只用于直播间挂机，不需要可以为空
+        "password": "" // AcFun帐号密码
+    },
+    "autoKeepOnline": true, // 是否自动在有守护徽章的直播间挂机，需要设置AcFun帐号和密码
+    "mirai": {
+        "adminQQ": 12345,        // 用来发送命令控制本程序的管理者QQ，可选
+        "botQQ": 123456,         // QQ机器人的QQ号
+        "botQQPassword": "abcde" // QQ机器人QQ号的密码
+        "sendQQ": [              // 发送开播提醒到数组里的所有QQ（需要QQ机器人添加这些QQ为好友），会被live.json里的设置覆盖
+            12345,
+            123456
+        ],
+        "sendQQGroup": [        // 发送开播提醒到数组里的所有QQ群（需要QQ机器人在这些QQ群里，最好是管理员，会@全体成员），会被live.json里的设置覆盖
+            1234567
+        ]
     }
-]
+}
 ```
 
 ### 使用方法
