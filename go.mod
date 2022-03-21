@@ -16,18 +16,15 @@ require (
 	github.com/google/go-cmp v0.5.7
 	github.com/gopherjs/gopherjs v0.0.0-20220221023154-0b2280d3ff96 // indirect
 	github.com/gorilla/mux v1.8.0
-	github.com/klauspost/compress v1.14.4 // indirect
 	github.com/orzogc/acfundanmu v0.0.0-20220124164327-315fbe71a129
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/rs/cors v1.8.2
 	github.com/segmentio/encoding v0.3.4 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/tidwall/gjson v1.14.0 // indirect
-	github.com/valyala/fasthttp v1.33.0
+	github.com/valyala/fasthttp v1.34.0
 	github.com/valyala/fastjson v1.6.3
 	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 )
