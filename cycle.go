@@ -89,7 +89,7 @@ func (s streamer) cycle(liveID string) {
 
 					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
-						s.sendMirai(s.longID() + "正在直播：" + title + "，直播观看地址：" + s.getURL())
+						s.sendMirai(s.Name+"正在直播："+title+"，直播观看地址："+s.getURL(), true)
 					}
 
 					info, _ := getLiveInfo(liveID)
@@ -110,11 +110,11 @@ func (s streamer) cycle(liveID string) {
 				// 应付AcFun API可能出现的bug：主播没下播但API显示下播
 				if isLive && !s.isLiveOnByPage() {
 					isLive = false
-					msg := s.longID() + "已经下播"
+					msg := s.Name + "已经下播"
 					lPrintln(msg)
 					if s.Notify.NotifyOff {
-						desktopNotify(s.Name + "已经下播")
-						s.sendMirai(msg)
+						desktopNotify(msg)
+						s.sendMirai(msg, true)
 					}
 				}
 			}

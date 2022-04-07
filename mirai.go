@@ -182,7 +182,7 @@ func initMirai() (result bool) {
 	checkErr(err)
 	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
 
-	miraiClient.OnDisconnected(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
+	miraiClient.DisconnectedEvent.Subscribe(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
 		if miraiClient != nil {
 			if miraiClient.Online.Load() {
 				lPrintWarn("QQ帐号已登陆，无需重连")
@@ -216,9 +216,8 @@ func initMirai() (result bool) {
 	})
 
 	if config.Mirai.AdminQQ > 0 {
-		miraiClient.OnPrivateMessage(privateMsgEvent)
-		//miraiClient.OnTempMessage(tempMsgEvent)
-		miraiClient.OnGroupMessage(groupMsgEvent)
+		miraiClient.PrivateMessageEvent.Subscribe(privateMsgEvent)
+		miraiClient.GroupMessageEvent.Subscribe(groupMsgEvent)
 	}
 
 	return true
@@ -228,11 +227,6 @@ func initMirai() (result bool) {
 func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
 	handlePrivateMsg(m.Sender.Uin, m.Elements)
 }
-
-// 处理临时会话消息事件
-//func tempMsgEvent(c *client.QQClient, m *message.TempMessage) {
-//	handlePrivateMsg(m.Sender.Uin, m.Elements)
-//}
 
 // 处理QQ bot接收到的私聊或临时会话消息
 func handlePrivateMsg(qq int64, Elements []message.IMessageElement) {
@@ -335,7 +329,7 @@ func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 }
 
 // 发送消息
-func (s *streamer) sendMirai(text string) {
+func (s *streamer) sendMirai(text string, isSendGroup bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in sendMirai(), the error is:", err)
@@ -344,8 +338,8 @@ func (s *streamer) sendMirai(text string) {
 	}()
 
 	if *isMirai && miraiClient != nil {
-		text = strings.ReplaceAll(text, "（", "(")
-		text = strings.ReplaceAll(text, "）", ")")
+		//text = strings.ReplaceAll(text, "（", "(")
+		//text = strings.ReplaceAll(text, "）", ")")
 
 		sendQQ := config.Mirai.SendQQ
 		if len(s.SendQQ) != 0 {
@@ -363,25 +357,27 @@ func (s *streamer) sendMirai(text string) {
 			}
 		}
 
-		sendQQGroup := config.Mirai.SendQQGroup
-		if len(s.SendQQGroup) != 0 {
-			sendQQGroup = s.SendQQGroup
-		}
-		for _, qqGroup := range sendQQGroup {
-			if qqGroup > 0 {
-				if groupInfo := miraiClient.FindGroup(qqGroup); groupInfo == nil {
-					lPrintErrf("QQ机器人未加入QQ群 %d，取消发送消息", qqGroup)
-					continue
-				} else {
-					info := groupInfo.FindMember(config.Mirai.BotQQ)
-					if info.Permission == client.Member {
-						miraiSendQQGroup(qqGroup, text)
+		if isSendGroup {
+			sendQQGroup := config.Mirai.SendQQGroup
+			if len(s.SendQQGroup) != 0 {
+				sendQQGroup = s.SendQQGroup
+			}
+			for _, qqGroup := range sendQQGroup {
+				if qqGroup > 0 {
+					if groupInfo := miraiClient.FindGroup(qqGroup); groupInfo == nil {
+						lPrintErrf("QQ机器人未加入QQ群 %d，取消发送消息", qqGroup)
+						continue
 					} else {
-						miraiSendQQGroupAtAll(qqGroup, text)
+						info := groupInfo.FindMember(config.Mirai.BotQQ)
+						if info.Permission == client.Member {
+							miraiSendQQGroup(qqGroup, text)
+						} else {
+							miraiSendQQGroupAtAll(qqGroup, text)
+						}
 					}
+				} else {
+					lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
 				}
-			} else {
-				lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
 			}
 		}
 	}
