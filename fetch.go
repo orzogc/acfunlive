@@ -41,7 +41,7 @@ var (
 	fetchRoomPool      fastjson.ParserPool
 	fetchLiveInfoPool  fastjson.ParserPool
 	fetchMedalListPool fastjson.ParserPool
-	fetchMedalInfoPool fastjson.ParserPool
+	//fetchMedalInfoPool fastjson.ParserPool
 )
 
 // 直播间的数据结构
@@ -414,7 +414,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 	return medalList, nil
 }
 
-// 获取登陆帐号是否拥有指定主播的守护徽章
+/* // 获取登陆帐号是否拥有指定主播的守护徽章
 func fetchMedalInfo(uid int) (hasMedal bool, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -448,7 +448,7 @@ func fetchMedalInfo(uid int) (hasMedal bool, e error) {
 	}
 
 	return v.GetInt("medal", "level") > 0, nil
-}
+} */
 
 // 获取用户直播相关信息，可能要将room放回liveRoomPool
 func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {

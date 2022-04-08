@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"math/rand"
 	"time"
 )
 
@@ -158,52 +157,6 @@ func cycleFetch(ctx context.Context) {
 				}
 
 				liveRooms.Lock()
-				if config.AutoKeepOnline && len(acfunCookies) != 0 && needMdealInfo.Load() {
-					for uid, room := range liveRooms.newRooms {
-						// 这样可以防止请求过多，但是要下一场直播才会自动挂牌子
-						if _, ok := liveRooms.rooms[uid]; !ok {
-							go func(uid int, name string) {
-								rand.Seed(time.Now().UnixNano())
-								n := rand.Intn(10000)
-								time.Sleep(time.Duration(n) * time.Millisecond)
-
-								var isChanged bool
-								streamers.Lock()
-								if s, ok := streamers.crt[uid]; ok {
-									if !s.KeepOnline {
-										hasMedal, err := fetchMedalInfo(uid)
-										if err != nil {
-											lPrintErr("%+v", err)
-										} else if hasMedal {
-											s.KeepOnline = true
-											streamers.crt[s.UID] = s
-											isChanged = true
-										}
-									}
-								} else {
-									hasMedal, err := fetchMedalInfo(uid)
-									if err != nil {
-										lPrintErr("%+v", err)
-									} else if hasMedal {
-										s := streamer{
-											UID:        uid,
-											Name:       name,
-											KeepOnline: true,
-										}
-										streamers.crt[s.UID] = s
-										isChanged = true
-									}
-								}
-								streamers.Unlock()
-
-								if isChanged {
-									saveLiveConfig()
-								}
-							}(uid, room.name)
-						}
-					}
-				}
-
 				for uid, room := range liveRooms.rooms {
 					delete(liveRooms.rooms, uid)
 					liveRoomPool.Put(room)
@@ -222,7 +175,7 @@ func cycleFetch(ctx context.Context) {
 func cycleGetMedals(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			lPrintErr("Recovering from panic in cycleGetMedals(), the error is:", err)
+			lPrintErrf("Recovering from panic in cycleGetMedals(), the error is: %v", err)
 			lPrintErr("自动挂机出现错误，取消自动挂机")
 		}
 	}()
@@ -239,8 +192,6 @@ func cycleGetMedals(ctx context.Context) {
 		default:
 			list, err := fetchMedalList()
 			if err == nil {
-				length := len(list)
-
 				var isChanged bool
 				streamers.Lock()
 				for _, m := range list {
@@ -265,12 +216,6 @@ func cycleGetMedals(ctx context.Context) {
 
 				if isChanged {
 					saveLiveConfig()
-				}
-
-				// 守护徽章列表最多只有300个
-				if length >= 300 {
-					_ = needMdealInfo.CAS(false, true)
-					return
 				}
 			} else {
 				lPrintErrf("%+v", err)

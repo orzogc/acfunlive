@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/orzogc/acfundanmu"
-	"go.uber.org/atomic"
 )
 
 type control int
@@ -84,20 +83,19 @@ var logString struct {
 }
 
 var (
-	exeDir        string                                  // 运行程序所在文件夹
-	mainCh        chan controlMsg                         // main()的管道
-	mainCtx       context.Context                         // main()的ctx
-	isListen      *bool                                   // 程序是否处于监听状态
-	isWebAPI      *bool                                   // 程序是否启动web API服务器
-	isWebUI       *bool                                   // 程序是否启动web UI服务器
-	configDir     *string                                 // 设置文件所在文件夹
-	recordDir     *string                                 // 下载录播和弹幕时保存的文件夹
-	isNoGUI       = new(bool)                             // 程序是否启动GUI界面
-	logger        = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
-	itoa          = strconv.Itoa                          // 将int转换为字符串
-	atoi          = strconv.Atoi                          // 将字符串转换为int
-	boolStr       = strconv.FormatBool                    // 将bool类型转换为字符串
-	needMdealInfo = atomic.Bool{}                         // 是否需要指定主播的守护徽章的信息
+	exeDir    string                                  // 运行程序所在文件夹
+	mainCh    chan controlMsg                         // main()的管道
+	mainCtx   context.Context                         // main()的ctx
+	isListen  *bool                                   // 程序是否处于监听状态
+	isWebAPI  *bool                                   // 程序是否启动web API服务器
+	isWebUI   *bool                                   // 程序是否启动web UI服务器
+	configDir *string                                 // 设置文件所在文件夹
+	recordDir *string                                 // 下载录播和弹幕时保存的文件夹
+	isNoGUI   = new(bool)                             // 程序是否启动GUI界面
+	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
+	itoa      = strconv.Itoa                          // 将int转换为字符串
+	atoi      = strconv.Atoi                          // 将字符串转换为int
+	boolStr   = strconv.FormatBool                    // 将bool类型转换为字符串
 )
 
 // 检查错误
