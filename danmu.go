@@ -9,9 +9,6 @@ import (
 	"github.com/orzogc/acfundanmu"
 )
 
-// AcFun帐号的cookies
-var acfunCookies acfundanmu.Cookies
-
 // 不同的视频分辨率对应的弹幕字幕设置
 var subConfigs = map[int]acfundanmu.SubConfig{
 	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 60}, // 这是手机直播，有一些是540X960
@@ -32,7 +29,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 	}()
 
 	if s.KeepOnline {
-		if len(acfunCookies) != 0 {
+		if is_login_acfun() {
 			lPrintf("开始在%s的直播间挂机", s.longID())
 		} else {
 			lPrintErrf("没有登陆AcFun帐号，取消在%s的直播间挂机", s.longID())
@@ -58,7 +55,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 
 	var cookies acfundanmu.Cookies
 	if s.KeepOnline {
-		cookies = acfunCookies
+		cookies = acfun_cookies()
 	}
 	ac, err := acfundanmu.NewAcFunLive(acfundanmu.SetLiverUID(int64(s.UID)), acfundanmu.SetCookies(cookies))
 	checkErr(err)

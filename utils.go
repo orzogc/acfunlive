@@ -82,6 +82,13 @@ var logString struct {
 	str strings.Builder
 }
 
+// AcFun帐号的cookies
+var acfunCookies struct {
+	sync.RWMutex
+	time    time.Time
+	cookies acfundanmu.Cookies
+}
+
 var (
 	exeDir    string                                  // 运行程序所在文件夹
 	mainCh    chan controlMsg                         // main()的管道
@@ -132,7 +139,7 @@ func getLogTime() string {
 }
 
 // 打印带时间戳的log信息
-func lPrintln(msg ...interface{}) {
+func lPrintln(msg ...any) {
 	if *isNoGUI {
 		logger.Println(msg...)
 	}
@@ -148,31 +155,31 @@ func lPrintln(msg ...interface{}) {
 }
 
 // 打印警告信息
-func lPrintWarn(msg ...interface{}) {
-	w := []interface{}{"[WARN]"}
+func lPrintWarn(msg ...any) {
+	w := []any{"[WARN]"}
 	msg = append(w, msg...)
 	lPrintln(msg...)
 }
 
 // 打印错误信息
-func lPrintErr(msg ...interface{}) {
-	e := []interface{}{"[ERROR]"}
+func lPrintErr(msg ...any) {
+	e := []any{"[ERROR]"}
 	msg = append(e, msg...)
 	lPrintln(msg...)
 }
 
 // 打印带时间戳的log信息（格式化字符串）
-func lPrintf(format string, a ...interface{}) {
+func lPrintf(format string, a ...any) {
 	lPrintln(fmt.Sprintf(format, a...))
 }
 
 // 打印警告信息（格式化字符串）
-func lPrintWarnf(format string, a ...interface{}) {
+func lPrintWarnf(format string, a ...any) {
 	lPrintWarn(fmt.Sprintf(format, a...))
 }
 
 // 打印错误信息（格式化字符串）
-func lPrintErrf(format string, a ...interface{}) {
+func lPrintErrf(format string, a ...any) {
 	lPrintErr(fmt.Sprintf(format, a...))
 }
 
@@ -265,3 +272,48 @@ func isKeepOnline(liveID string) bool {
 	return false
 }
 */
+
+// 是否登陆AcFun帐号
+func is_login_acfun() bool {
+	acfunCookies.RLock()
+	defer acfunCookies.RUnlock()
+	return len(acfunCookies.cookies) != 0
+}
+
+// 登陆AcFun帐号
+func acfun_login() error {
+	if config.Acfun.Account != "" && config.Acfun.Password != "" {
+		acfunCookies.Lock()
+		defer acfunCookies.Unlock()
+		cookies, err := acfundanmu.Login(config.Acfun.Account, config.Acfun.Password)
+		if err != nil {
+			return err
+		}
+		acfunCookies.cookies = cookies
+		acfunCookies.time = time.Now()
+		return nil
+	}
+	return fmt.Errorf("没有设置AcFun帐号或密码")
+}
+
+// 返回AcFun帐号的cookies
+func acfun_cookies() acfundanmu.Cookies {
+	if config.Acfun.Account != "" && config.Acfun.Password != "" && is_login_acfun() {
+		acfunCookies.RLock()
+		cookies_time := time.Since(acfunCookies.time)
+		acfunCookies.RUnlock()
+		// 20天后重新登陆A站帐号
+		if cookies_time > 480*time.Hour {
+			err := acfun_login()
+			if err != nil {
+				lPrintErrf("重新登陆AcFun帐号时出现错误：%v", err)
+			} else {
+				lPrintln("重新登陆AcFun帐号成功")
+			}
+		}
+		acfunCookies.RLock()
+		defer acfunCookies.RUnlock()
+		return append(acfundanmu.Cookies{}, acfunCookies.cookies...)
+	}
+	return nil
+}

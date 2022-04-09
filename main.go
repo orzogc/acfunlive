@@ -11,8 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-
-	"github.com/orzogc/acfundanmu"
 )
 
 // 命令行参数处理
@@ -206,11 +204,10 @@ func initialize() {
 	liveRooms.rooms = liveRooms.newRooms
 
 	if config.Acfun.Account != "" && config.Acfun.Password != "" {
-		acfunCookies, err = acfundanmu.Login(config.Acfun.Account, config.Acfun.Password)
+		err = acfun_login()
 		if err != nil {
 			lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
-			acfunCookies = nil
-		} else if len(acfunCookies) != 0 {
+		} else if is_login_acfun() {
 			lPrintln("登陆AcFun帐号成功")
 		}
 	}

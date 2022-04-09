@@ -66,14 +66,14 @@ var liveRooms struct {
 
 // liveRoom的pool
 var liveRoomPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(liveRoom)
 	},
 }
 
 // medalInfo的pool
 var medalInfoPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return new(medalInfo)
 	},
 }
@@ -379,14 +379,14 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 
 	const medalListURL = "https://www.acfun.cn/rest/pc-direct/fansClub/fans/medal/list"
 
-	if len(acfunCookies) == 0 {
+	if !is_login_acfun() {
 		return nil, fmt.Errorf("没有登陆AcFun帐号")
 	}
 
 	client := &httpClient{
 		url:     medalListURL,
 		method:  fasthttp.MethodGet,
-		cookies: acfunCookies,
+		cookies: acfun_cookies(),
 	}
 	resp, err := client.doRequest()
 	checkErr(err)

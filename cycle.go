@@ -109,9 +109,9 @@ func (s streamer) cycle(liveID string) {
 				// 应付AcFun API可能出现的bug：主播没下播但API显示下播
 				if isLive && !s.isLiveOnByPage() {
 					isLive = false
-					msg := s.Name + "已经下播"
-					lPrintln(msg)
+					lPrintln(s.longID() + "已经下播")
 					if s.Notify.NotifyOff {
+						msg := s.Name + "已经下播"
 						desktopNotify(msg)
 						s.sendMirai(msg, true)
 					}
@@ -180,7 +180,7 @@ func cycleGetMedals(ctx context.Context) {
 		}
 	}()
 
-	if len(acfunCookies) == 0 {
+	if !is_login_acfun() {
 		lPrintErr("没有登陆AcFun帐号，取消自动挂机")
 		return
 	}

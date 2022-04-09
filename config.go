@@ -419,7 +419,7 @@ func (s streamer) setBoolConfig(tag string, value bool) bool {
 }
 
 // 递归寻找tag指定的value
-func seekField(iface interface{}, tag string) (reflect.Value, bool) {
+func seekField(iface any, tag string) (reflect.Value, bool) {
 	ifv := reflect.Indirect(reflect.ValueOf(iface))
 	for i := 0; i < ifv.NumField(); i++ {
 		value := ifv.Field(i)
