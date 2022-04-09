@@ -1,9 +1,10 @@
-// +build tray
+//go:build tray
 
 // 系统托盘
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/getlantern/systray"
@@ -49,7 +50,7 @@ func trayOnReady() {
 		select {
 		case <-openWebUI.ClickedCh:
 			lPrintln("通过systray打开web界面")
-			err := open.Run("http://localhost:" + itoa(config.WebPort+10))
+			err := open.Run(fmt.Sprintf("http://localhost:%d", config.WebPort+10))
 			checkErr(err)
 		case <-quit.ClickedCh:
 			quitRun()

@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -88,7 +89,7 @@ func (s streamer) cycle(liveID string) {
 
 					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
-						s.sendMirai(s.Name+"正在直播："+title+"，直播观看地址："+s.getURL(), true)
+						s.sendMirai(fmt.Sprintf("%s正在直播：%s，直播观看地址：%s", s.Name, title, s.getURL()), true)
 					}
 
 					info, _ := getLiveInfo(liveID)
@@ -97,7 +98,7 @@ func (s streamer) cycle(liveID string) {
 					if s.Record && !info.isRecording {
 						go s.recordLive(s.Danmu || s.KeepOnline)
 					} else {
-						lPrintln("如果要临时下载" + s.Name + "的直播视频，可以运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
+						lPrintf("如果要临时下载%s的直播视频，可以运行 startrecord %d 或 startrecdan %d", s.Name, s.UID, s.UID)
 						// 不下载直播视频时下载弹幕
 						if (s.Danmu && !info.isDanmu) || (s.KeepOnline && !info.isKeepOnline) {
 							filename := getTime() + " " + s.Name + " " + title

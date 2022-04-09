@@ -24,7 +24,7 @@ AcFun直播通知和下载助手
 #### 编译依赖
 * go
 * yarn
-* gtk3 和 libappindicator3 （Linux下编译gui版本需要）
+* gtk3 和 libayatana-appindicator3 （Linux下编译gui版本需要）
 * GNU Make （Linux下可选）
 
 ### 编译

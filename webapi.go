@@ -55,7 +55,7 @@ var apiSrv *http.Server
 
 // 返回localhost地址和端口
 func address(port int) string {
-	return "http://localhost:" + itoa(port)
+	return fmt.Sprintf("http://localhost:%d", port)
 }
 
 // 处理 "/cmd"
@@ -154,7 +154,7 @@ func webAPI() {
 	handler := cors.Default().Handler(r)
 
 	apiSrv = &http.Server{
-		Addr:         ":" + itoa(config.WebPort),
+		Addr:         fmt.Sprintf(":%d", config.WebPort),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  60 * time.Second,

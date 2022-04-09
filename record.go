@@ -20,7 +20,7 @@ func startRec(uid int, danmu bool) bool {
 	if !ok {
 		name = getName(uid)
 		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarnf("不存在uid为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name}
@@ -35,7 +35,7 @@ func startRec(uid int, danmu bool) bool {
 		return false
 	}
 	if isRecording(liveID) {
-		lPrintWarn("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
+		lPrintWarnf("已经在下载%s的直播视频，如要重启下载，请先运行 stoprecord %d", s.longID(), s.UID)
 		return false
 	}
 
@@ -60,7 +60,7 @@ func startRec(uid int, danmu bool) bool {
 func stopRec(uid int) bool {
 	infoList, ok := getLiveInfoByUID(uid)
 	if !ok {
-		lPrintWarn("没有在下载uid为" + itoa(uid) + "的主播的直播视频")
+		lPrintWarnf("没有在下载uid为%d的主播的直播视频", uid)
 		return true
 	}
 
@@ -97,9 +97,10 @@ func (s streamer) recordLive(danmu bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in recordLive(), the error is:", err)
-			lPrintErr("下载" + s.longID() + "的直播视频发生错误，如要重启下载，请运行 startrecord " + s.itoa() + " 或 startrecdan " + s.itoa())
+			msg := "下载%s的直播视频发生错误，如要重启下载，请运行 startrecord %d 或 startrecdan %d"
+			lPrintErrf(msg, s.longID(), s.UID, s.UID)
 			desktopNotify("下载" + s.Name + "的直播视频发生错误")
-			s.sendMirai("下载"+s.Name+"的直播视频发生错误，如要重启下载，请运行 startrecord "+s.itoa()+" 或 startrecdan "+s.itoa(), false)
+			s.sendMirai(fmt.Sprintf(msg, s.Name, s.UID, s.UID), false)
 		}
 	}()
 
@@ -115,7 +116,7 @@ func (s streamer) recordLive(danmu bool) {
 	if err != nil {
 		lPrintErr(err)
 		msg := "无法获取%s的直播源，退出下载直播视频，请确定主播正在直播，如要重启下载，请运行 startrecord %d 或 startrecdan %d"
-		lPrintErr(fmt.Sprintf(msg, s.longID(), s.UID, s.UID))
+		lPrintErrf(msg, s.longID(), s.UID, s.UID)
 		if s.Notify.NotifyRecord {
 			desktopNotify("无法获取" + s.Name + "的直播源，退出下载直播视频")
 			s.sendMirai(fmt.Sprintf(msg, s.Name, s.UID, s.UID), false)
@@ -125,7 +126,7 @@ func (s streamer) recordLive(danmu bool) {
 
 	if existInfo, ok := getLiveInfo(info.LiveID); ok {
 		if existInfo.isRecording {
-			lPrintWarn("已经在下载" + s.longID() + "的直播视频，如要重启下载，请先运行 stoprecord " + s.itoa())
+			lPrintWarnf("已经在下载%s的直播视频，如要重启下载，请先运行 stoprecord %d", s.longID(), s.UID)
 			return
 		}
 		url := info.streamURL
@@ -146,15 +147,15 @@ func (s streamer) recordLive(danmu bool) {
 	lPrintln("开始下载" + s.longID() + "的直播视频")
 	lPrintln("本次下载的视频文件保存在" + recordFile)
 	if *isListen {
-		lPrintln("如果想提前结束下载" + s.longID() + "的直播视频，运行 stoprecord " + s.itoa())
+		lPrintf("如果想提前结束下载%s的直播视频，运行 stoprecord %d", s.longID(), s.UID)
 	}
 	if s.Notify.NotifyRecord {
 		if danmu {
 			desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
-			s.sendMirai("开始下载"+s.Name+"的直播视频和弹幕："+title, false)
+			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频和弹幕：%s，直播观看地址：%s", s.Name, title, s.getURL()), false)
 		} else {
 			desktopNotify("开始下载" + s.Name + "的直播视频")
-			s.sendMirai("开始下载"+s.Name+"的直播视频："+title, false)
+			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频：%s，直播观看地址：%s", s.Name, title, s.getURL()), false)
 		}
 	}
 
@@ -196,7 +197,7 @@ func (s streamer) recordLive(danmu bool) {
 
 	err = cmd.Run()
 	if err != nil {
-		lPrintErr("下载"+s.longID()+"的直播视频出现错误，尝试重启下载：", err)
+		lPrintErrf("下载%s的直播视频出现错误，尝试重启下载：%v", s.longID(), err)
 	}
 	defer s.moveFile(recordFile)
 

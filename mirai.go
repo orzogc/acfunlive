@@ -397,7 +397,7 @@ func addQQNotify(uid int, qq int64) bool {
 	} else {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarnf("不存在uid为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name, SendQQ: []int64{qq}}
@@ -427,7 +427,7 @@ func delQQNotify(uid int, qq int64) bool {
 			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 		}
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒")
+		lPrintWarnf("没有设置过uid为%d的主播的QQ提醒", uid)
 	}
 
 	saveLiveConfig()
@@ -441,7 +441,7 @@ func cancelQQNotify(uid int) bool {
 		setStreamer(s)
 		lPrintln("成功取消设置" + s.longID() + "的QQ提醒")
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ提醒")
+		lPrintWarnf("没有设置过uid为%d的主播的QQ提醒", uid)
 	}
 
 	saveLiveConfig()
@@ -462,7 +462,7 @@ func addQQGroup(uid int, qqGroup int64) bool {
 	} else {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarnf("不存在uid为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name, SendQQGroup: []int64{qqGroup}}
@@ -492,7 +492,7 @@ func delQQGroup(uid int, qqGroup int64) bool {
 			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 		}
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒")
+		lPrintWarnf("没有设置过uid为%d的主播的QQ群提醒", uid)
 	}
 
 	saveLiveConfig()
@@ -506,7 +506,7 @@ func cancelQQGroup(uid int) bool {
 		setStreamer(s)
 		lPrintln("成功取消设置" + s.longID() + "的QQ群提醒")
 	} else {
-		lPrintWarn("没有设置过uid为" + itoa(uid) + "的主播的QQ群提醒")
+		lPrintWarnf("没有设置过uid为%d的主播的QQ群提醒", uid)
 	}
 
 	saveLiveConfig()

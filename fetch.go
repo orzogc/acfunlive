@@ -80,8 +80,8 @@ var medalInfoPool = &sync.Pool{
 
 // 获取主播的直播链接
 func getURL(uid int) string {
-	const livePage = "https://live.acfun.cn/live/"
-	return livePage + itoa(uid)
+	const livePage = "https://live.acfun.cn/live/%d"
+	return fmt.Sprintf(livePage, uid)
 }
 
 // 获取主播的直播链接
@@ -468,11 +468,11 @@ func (s *streamer) isLiveOnByPage() (isLive bool) {
 		}
 	}()
 
-	const acLivePage = "https://m.acfun.cn/live/detail/"
+	const acLivePage = "https://m.acfun.cn/live/detail/%d"
 	const mobileUserAgent = "Mozilla/5.0 (iPad; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 
 	client := &httpClient{
-		url:       acLivePage + itoa(s.UID),
+		url:       fmt.Sprintf(acLivePage, s.UID),
 		method:    fasthttp.MethodGet,
 		userAgent: mobileUserAgent,
 	}
@@ -592,7 +592,7 @@ func printStreamURL(uid int) (string, string) {
 	if !ok {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarn("不存在uid为" + itoa(uid) + "的用户")
+			lPrintWarnf("不存在uid为%d的用户", uid)
 			return "", ""
 		}
 		s = streamer{UID: uid, Name: name}

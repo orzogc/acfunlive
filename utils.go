@@ -100,7 +100,6 @@ var (
 	recordDir *string                                 // 下载录播和弹幕时保存的文件夹
 	isNoGUI   = new(bool)                             // 程序是否启动GUI界面
 	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的logger
-	itoa      = strconv.Itoa                          // 将int转换为字符串
 	atoi      = strconv.Atoi                          // 将字符串转换为int
 	boolStr   = strconv.FormatBool                    // 将bool类型转换为字符串
 )
@@ -183,19 +182,14 @@ func lPrintErrf(format string, a ...any) {
 	lPrintErr(fmt.Sprintf(format, a...))
 }
 
-// 将UID转换成字符串
-func (s *streamer) itoa() string {
-	return itoa(s.UID)
-}
-
 // 返回ID（UID）形式的字符串
 func (s *streamer) longID() string {
-	return s.Name + "（" + s.itoa() + "）"
+	return fmt.Sprintf("%s（%d）", s.Name, s.UID)
 }
 
 // 返回ID（UID）形式的字符串
 func longID(uid int) string {
-	return getName(uid) + "（" + itoa(uid) + "）"
+	return fmt.Sprintf("%s（%d）", getName(uid), uid)
 }
 
 // 根据uid获取liveInfo
@@ -228,25 +222,6 @@ func setLiveInfo(info liveInfo) {
 	lInfoMap.info[info.LiveID] = info
 }
 
-/*
-// 根据uid获取streamerInfo
-func getStreamerInfo(uid int) (streamerInfo, bool) {
-	sInfoMap.Lock()
-	defer sInfoMap.Unlock()
-	if info, ok := sInfoMap.info[uid]; ok {
-		return info, true
-	}
-	return streamerInfo{}, false
-}
-
-// 将info放进sInfoMap里
-func setStreamerInfo(info streamerInfo) {
-	sInfoMap.Lock()
-	defer sInfoMap.Unlock()
-	sInfoMap.info[info.UID] = info
-}
-*/
-
 // 根据liveID查询是否正在下载直播视频
 func isRecording(liveID string) bool {
 	if info, ok := getLiveInfo(liveID); ok {
@@ -262,16 +237,6 @@ func isDanmu(liveID string) bool {
 	}
 	return false
 }
-
-// 根据liveID查询是否正在直播间挂机
-/*
-func isKeepOnline(liveID string) bool {
-	if info, ok := getLiveInfo(liveID); ok {
-		return info.isKeepOnline
-	}
-	return false
-}
-*/
 
 // 是否登陆AcFun帐号
 func is_login_acfun() bool {

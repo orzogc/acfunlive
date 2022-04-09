@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -28,7 +29,7 @@ func webUI(dir string) {
 	lPrintln("启动web UI服务器，现在可以通过 " + address(config.WebPort+10) + " 来访问UI界面")
 
 	uiSrv = &http.Server{
-		Addr:         ":" + itoa(config.WebPort+10),
+		Addr:         fmt.Sprintf(":%d", config.WebPort+10),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 		IdleTimeout:  60 * time.Second,

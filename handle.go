@@ -124,7 +124,7 @@ func handleCmdUID(cmd string, uid int) string {
 	if !ok {
 		name := getName(uid)
 		if name == "" {
-			lPrintErr("不存在uid为" + itoa(uid) + "的用户")
+			lPrintErrf("不存在uid为%d的用户", uid)
 			return ""
 		}
 		s = streamer{UID: uid, Name: name}

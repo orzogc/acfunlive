@@ -1,4 +1,4 @@
-// +build !tray
+//go:build !tray
 
 // 系统托盘
 package main
