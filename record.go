@@ -152,10 +152,10 @@ func (s streamer) recordLive(danmu bool) {
 	if s.Notify.NotifyRecord {
 		if danmu {
 			desktopNotify("开始下载" + s.Name + "的直播视频和弹幕")
-			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频和弹幕：%s，直播观看地址：%s", s.Name, title, s.getURL()), false)
+			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频和弹幕：%s，观看地址：%s", s.Name, title, s.getURL()), false)
 		} else {
 			desktopNotify("开始下载" + s.Name + "的直播视频")
-			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频：%s，直播观看地址：%s", s.Name, title, s.getURL()), false)
+			s.sendMirai(fmt.Sprintf("开始下载%s的直播视频：%s，观看地址：%s", s.Name, title, s.getURL()), false)
 		}
 	}
 

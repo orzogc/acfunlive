@@ -89,7 +89,7 @@ func (s streamer) cycle(liveID string) {
 
 					if s.Notify.NotifyOn {
 						desktopNotify(s.Name + "正在直播：" + title)
-						s.sendMirai(fmt.Sprintf("%s正在直播：%s，直播观看地址：%s", s.Name, title, s.getURL()), true)
+						s.sendMirai(fmt.Sprintf("%s正在直播：%s，观看地址：%s", s.Name, title, s.getURL()), true)
 					}
 
 					info, _ := getLiveInfo(liveID)
