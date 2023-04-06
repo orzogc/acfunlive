@@ -1,4 +1,4 @@
-//爬虫相关
+// 爬虫相关
 package main
 
 import (
@@ -146,6 +146,8 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	if c.referer != "" {
 		req.Header.SetReferer(c.referer)
 	}
+
+	req.Header.SetCookie("_did", deviceID)
 
 	req.Header.Set("Accept-Encoding", "gzip")
 

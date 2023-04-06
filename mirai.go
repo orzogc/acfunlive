@@ -3,7 +3,6 @@ package main
 
 import (
 	"bufio"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -99,7 +98,7 @@ func initMirai() (result bool) {
 				continue
 			case client.NeedCaptcha:
 				imageFile := filepath.Join(*configDir, qqCaptchaImage)
-				err = ioutil.WriteFile(imageFile, resp.CaptchaImage, 0644)
+				err = os.WriteFile(imageFile, resp.CaptchaImage, 0644)
 				checkErr(err)
 				lPrintln("QQ验证码图片保存在：" + imageFile)
 				lPrintln("请输入验证码，按回车提交：")

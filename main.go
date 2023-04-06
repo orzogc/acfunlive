@@ -7,10 +7,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/orzogc/acfundanmu"
 )
 
 // 命令行参数处理
@@ -174,14 +175,14 @@ func initialize() {
 	}
 
 	if !isConfigFileExist(liveFile) {
-		err = ioutil.WriteFile(liveFileLocation, []byte("[]"), 0644)
+		err = os.WriteFile(liveFileLocation, []byte("[]"), 0644)
 		checkErr(err)
 		lPrintln("创建设置文件" + liveFile)
 	}
 	if !isConfigFileExist(configFile) {
 		data, err := json.MarshalIndent(config, "", "    ")
 		checkErr(err)
-		err = ioutil.WriteFile(configFileLocation, data, 0600)
+		err = os.WriteFile(configFileLocation, data, 0600)
 		checkErr(err)
 		lPrintln("创建设置文件" + configFile)
 	}
@@ -202,6 +203,9 @@ func initialize() {
 		os.Exit(1)
 	}
 	liveRooms.rooms = liveRooms.newRooms
+
+	deviceID, err = acfundanmu.GetDeviceID()
+	checkErr(err)
 
 	if config.Acfun.Account != "" && config.Acfun.Password != "" {
 		err = acfun_login()

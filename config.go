@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -157,7 +156,7 @@ func isConfigFileExist(filename string) bool {
 // 读取live.json
 func loadLiveConfig() {
 	if isConfigFileExist(liveFile) {
-		data, err := ioutil.ReadFile(liveFileLocation)
+		data, err := os.ReadFile(liveFileLocation)
 		checkErr(err)
 
 		if json.Valid(data) {
@@ -180,7 +179,7 @@ func loadLiveConfig() {
 // 读取config.json
 func loadConfig() {
 	if isConfigFileExist(configFile) {
-		data, err := ioutil.ReadFile(configFileLocation)
+		data, err := os.ReadFile(configFileLocation)
 		checkErr(err)
 
 		if json.Valid(data) {
@@ -197,7 +196,7 @@ func saveLiveConfig() {
 	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
 
-	err = ioutil.WriteFile(liveFileLocation, data, 0644)
+	err = os.WriteFile(liveFileLocation, data, 0644)
 	checkErr(err)
 }
 

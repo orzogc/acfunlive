@@ -89,6 +89,9 @@ var acfunCookies struct {
 	cookies acfundanmu.Cookies
 }
 
+// 设备ID
+var deviceID string
+
 var (
 	exeDir    string                                  // 运行程序所在文件夹
 	mainCh    chan controlMsg                         // main()的管道
