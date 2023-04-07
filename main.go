@@ -199,13 +199,13 @@ func initialize() {
 		streamers.old[uid] = s
 	}
 
+	deviceID, err = acfundanmu.GetDeviceID()
+	checkErr(err)
+
 	if ok := fetchAllRooms(); !ok {
 		os.Exit(1)
 	}
 	liveRooms.rooms = liveRooms.newRooms
-
-	deviceID, err = acfundanmu.GetDeviceID()
-	checkErr(err)
 
 	if config.Acfun.Account != "" && config.Acfun.Password != "" {
 		err = acfun_login()

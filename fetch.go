@@ -131,7 +131,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 		}
 	}
 
-	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"
+	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
 
 	if c.userAgent != "" {
 		req.Header.SetUserAgent(c.userAgent)

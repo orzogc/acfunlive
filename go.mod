@@ -10,7 +10,7 @@ require (
 	github.com/getlantern/systray v1.2.1
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
-	github.com/orzogc/acfundanmu v0.0.0-20230406213334-af8312538109
+	github.com/orzogc/acfundanmu v0.0.0-20230407115737-7b64f2d93d38
 	github.com/rs/cors v1.8.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.45.0
