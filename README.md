@@ -1,20 +1,20 @@
 # acfunlive
 AcFun直播通知和下载助手
 
-* [acfunlive](#acfunlive)
-    * [依赖](#依赖)
-      * [运行依赖](#运行依赖)
-      * [编译依赖](#编译依赖)
-    * [编译](#编译)
-      * [使用GNU Make](#使用gnu-make)
-      * [不使用GNU Make](#不使用gnu-make)
-    * [配置文件详解](#配置文件详解)
-      * [live\.json](#livejson)
-      * [config\.json](#configjson)
-    * [使用方法](#使用方法)
-    * [web API](#web-api)
-    * [Mirai使用方法](#mirai使用方法)
-    * [Docker](#docker)
+- [acfunlive](#acfunlive)
+    - [依赖](#依赖)
+      - [运行依赖](#运行依赖)
+      - [编译依赖](#编译依赖)
+    - [编译](#编译)
+      - [使用GNU Make](#使用gnu-make)
+      - [不使用GNU Make](#不使用gnu-make)
+    - [配置文件详解](#配置文件详解)
+      - [live.json](#livejson)
+      - [config.json](#configjson)
+    - [使用方法](#使用方法)
+    - [web API](#web-api)
+    - [Mirai使用方法](#mirai使用方法)
+    - [Docker](#docker)
 
 ### 依赖
 #### 运行依赖
@@ -86,9 +86,9 @@ yarn generate
 ]
 ```
 Bitrate默认为0，相当于默认下载码率最高的直播源，如果设置为其他数字，则会下载码率小于等于Bitrate的条件下码率最高的直播源。直播源具体的名字和码率的对应看下表：
-| 直播源名字 | 高清 | 超清 | 蓝光 4M | 蓝光 5M | 蓝光 6M | 蓝光 7M | 蓝光 8M |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 码率 | 1000/2000 | 2000/3000 | 4000 | 5000 | 6000 | 7000 | 8000 |
+| 直播源名字 | 高清      | 超清      | 蓝光 4M | 蓝光 5M | 蓝光 6M | 蓝光 7M | 蓝光 8M |
+| ---------- | --------- | --------- | ------- | ------- | ------- | ------- | ------- |
+| 码率       | 1000/2000 | 2000/3000 | 4000    | 5000    | 6000    | 7000    | 8000    |
 
 #### config.json
 `config.json`的内容手动修改后需要重新启动本程序以生效
@@ -133,11 +133,15 @@ Windows下如果要使用命令行模式，下载CLI版本，具体参数看 [cl
 ### Mirai使用方法
 **本项目使用 [MiraiGo](https://github.com/Mrs4s/MiraiGo) 。**
 
-命令行模式启动时加上`-mirai`参数，需要在`config.json`里的Mirai对象设置机器人QQ号和密码。
+命令行模式启动时加上`-mirai`参数，需要在`config.json`里的`mirai`对象设置机器人QQ号和密码。
 
 如果由于设备锁无法登陆，请利用日志里的链接验证后重新启动本程序。
 
-`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送help查看具体命令。
+`config.json`里Mirai对象的AdminQQ为自己的QQ号时，添加QQ机器人为好友或者将QQ机器人加进QQ群后，可以发送命令给机器人控制本程序（在QQ群里需要@机器人的昵称），发送`help`查看具体命令。
+
+如果实在无法登陆QQ，修改配置文件所在文件夹里的`qqdevice.json`，将`protocol`改为2可以使用手机QQ扫码登陆。
+
+如果在一台电脑/服务器能登陆QQ，而另外一台电脑/服务器登陆失败，可以将登陆成功的`qqdevice.json`和`qqsession.token`复制到登陆失败的电脑/服务器配置文件所在文件夹里，再启动本程序试试。
 
 ### Docker
 ```

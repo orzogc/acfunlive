@@ -10,6 +10,7 @@ require (
 	github.com/getlantern/systray v1.2.1
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/mux v1.8.0
+	github.com/mattn/go-colorable v0.1.13
 	github.com/orzogc/acfundanmu v0.0.0-20230407115737-7b64f2d93d38
 	github.com/rs/cors v1.8.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -37,6 +38,7 @@ require (
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/klauspost/compress v1.16.4 // indirect
+	github.com/mattn/go-isatty v0.0.18 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/orzogc/fastws v1.0.5-0.20220122125748-aa014b776886 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
