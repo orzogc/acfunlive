@@ -25,7 +25,7 @@ func getFFmpeg() (ffmpegFile string) {
 // 转换文件名和限制文件名长度，添加程序所在文件夹的路径
 func transFilename(filename string) string {
 	// 转换文件名不允许的特殊字符
-	re := regexp.MustCompile(`[<>:"/\\|?*]`)
+	re := regexp.MustCompile(`[<>:"/\\|?*\r\n]`)
 	filename = re.ReplaceAllString(filename, "-")
 	outFilename := filepath.Join(*recordDir, filename)
 	// windows下全路径文件名不能过长

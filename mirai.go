@@ -4,7 +4,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"image"
 	"image/png"
@@ -272,7 +271,7 @@ func initMirai() (result bool) {
 		checkErr(err)
 		err = device.ReadJson(data)
 		checkErr(err)
-	} else if errors.Is(err, os.ErrNotExist) {
+	} else if os.IsNotExist(err) {
 		device = client.GenRandomDevice()
 		err := os.WriteFile(deviceFile, device.ToJson(), 0644)
 		checkErr(err)
