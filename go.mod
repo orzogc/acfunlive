@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/mattn/go-colorable v0.1.13
 	github.com/orzogc/acfundanmu v0.0.0-20240316224550-90660b26bb41
-	github.com/rs/cors v1.10.1
+	github.com/rs/cors v1.11.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/valyala/fasthttp v1.52.0
 	github.com/valyala/fastjson v1.6.4
