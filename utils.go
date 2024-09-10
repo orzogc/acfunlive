@@ -14,6 +14,7 @@ import (
 
 	"github.com/orzogc/acfundanmu"
 	"github.com/valyala/fasthttp"
+	"go.uber.org/atomic"
 )
 
 type control int
@@ -94,18 +95,19 @@ var acfunCookies struct {
 var deviceID string
 
 var (
-	exeDir    string                                  // 运行程序所在文件夹
-	mainCh    chan controlMsg                         // main() 的管道
-	mainCtx   context.Context                         // main() 的 ctx
-	isListen  *bool                                   // 程序是否处于监听状态
-	isWebAPI  *bool                                   // 程序是否启动 web API 服务器
-	isWebUI   *bool                                   // 程序是否启动 web UI 服务器
-	configDir *string                                 // 设置文件所在文件夹
-	recordDir *string                                 // 下载录播和弹幕时保存的文件夹
-	isNoGUI   = new(bool)                             // 程序是否启动 GUI 界面
-	logger    = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的 logger
-	atoi      = strconv.Atoi                          // 将字符串转换为 int
-	boolStr   = strconv.FormatBool                    // 将 bool 类型转换为字符串
+	exeDir        string                                  // 运行程序所在文件夹
+	mainCh        chan controlMsg                         // main() 的管道
+	mainCtx       context.Context                         // main() 的 ctx
+	isListen      *bool                                   // 程序是否处于监听状态
+	isWebAPI      *bool                                   // 程序是否启动 web API 服务器
+	isWebUI       *bool                                   // 程序是否启动 web UI 服务器
+	configDir     *string                                 // 设置文件所在文件夹
+	recordDir     *string                                 // 下载录播和弹幕时保存的文件夹
+	isNoGUI       = new(bool)                             // 程序是否启动 GUI 界面
+	logger        = log.New(os.Stdout, "", log.LstdFlags) // 可以同步输出的 logger
+	atoi          = strconv.Atoi                          // 将字符串转换为 int
+	boolStr       = strconv.FormatBool                    // 将 bool 类型转换为字符串
+	needMdealInfo = atomic.Bool{}                         // 是否需要指定主播的守护徽章的信息
 )
 
 // 检查错误

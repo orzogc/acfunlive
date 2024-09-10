@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -158,6 +159,52 @@ func cycleFetch(ctx context.Context) {
 				}
 
 				liveRooms.Lock()
+				if config.AutoKeepOnline && is_login_acfun() && needMdealInfo.Load() {
+					for uid, room := range liveRooms.newRooms {
+						// 这样可以防止请求过多，但是要下一场直播才会自动挂牌子
+						if _, ok := liveRooms.rooms[uid]; !ok {
+							go func(uid int, name string) {
+								r := rand.New(rand.NewSource(time.Now().UnixNano()))
+								n := r.Intn(10000)
+								time.Sleep(time.Duration(n) * time.Millisecond)
+
+								var isChanged bool
+								streamers.Lock()
+								if s, ok := streamers.crt[uid]; ok {
+									if !s.KeepOnline {
+										hasMedal, err := fetchMedalInfo(uid)
+										if err != nil {
+											lPrintErr("%+v", err)
+										} else if hasMedal {
+											s.KeepOnline = true
+											streamers.crt[s.UID] = s
+											isChanged = true
+										}
+									}
+								} else {
+									hasMedal, err := fetchMedalInfo(uid)
+									if err != nil {
+										lPrintErr("%+v", err)
+									} else if hasMedal {
+										s := streamer{
+											UID:        uid,
+											Name:       name,
+											KeepOnline: true,
+										}
+										streamers.crt[s.UID] = s
+										isChanged = true
+									}
+								}
+								streamers.Unlock()
+
+								if isChanged {
+									saveLiveConfig()
+								}
+							}(uid, room.name)
+						}
+					}
+				}
+
 				for uid, room := range liveRooms.rooms {
 					delete(liveRooms.rooms, uid)
 					liveRoomPool.Put(room)
@@ -193,6 +240,8 @@ func cycleGetMedals(ctx context.Context) {
 		default:
 			list, err := fetchMedalList()
 			if err == nil {
+				length := len(list)
+
 				var isChanged bool
 				streamers.Lock()
 				for _, m := range list {
@@ -217,6 +266,12 @@ func cycleGetMedals(ctx context.Context) {
 
 				if isChanged {
 					saveLiveConfig()
+				}
+
+				// 守护徽章列表最多只有 500 个
+				if length >= 500 {
+					_ = needMdealInfo.CompareAndSwap(false, true)
+					return
 				}
 			} else {
 				lPrintErrf("%+v", err)
