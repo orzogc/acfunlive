@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const ffmpegNotExist = "没有找到FFmpeg，停止下载直播视频"
+const ffmpegNotExist = "没有找到 FFmpeg，停止下载直播视频"
 
 // 临时下载指定主播的直播视频
 func startRec(uid int, danmu bool) bool {
@@ -20,7 +20,7 @@ func startRec(uid int, danmu bool) bool {
 	if !ok {
 		name = getName(uid)
 		if name == "" {
-			lPrintWarnf("不存在uid为%d的用户", uid)
+			lPrintWarnf("不存在 uid 为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name}
@@ -47,10 +47,10 @@ func startRec(uid int, danmu bool) bool {
 
 	// 查看程序是否处于监听状态
 	if *isListen {
-		// goroutine是为了快速返回
+		// goroutine 是为了快速返回
 		go s.recordLive(danmu)
 	} else {
-		// 程序只在单独下载一个直播视频，不用goroutine，防止程序提前结束运行
+		// 程序只在单独下载一个直播视频，不用 goroutine，防止程序提前结束运行
 		s.recordLive(danmu)
 	}
 	return true
@@ -60,7 +60,7 @@ func startRec(uid int, danmu bool) bool {
 func stopRec(uid int) bool {
 	infoList, ok := getLiveInfoByUID(uid)
 	if !ok {
-		lPrintWarnf("没有在下载uid为%d的主播的直播视频", uid)
+		lPrintWarnf("没有在下载 uid 为%d的主播的直播视频", uid)
 		return true
 	}
 
@@ -69,7 +69,7 @@ func stopRec(uid int) bool {
 			lPrintf("开始停止下载%s的liveID为%s直播视频", longID(uid), info.LiveID)
 			info.recordCh <- stopRecord
 			_, _ = io.WriteString(info.ffmpegStdin, "q")
-			// 等待20秒强制停止下载，goroutine是为了防止锁住时间过长
+			// 等待 20 秒强制停止下载，goroutine 是为了防止锁住时间过长
 			go func(cancel context.CancelFunc) {
 				time.Sleep(20 * time.Second)
 				cancel()
@@ -140,7 +140,7 @@ func (s streamer) recordLive(danmu bool) {
 	if recordFile == "" {
 		return
 	}
-	// 想要输出其他视频格式可以修改config.json里的Output
+	// 想要输出其他视频格式可以修改 config.json 里的 Output
 	recordFile = recordFile + "." + config.Output
 	info.recordFile = recordFile
 
@@ -159,7 +159,7 @@ func (s streamer) recordLive(danmu bool) {
 		}
 	}
 
-	// 运行ffmpeg下载直播视频，不用mainCtx是为了能正常退出
+	// 运行 ffmpeg 下载直播视频，不用 mainCtx 是为了能正常退出
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	cmd := exec.CommandContext(ctx, ffmpegFile,
@@ -185,9 +185,9 @@ func (s streamer) recordLive(danmu bool) {
 	defer once.Do(q)
 
 	if !*isListen {
-		// 程序单独下载一个直播视频时可以按q键退出（ffmpeg的特性）
+		// 程序单独下载一个直播视频时可以按 q 键退出（ffmpeg 的特性）
 		cmd.Stdin = os.Stdin
-		lPrintln("按q键退出下载直播视频")
+		lPrintln("按 q 键退出下载直播视频")
 	}
 
 	// 下载弹幕

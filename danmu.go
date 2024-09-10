@@ -12,7 +12,7 @@ import (
 
 // 不同的视频分辨率对应的弹幕字幕设置
 var subConfigs = map[int]acfundanmu.SubConfig{
-	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 60}, // 这是手机直播，有一些是540X960
+	0:    {PlayResX: 720, PlayResY: 1280, FontSize: 60}, // 这是手机直播，有一些是 540X960
 	540:  {PlayResX: 960, PlayResY: 540, FontSize: 30},
 	720:  {PlayResX: 1280, PlayResY: 720, FontSize: 40},
 	1080: {PlayResX: 1920, PlayResY: 1080, FontSize: 60},
@@ -43,7 +43,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 
 	if s.Danmu {
 		lPrintln("开始下载" + s.longID() + "的直播弹幕")
-		lPrintln("本次下载的ass文件保存在" + info.assFile)
+		lPrintln("本次下载的 ass 文件保存在" + info.assFile)
 		if *isListen {
 			lPrintf("如果想提前结束下载%s的直播弹幕，运行 stopdanmu %d", s.longID(), s.UID)
 		}
@@ -72,7 +72,7 @@ func (s streamer) getDanmu(ctx context.Context, info liveInfo) {
 			}
 		}
 	} else {
-		lPrintErr("s.Danmu或s.KeepOnline必须为true")
+		lPrintErr("s.Danmu 或 s.KeepOnline 必须为 true")
 		return
 	}
 
@@ -85,7 +85,7 @@ Outer:
 			break Outer
 		default:
 			// 因意外结束弹幕下载时重启下载
-			// 应付AcFun API可能出现的bug
+			// 应付 AcFun API 可能出现的 bug
 			if s.isLiveOnByPage() {
 				if newLiveID := getLiveID(s.UID); newLiveID == info.LiveID {
 					lPrintWarn("因意外结束下载" + s.longID() + "的直播弹幕，尝试重启下载")
@@ -206,7 +206,7 @@ func startDanmu(uid int) bool {
 	if !ok {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarnf("不存在uid为%d的用户", uid)
+			lPrintWarnf("不存在 uid 为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name}
@@ -228,10 +228,10 @@ func startDanmu(uid int) bool {
 
 	// 查看程序是否处于监听状态
 	if *isListen {
-		// goroutine是为了快速返回
+		// goroutine 是为了快速返回
 		go s.initDanmu(mainCtx, liveID, filename)
 	} else {
-		// 程序只在单独下载一个直播弹幕，不用goroutine，防止程序提前结束运行
+		// 程序只在单独下载一个直播弹幕，不用 goroutine，防止程序提前结束运行
 		s.initDanmu(mainCtx, liveID, filename)
 	}
 	return true
@@ -241,7 +241,7 @@ func startDanmu(uid int) bool {
 func stopDanmu(uid int) bool {
 	infoList, ok := getLiveInfoByUID(uid)
 	if !ok {
-		lPrintWarnf("没有在下载uid为%d的主播的直播弹幕", uid)
+		lPrintWarnf("没有在下载 uid 为%d的主播的直播弹幕", uid)
 		return true
 	}
 

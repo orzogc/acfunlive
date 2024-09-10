@@ -11,12 +11,12 @@ import (
 	"unicode/utf8"
 )
 
-// 查看并获取FFmpeg的位置
+// 查看并获取 FFmpeg 的位置
 func getFFmpeg() (ffmpegFile string) {
-	// windows下ffmpeg.exe需要和本程序exe放在同一文件夹下
+	// windows 下 ffmpeg.exe 需要和本程序 exe 放在同一文件夹下
 	ffmpegFile = filepath.Join(exeDir, "ffmpeg.exe")
 	if _, err := os.Stat(ffmpegFile); os.IsNotExist(err) {
-		lPrintErr("ffmpeg.exe需要和本程序放在同一文件夹下")
+		lPrintErr("ffmpeg.exe 需要和本程序放在同一文件夹下")
 		return ""
 	}
 	return ffmpegFile
@@ -28,7 +28,7 @@ func transFilename(filename string) string {
 	re := regexp.MustCompile(`[<>:"/\\|?*\r\n]`)
 	filename = re.ReplaceAllString(filename, "-")
 	outFilename := filepath.Join(*recordDir, filename)
-	// windows下全路径文件名不能过长
+	// windows 下全路径文件名不能过长
 	if utf8.RuneCountInString(outFilename) > 255 {
 		lPrintErr("全路径文件名太长，取消下载")
 		desktopNotify("全路径文件名太长，取消下载")
@@ -37,7 +37,7 @@ func transFilename(filename string) string {
 	return outFilename
 }
 
-// Windows下启用GUI时隐藏FFmpeg的cmd窗口
+// Windows 下启用 GUI 时隐藏 FFmpeg 的 cmd 窗口
 func hideCmdWindow(cmd *exec.Cmd) {
 	if !*isNoGUI {
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}

@@ -21,7 +21,7 @@ type sJSON struct {
 	URL   string `json:"url"`
 }
 
-// 实现json.Marshaler接口
+// 实现 json.Marshaler 接口
 func (s *streaming) MarshalJSON() ([]byte, error) {
 	st := (*streamer)(s)
 	sj := sJSON{UID: s.UID, Name: s.Name, Title: st.getTitle(), URL: st.getURL()}
@@ -110,7 +110,7 @@ func listDanmu() (danmu []streaming) {
 	return danmu
 }
 
-// 通知main()退出程序
+// 通知 main() 退出程序
 func quitRun() {
 	lPrintln("正在准备退出，请等待...")
 	q := controlMsg{c: quit}

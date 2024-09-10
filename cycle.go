@@ -24,7 +24,7 @@ func (s *streamer) handleMsg(msg controlMsg) {
 		sInfoMap.Unlock()
 	case quit:
 	default:
-		lPrintErrf("未知的controlMsg：%+v", msg)
+		lPrintErrf("未知的 controlMsg：%+v", msg)
 	}
 }
 
@@ -107,7 +107,7 @@ func (s streamer) cycle(liveID string) {
 					}
 				}
 			} else {
-				// 应付AcFun API可能出现的bug：主播没下播但API显示下播
+				// 应付 AcFun API 可能出现的 bug：主播没下播但 API 显示下播
 				if isLive && !s.isLiveOnByPage() {
 					isLive = false
 					lPrintln(s.longID() + "已经下播")
@@ -124,7 +124,7 @@ func (s streamer) cycle(liveID string) {
 	}
 }
 
-// 循环检测删除lInfoMap.info里没有下载视频和弹幕以及不在挂机的key
+// 循环检测删除 lInfoMap.info 里没有下载视频和弹幕以及不在挂机的 key
 func cycleDelKey(ctx context.Context) {
 	for {
 		select {
@@ -145,7 +145,7 @@ func cycleDelKey(ctx context.Context) {
 	}
 }
 
-// 循环获取AcFun直播间数据
+// 循环获取 AcFun 直播间数据
 func cycleFetch(ctx context.Context) {
 	for {
 		select {
@@ -166,7 +166,7 @@ func cycleFetch(ctx context.Context) {
 				liveRooms.Unlock()
 			}
 
-			// 每10秒循环一次
+			// 每 10 秒循环一次
 			time.Sleep(10 * time.Second)
 		}
 	}
@@ -182,7 +182,7 @@ func cycleGetMedals(ctx context.Context) {
 	}()
 
 	if !is_login_acfun() {
-		lPrintErr("没有登陆AcFun帐号，取消自动挂机")
+		lPrintErr("没有登陆 AcFun 帐号，取消自动挂机")
 		return
 	}
 

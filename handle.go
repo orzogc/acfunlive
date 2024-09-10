@@ -15,12 +15,12 @@ const handleErrMsg = "请输入正确的命令，输入 help 查看全部命令�
 const helpMsg = `listlive：列出正在直播的主播
 listrecord：列出正在下载的直播视频
 listdanmu：列出正在下载的直播弹幕
-startwebapi：启动web API服务器
-stopwebapi：停止web API服务器
-startwebui：启动web UI服务器，需要web API服务器运行，如果web API服务器没启动会启动web API服务器
-stopwebui：停止web UI服务器
-startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-addnotifyon uid：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
+startwebapi：启动 web API 服务器
+stopwebapi：停止 web API 服务器
+startwebui：启动 web UI 服务器，需要 web API 服务器运行，如果 web API 服务器没启动会启动 web API 服务器
+stopwebui：停止 web UI 服务器
+startmirai：利用 Mirai 发送直播通知到指定 QQ 或 QQ 群
+addnotifyon uid：订阅指定主播的开播提醒，uid 在主播的网页版个人主页查看
 delnotifyon uid：取消订阅指定主播的开播提醒
 addnotifyoff uid：订阅指定主播的下播提醒
 delnotifyoff uid：取消订阅指定主播的下播提醒
@@ -36,12 +36,12 @@ addkeeponline uid：指定主播直播时在其直播间挂机
 delkeeponline uid：取消在指定主播直播时在其直播间挂机
 delconfig uid：删除指定主播的所有设置
 getdlurl uid：查看指定主播是否在直播，如在直播输出其直播源地址
-addqq uid QQ号：设置将指定主播的开播提醒发送到指定QQ号，需要QQ机器人已经添加该QQ为好友
-delqq uid QQ号：取消设置将指定主播的开播提醒发送到指定QQ号
-cancelqq uid：取消设置将指定主播的开播提醒发送到任何QQ
-addqqgroup uid QQ群号：设置将指定主播的开播提醒发送到指定QQ群号，需要QQ机器人已经加入该QQ群，最好是管理员，会@全体成员
-delqqgroup uid QQ群号：取消设置将指定主播的开播提醒发送到指定QQ群号
-cancelqqgroup uid：取消设置将指定主播的开播提醒发送到任何QQ群
+addqq uid QQ 号：设置将指定主播的开播提醒发送到指定 QQ 号，需要 QQ 机器人已经添加该 QQ 为好友
+delqq uid QQ 号：取消设置将指定主播的开播提醒发送到指定 QQ 号
+cancelqq uid：取消设置将指定主播的开播提醒发送到任何 QQ
+addqqgroup uid QQ 群号：设置将指定主播的开播提醒发送到指定 QQ 群号，需要 QQ 机器人已经加入该 QQ 群，最好是管理员，会@全体成员
+delqqgroup uid QQ 群号：取消设置将指定主播的开播提醒发送到指定 QQ 群号
+cancelqqgroup uid：取消设置将指定主播的开播提醒发送到任何 QQ 群
 startrecord uid：临时下载指定主播的直播视频，如果没有设置自动下载该主播的直播视频，这次为一次性的下载
 stoprecord uid：正在下载指定主播的直播视频时取消下载
 startdanmu uid：临时下载指定主播的直播弹幕，如果没有设置自动下载该主播的直播弹幕，这次为一次性的下载
@@ -124,7 +124,7 @@ func handleCmdUID(cmd string, uid int) string {
 	if !ok {
 		name := getName(uid)
 		if name == "" {
-			lPrintErrf("不存在uid为%d的用户", uid)
+			lPrintErrf("不存在 uid 为%d的用户", uid)
 			return ""
 		}
 		s = streamer{UID: uid, Name: name}
@@ -161,7 +161,7 @@ func handleCmdUID(cmd string, uid int) string {
 	}
 }
 
-// 处理QQ命令
+// 处理 QQ 命令
 func handleCmdQQ(cmd string, uid int, qq int64) string {
 	if d, ok := qqDispatch[cmd]; ok {
 		return boolStr(d(uid, qq))

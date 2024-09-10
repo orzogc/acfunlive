@@ -48,30 +48,30 @@ var (
 type liveRoom struct {
 	name   string // 主播名字
 	title  string // 直播间标题
-	liveID string // 直播ID
+	liveID string // 直播 ID
 }
 
 // 守护徽章信息
 type medalInfo struct {
-	uid  int64  // 主播uid
+	uid  int64  // 主播 uid
 	name string // 主播名字
 }
 
-// liveRoom的map
+// liveRoom 的 map
 var liveRooms struct {
-	sync.RWMutex                   // rooms的锁
-	rooms        map[int]*liveRoom // 现在的liveRoom
-	newRooms     map[int]*liveRoom // 新的liveRoom
+	sync.RWMutex                   // rooms 的锁
+	rooms        map[int]*liveRoom // 现在的 liveRoom
+	newRooms     map[int]*liveRoom // 新的 liveRoom
 }
 
-// liveRoom的pool
+// liveRoom 的 pool
 var liveRoomPool = &sync.Pool{
 	New: func() any {
 		return new(liveRoom)
 	},
 }
 
-// medalInfo的pool
+// medalInfo 的 pool
 var medalInfoPool = &sync.Pool{
 	New: func() any {
 		return new(medalInfo)
@@ -89,7 +89,7 @@ func (s *streamer) getURL() string {
 	return getURL(s.UID)
 }
 
-// http请求，调用后需要 defer fasthttp.ReleaseResponse(resp)
+// http 请求，调用后需要 defer fasthttp.ReleaseResponse(resp)
 func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -111,7 +111,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 		req.SetRequestURI(c.url)
 	} else {
 		fasthttp.ReleaseResponse(resp)
-		return nil, fmt.Errorf("请求的url不能为空")
+		return nil, fmt.Errorf("请求的 url 不能为空")
 	}
 
 	if len(c.body) != 0 {
@@ -121,7 +121,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	if c.method != "" {
 		req.Header.SetMethod(c.method)
 	} else {
-		// 默认为GET
+		// 默认为 GET
 		req.Header.SetMethod(fasthttp.MethodGet)
 	}
 
@@ -131,7 +131,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 		}
 	}
 
-	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
+	const userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 
 	if c.userAgent != "" {
 		req.Header.SetUserAgent(c.userAgent)
@@ -157,7 +157,7 @@ func (c *httpClient) doRequest() (resp *fasthttp.Response, e error) {
 	return resp, nil
 }
 
-// 获取响应body
+// 获取响应 body
 func getBody(resp *fasthttp.Response) []byte {
 	if string(resp.Header.Peek("content-encoding")) == "gzip" || string(resp.Header.Peek("Content-Encoding")) == "gzip" {
 		body, err := resp.BodyGunzip()
@@ -169,7 +169,7 @@ func getBody(resp *fasthttp.Response) []byte {
 	return resp.Body()
 }
 
-// 获取全部AcFun直播间
+// 获取全部 AcFun 直播间
 func fetchAllRooms() bool {
 	for count := 10000; count < 1e9; count *= 10 {
 		rooms, all, err := fetchLiveRoom(count)
@@ -188,7 +188,7 @@ func fetchAllRooms() bool {
 	return false
 }
 
-// 获取指定数量的AcFun直播间列表
+// 获取指定数量的 AcFun 直播间列表
 func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -235,7 +235,7 @@ func fetchLiveRoom(count int) (rooms map[int]*liveRoom, all bool, e error) {
 	return rooms, true, nil
 }
 
-// 根据uid获取主播的名字，可能需要检查返回是否为空
+// 根据 uid 获取主播的名字，可能需要检查返回是否为空
 func getName(uid int) string {
 	liveRooms.RLock()
 	room, ok := liveRooms.rooms[uid]
@@ -254,7 +254,7 @@ func getName(uid int) string {
 	return room.name
 }
 
-// 根据uid获取主播直播间的标题
+// 根据 uid 获取主播直播间的标题
 func getTitle(uid int) string {
 	liveRooms.RLock()
 	room, ok := liveRooms.rooms[uid]
@@ -274,7 +274,7 @@ func getTitle(uid int) string {
 	return ""
 }
 
-// 根据uid获取liveID，结果准确，可能需要检查返回是否为空
+// 根据 uid 获取 liveID，结果准确，可能需要检查返回是否为空
 func getLiveID(uid int) string {
 	if isLive, room, err := tryFetchLiveInfo(uid); err == nil {
 		defer liveRoomPool.Put(room)
@@ -285,7 +285,7 @@ func getLiveID(uid int) string {
 	return ""
 }
 
-// 根据uid查看主播是否正在直播
+// 根据 uid 查看主播是否正在直播
 func isLiveOn(uid int) bool {
 	liveRooms.RLock()
 	_, ok := liveRooms.rooms[uid]
@@ -306,7 +306,7 @@ func (s *streamer) getTitle() string {
 	return getTitle(s.UID)
 }
 
-// 获取liveID，由于AcFun的bug，结果不一定准确，可能需要检查返回是否为空
+// 获取 liveID，由于 AcFun 的 bug，结果不一定准确，可能需要检查返回是否为空
 func (s *streamer) getLiveID() string {
 	liveRooms.RLock()
 	defer liveRooms.RUnlock()
@@ -317,7 +317,7 @@ func (s *streamer) getLiveID() string {
 	return ""
 }
 
-// 查看主播是否在直播，由于AcFun的bug，结果不一定准确
+// 查看主播是否在直播，由于 AcFun 的 bug，结果不一定准确
 func (s *streamer) isLiveOn() bool {
 	liveRooms.RLock()
 	defer liveRooms.RUnlock()
@@ -325,7 +325,7 @@ func (s *streamer) isLiveOn() bool {
 	return ok
 }
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool
+// 获取用户直播相关信息，可能要将 room 放回 liveRoomPool
 func fetchLiveInfo(uid int) (isLive bool, room *liveRoom, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -382,7 +382,7 @@ func fetchMedalList() (medalList []*medalInfo, e error) {
 	const medalListURL = "https://www.acfun.cn/rest/pc-direct/fansClub/fans/medal/list"
 
 	if !is_login_acfun() {
-		return nil, fmt.Errorf("没有登陆AcFun帐号")
+		return nil, fmt.Errorf("没有登陆 AcFun 帐号")
 	}
 
 	client := &httpClient{
@@ -427,7 +427,7 @@ func fetchMedalInfo(uid int) (hasMedal bool, e error) {
 	const medalInfoURL = "https://live.acfun.cn/rest/pc-direct/fansClub/fans/medal/detail?uperId=%d"
 
 	if len(acfunCookies) == 0 {
-		return false, fmt.Errorf("没有登陆AcFun帐号")
+		return false, fmt.Errorf("没有登陆 AcFun 帐号")
 	}
 
 	client := &httpClient{
@@ -452,7 +452,7 @@ func fetchMedalInfo(uid int) (hasMedal bool, e error) {
 	return v.GetInt("medal", "level") > 0, nil
 } */
 
-// 获取用户直播相关信息，可能要将room放回liveRoomPool
+// 获取用户直播相关信息，可能要将 room 放回 liveRoomPool
 func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {
 	err = runThrice(func() (err error) {
 		isLive, room, err = fetchLiveInfo(uid)
@@ -461,7 +461,7 @@ func tryFetchLiveInfo(uid int) (isLive bool, room *liveRoom, err error) {
 	return isLive, room, err
 }
 
-// 通过wap版网页查看主播是否在直播
+// 通过 wap 版网页查看主播是否在直播
 func (s *streamer) isLiveOnByPage() (isLive bool) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -488,7 +488,7 @@ func (s *streamer) isLiveOnByPage() (isLive bool) {
 	return doc.Find("p.closed-tip").Text() != "直播已结束"
 }
 
-// 获取AcFun的logo
+// 获取 AcFun 的 logo
 func fetchAcLogo() {
 	const acLogo = "https://cdn.aixifan.com/ico/favicon.ico"
 
@@ -509,7 +509,7 @@ func fetchAcLogo() {
 	checkErr(err)
 }
 
-// 获取AcFun的直播源信息，分为hls和flv两种
+// 获取 AcFun 的直播源信息，分为 hls 和 flv 两种
 func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -529,10 +529,10 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 
 	index := 0
 	if s.Bitrate == 0 {
-		// s.Bitrate为0时选择码率最高的直播源
+		// s.Bitrate 为 0 时选择码率最高的直播源
 		index = len(sInfo.StreamList) - 1
 	} else {
-		// 选择s.Bitrate下码率最高的直播源
+		// 选择 s.Bitrate 下码率最高的直播源
 		for i, stream := range sInfo.StreamList {
 			if s.Bitrate >= stream.Bitrate {
 				index = i
@@ -557,13 +557,13 @@ func (s *streamer) getStreamInfo() (info streamInfo, e error) {
 	}
 
 	i := strings.Index(info.flvURL, "flv?")
-	// 这是flv对应的hls视频源
+	// 这是 flv 对应的 hls 视频源
 	info.hlsURL = strings.ReplaceAll(info.flvURL[0:i], "pull.etoote.com", "hlspull.etoote.com") + "m3u8"
 
 	return info, nil
 }
 
-// 根据config.Source获取直播信息
+// 根据 config.Source 获取直播信息
 func (s *streamer) getLiveInfo() (info liveInfo, e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -594,7 +594,7 @@ func printStreamURL(uid int) (string, string) {
 	if !ok {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarnf("不存在uid为%d的用户", uid)
+			lPrintWarnf("不存在 uid 为%d的用户", uid)
 			return "", ""
 		}
 		s = streamer{UID: uid, Name: name}
@@ -607,7 +607,7 @@ func printStreamURL(uid int) (string, string) {
 		if err != nil {
 			lPrintErr("无法获取" + s.longID() + "的直播源，请重新运行命令")
 		} else {
-			lPrintln(s.longID() + "直播源的hls和flv地址分别是：" + "\n" + info.hlsURL + "\n" + info.flvURL)
+			lPrintln(s.longID() + "直播源的 hls 和 flv 地址分别是：" + "\n" + info.hlsURL + "\n" + info.flvURL)
 		}
 		return info.hlsURL, info.flvURL
 	}

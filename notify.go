@@ -5,10 +5,10 @@ import (
 	"github.com/gen2brain/beeep"
 )
 
-// logo文件名字
+// logo 文件名字
 const logoFile = "acfunlogo.ico"
 
-// logo文件位置
+// logo 文件位置
 var logoFileLocation string
 
 type notify struct {
@@ -20,5 +20,5 @@ type notify struct {
 
 // 桌面通知
 func desktopNotify(text string) {
-	beeep.Alert("AcFun直播通知", text, logoFileLocation)
+	beeep.Alert("AcFun 直播通知", text, logoFileLocation)
 }

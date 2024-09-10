@@ -1,7 +1,7 @@
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
-GOGET=$(GOCMD) get -d
+GOGET=$(GOCMD) get
 GITREPO=github.com/orzogc/acfunlive
 UIDIR=acfunlive-ui
 STATIC=CGO_ENABLED=0
@@ -58,3 +58,5 @@ build-windows-cli: deps build-go-windows-cli build-ui
 build-go-windows-cli:
 	$(MKDIR) $(BINARY)
 	$(STATIC) $(WINDOWSENV) $(GOBUILD) -o $(BINARY)
+
+.NOTPARALLEL:

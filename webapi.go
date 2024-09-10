@@ -1,4 +1,4 @@
-// web服务相关
+// web 服务相关
 package main
 
 import (
@@ -13,47 +13,47 @@ import (
 	"github.com/rs/cors"
 )
 
-// web服务帮助信息
-const webHelp = `/listlive ：列出正在直播的主播
-/listrecord ：列出正在下载的直播视频
+// web 服务帮助信息
+const webHelp = `/listlive：列出正在直播的主播
+/listrecord：列出正在下载的直播视频
 /listdanmu：列出正在下载的直播弹幕
-/startwebui：启动web UI服务器
-/stopwebui：停止web UI服务器
+/startwebui：启动 web UI 服务器
+/stopwebui：停止 web UI 服务器
 /liststreamer：列出设置了开播提醒或自动下载直播的主播
-/startmirai：利用Mirai发送直播通知到指定QQ或QQ群
-/addnotifyon/uid ：订阅指定主播的开播提醒，uid在主播的网页版个人主页查看
-/delnotifyon/uid ：取消订阅指定主播的开播提醒
-/addnotifyoff/uid ：订阅指定主播的下播提醒
-/delnotifyoff/uid ：取消订阅指定主播的下播提醒
-/addnotifyrecord/uid ：通知指定主播的直播视频下载
-/delnotifyrecord/uid ：取消通知指定主播的直播视频下载
-/addnotifydanmu/uid ：通知指定主播的直播弹幕下载
-/delnotifydanmu/uid ：取消通知指定主播的直播弹幕下载
-/addrecord/uid ：自动下载指定主播的直播视频
-/delrecord/uid ：取消自动下载指定主播的直播视频
-/adddanmu/uid ：自动下载指定主播的直播弹幕
-/deldanmu/uid ：取消自动下载指定主播的直播弹幕
-/addkeeponline/uid ：指定主播直播时在其直播间挂机
-/delkeeponline/uid ：取消在指定主播直播时在其直播间挂机
+/startmirai：利用 Mirai 发送直播通知到指定 QQ 或 QQ 群
+/addnotifyon/uid：订阅指定主播的开播提醒，uid 在主播的网页版个人主页查看
+/delnotifyon/uid：取消订阅指定主播的开播提醒
+/addnotifyoff/uid：订阅指定主播的下播提醒
+/delnotifyoff/uid：取消订阅指定主播的下播提醒
+/addnotifyrecord/uid：通知指定主播的直播视频下载
+/delnotifyrecord/uid：取消通知指定主播的直播视频下载
+/addnotifydanmu/uid：通知指定主播的直播弹幕下载
+/delnotifydanmu/uid：取消通知指定主播的直播弹幕下载
+/addrecord/uid：自动下载指定主播的直播视频
+/delrecord/uid：取消自动下载指定主播的直播视频
+/adddanmu/uid：自动下载指定主播的直播弹幕
+/deldanmu/uid：取消自动下载指定主播的直播弹幕
+/addkeeponline/uid：指定主播直播时在其直播间挂机
+/delkeeponline/uid：取消在指定主播直播时在其直播间挂机
 /delconfig/uid：删除指定主播的所有设置
-/getdlurl/uid ：查看指定主播是否在直播，如在直播输出其直播源地址
+/getdlurl/uid：查看指定主播是否在直播，如在直播输出其直播源地址
 /addqq/uid/QQ号：设置将指定主播的开播提醒发送到指定QQ号
 /delqq/uid：取消设置将指定主播的开播提醒发送到QQ
 /addqqgroup/uid/QQ群号：设置将指定主播的开播提醒发送到指定QQ群号
 /delqqgroup/uid：取消设置将指定主播的开播提醒发送到QQ群号
-/startrecord/uid ：临时下载指定主播的直播视频，如果没有设置自动下载该主播的直播视频，这次为一次性的下载
-/stoprecord/uid ：正在下载指定主播的直播视频时取消下载
+/startrecord/uid：临时下载指定主播的直播视频，如果没有设置自动下载该主播的直播视频，这次为一次性的下载
+/stoprecord/uid：正在下载指定主播的直播视频时取消下载
 /startdanmu/uid：临时下载指定主播的直播弹幕，如果没有设置自动下载该主播的直播弹幕，这次为一次性的下载
 /stopdanmu/uid：正在下载指定主播的直播弹幕时取消下载
 /startrecdan/uid：临时下载指定主播的直播视频和弹幕，如果没有设置自动下载该主播的直播视频和弹幕，这次为一次性的下载
 /stoprecdan/uid：正在下载指定主播的直播视频和弹幕时取消下载
-/log ：查看log
-/quit ：退出本程序，退出需要等待半分钟左右
-/help ：本帮助信息`
+/log：查看 log
+/quit：退出本程序，退出需要等待半分钟左右
+/help：本帮助信息`
 
 var apiSrv *http.Server
 
-// 返回localhost地址和端口
+// 返回 localhost 地址和端口
 func address(port int) string {
 	return fmt.Sprintf("http://localhost:%d", port)
 }
@@ -100,7 +100,7 @@ func cmdQQHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 显示favicon
+// 显示 favicon
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, logoFile)
 }
@@ -117,28 +117,28 @@ func helpHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, webHelp)
 }
 
-// 打印web请求
+// 打印 web 请求
 func printRequestURI(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if *isNoGUI {
-			log.Println("处理web请求：" + r.RequestURI)
+			log.Println("处理 web 请求：" + r.RequestURI)
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-// web API服务器
+// web API 服务器
 func webAPI() {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in webAPI(), the error is:", err)
-			lPrintErr("web API服务器发生错误，尝试重启web API服务器")
+			lPrintErr("web API 服务器发生错误，尝试重启 web API 服务器")
 			time.Sleep(2 * time.Second)
 			go webAPI()
 		}
 	}()
 
-	lPrintln("启动web API服务器，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
+	lPrintln("启动 web API 服务器，现在可以通过 " + address(config.WebPort) + " 来查看状态和发送命令")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/favicon.ico", faviconHandler)
@@ -168,10 +168,10 @@ func webAPI() {
 	}
 }
 
-// 启动web API server
+// 启动 web API server
 func startWebAPI() bool {
 	if *isWebAPI {
-		lPrintWarn("已经启动过web API服务器")
+		lPrintWarn("已经启动过 web API 服务器")
 	} else {
 		*isWebAPI = true
 		go webAPI()
@@ -179,20 +179,20 @@ func startWebAPI() bool {
 	return true
 }
 
-// 停止web API server
+// 停止 web API server
 func stopWebAPI() bool {
 	if *isWebAPI {
 		*isWebAPI = false
-		lPrintln("停止web API服务器")
+		lPrintln("停止 web API 服务器")
 		ctx, cancel := context.WithCancel(mainCtx)
 		defer cancel()
 		if err := apiSrv.Shutdown(ctx); err != nil {
-			lPrintErr("web API服务器关闭错误：", err)
-			lPrintWarn("强行关闭web API服务器")
+			lPrintErr("web API 服务器关闭错误：", err)
+			lPrintWarn("强行关闭 web API 服务器")
 			cancel()
 		}
 	} else {
-		lPrintWarn("没有启动web API服务器")
+		lPrintWarn("没有启动 web API 服务器")
 	}
 	return true
 }

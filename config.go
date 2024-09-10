@@ -31,34 +31,34 @@ var (
 
 // 主播的设置数据
 type streamer struct {
-	UID         int     `json:"uid"`         // 主播uid
+	UID         int     `json:"uid"`         // 主播 uid
 	Name        string  `json:"name"`        // 主播名字
 	Notify      notify  `json:"notify"`      // 开播提醒相关
 	Record      bool    `json:"record"`      // 是否自动下载直播视频
 	Danmu       bool    `json:"danmu"`       // 是否自动下载直播弹幕
 	KeepOnline  bool    `json:"keepOnline"`  // 是否在该主播的直播间挂机，目前主要用于挂粉丝牌等级
 	Bitrate     int     `json:"bitrate"`     // 下载直播视频的最高码率
-	Directory   string  `json:"directory"`   // 直播视频和弹幕下载结束后会被移动到该文件夹，会覆盖config.json里的设置
-	SendQQ      []int64 `json:"sendQQ"`      // 给这些QQ号发送消息，会覆盖config.json里的设置
-	SendQQGroup []int64 `json:"sendQQGroup"` // 给这些QQ群发送消息，会覆盖config.json里的设置
+	Directory   string  `json:"directory"`   // 直播视频和弹幕下载结束后会被移动到该文件夹，会覆盖 config.json 里的设置
+	SendQQ      []int64 `json:"sendQQ"`      // 给这些 QQ 号发送消息，会覆盖 config.json 里的设置
+	SendQQGroup []int64 `json:"sendQQGroup"` // 给这些 QQ 群发送消息，会覆盖 config.json 里的设置
 }
 
 // 存放主播的设置数据
 var streamers struct {
-	sync.RWMutex                  // crt的锁
+	sync.RWMutex                  // crt 的锁
 	crt          map[int]streamer // 现在的主播的设置数据
 	old          map[int]streamer // 旧的主播的设置数据
 }
 
 // 设置数据
 type configData struct {
-	Source         string    `json:"source"`         // 直播源，有hls和flv两种
+	Source         string    `json:"source"`         // 直播源，有 hls 和 flv 两种
 	Output         string    `json:"output"`         // 直播下载视频格式的后缀名
-	WebPort        int       `json:"webPort"`        // web API的本地端口
-	Directory      string    `json:"directory"`      // 直播视频和弹幕下载结束后会被移动到该文件夹，会被live.json里的设置覆盖
-	Acfun          acfunUser `json:"acfun"`          // AcFun帐号相关
+	WebPort        int       `json:"webPort"`        // web API 的本地端口
+	Directory      string    `json:"directory"`      // 直播视频和弹幕下载结束后会被移动到该文件夹，会被 live.json 里的设置覆盖
+	Acfun          acfunUser `json:"acfun"`          // AcFun 帐号相关
 	AutoKeepOnline bool      `json:"autoKeepOnline"` // 是否自动在有守护徽章的直播间挂机
-	Mirai          miraiData `json:"mirai"`          // Mirai相关设置
+	Mirai          miraiData `json:"mirai"`          // Mirai 相关设置
 }
 
 // 默认设置
@@ -81,13 +81,14 @@ var config = configData{
 	},
 }
 
-// AcFun用户帐号数据
+// AcFun 用户帐号数据
 type acfunUser struct {
-	Account  string `json:"account"`  // AcFun帐号邮箱或手机号
-	Password string `json:"password"` // AcFun帐号密码
+	Cookies  string `json:"cookies"`  // AcFun 帐号 Cookies
+	Account  string `json:"account"`  // AcFun 帐号邮箱或手机号
+	Password string `json:"password"` // AcFun 帐号密码
 }
 
-// 从streamers.crt获取streamer
+// 从 streamers.crt 获取 streamer
 func getStreamer(uid int) (streamer, bool) {
 	streamers.RLock()
 	defer streamers.RUnlock()
@@ -95,14 +96,14 @@ func getStreamer(uid int) (streamer, bool) {
 	return s, ok
 }
 
-// 将s放进streamers.crt里
+// 将 s 放进 streamers.crt 里
 func setStreamer(s streamer) {
 	streamers.Lock()
 	defer streamers.Unlock()
 	streamers.crt[s.UID] = s
 }
 
-// 去掉slice里重复的元素
+// 去掉 slice 里重复的元素
 func removeDup(s []int64) []int64 {
 	seen := make(map[int64]struct{}, len(s))
 	i := 0
@@ -117,7 +118,7 @@ func removeDup(s []int64) []int64 {
 	return s[:i]
 }
 
-// 将map[int]streamer转换为[]streamer，按照uid大小排序
+// 将 map[int]streamer 转换为 []streamer，按照 uid 大小排序
 func getStreamers() []streamer {
 	streamers.RLock()
 	ss := make([]streamer, 0, len(streamers.crt))
@@ -131,7 +132,7 @@ func getStreamers() []streamer {
 		ss = append(ss, s)
 	}
 	streamers.RUnlock()
-	// 按uid大小排序
+	// 按 uid 大小排序
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].UID < ss[j].UID
 	})
@@ -153,7 +154,7 @@ func isConfigFileExist(filename string) bool {
 	return true
 }
 
-// 读取live.json
+// 读取 live.json
 func loadLiveConfig() {
 	if isConfigFileExist(liveFile) {
 		data, err := os.ReadFile(liveFileLocation)
@@ -171,12 +172,12 @@ func loadLiveConfig() {
 			}
 			streamers.crt = news
 		} else {
-			lPrintErr("设置文件" + liveFile + "的内容不符合json格式，请检查其内容")
+			lPrintErr("设置文件" + liveFile + "的内容不符合 json 格式，请检查其内容")
 		}
 	}
 }
 
-// 读取config.json
+// 读取 config.json
 func loadConfig() {
 	if isConfigFileExist(configFile) {
 		data, err := os.ReadFile(configFileLocation)
@@ -186,12 +187,12 @@ func loadConfig() {
 			err = json.Unmarshal(data, &config)
 			checkErr(err)
 		} else {
-			lPrintErr("设置文件" + configFile + "的内容不符合json格式，请检查其内容")
+			lPrintErr("设置文件" + configFile + "的内容不符合 json 格式，请检查其内容")
 		}
 	}
 }
 
-// 保存live.json
+// 保存 live.json
 func saveLiveConfig() {
 	data, err := json.MarshalIndent(getStreamers(), "", "    ")
 	checkErr(err)
@@ -200,7 +201,7 @@ func saveLiveConfig() {
 	checkErr(err)
 }
 
-// 设置里删除指定uid的主播
+// 设置里删除指定 uid 的主播
 func deleteStreamer(uid int) bool {
 	streamers.Lock()
 	if s, ok := streamers.crt[uid]; ok {
@@ -213,7 +214,7 @@ func deleteStreamer(uid int) bool {
 	return true
 }
 
-// 监控config.json是否被修改，是的话重新设置
+// 监控 config.json 是否被修改，是的话重新设置
 func cycleConfig(ctx context.Context) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -273,7 +274,7 @@ func cycleConfig(ctx context.Context) {
 	lPrintln("停止监控设置文件" + liveFile)
 }
 
-// 读取修改后的config.json
+// 读取修改后的 config.json
 func loadNewConfig() {
 	streamers.Lock()
 
@@ -282,7 +283,7 @@ func loadNewConfig() {
 	for uid, s := range streamers.crt {
 		if olds, ok := streamers.old[uid]; ok {
 			if !cmp.Equal(s, olds) {
-				// olds的设置被修改
+				// olds 的设置被修改
 				lPrintln(s.longID() + "的设置被修改，重新设置")
 				restart := controlMsg{s: s, c: startCycle}
 				sInfoMap.Lock()
@@ -295,7 +296,7 @@ func loadNewConfig() {
 				sInfoMap.Unlock()
 			}
 		} else {
-			// s为新增的主播
+			// s 为新增的主播
 			lPrintln("新增" + s.longID() + "的设置")
 			start := controlMsg{s: s, c: startCycle}
 			sInfoMap.Lock()
@@ -312,7 +313,7 @@ func loadNewConfig() {
 
 	for uid, olds := range streamers.old {
 		if _, ok := streamers.crt[uid]; !ok {
-			// olds为被删除的主播
+			// olds 为被删除的主播
 			lPrintln(olds.longID() + "的设置被删除")
 			stop := controlMsg{s: olds, c: stopCycle}
 			sInfoMap.Lock()
@@ -395,7 +396,7 @@ func (s *streamer) moveFile(oldFile string) {
 	}
 }
 
-// 设置live.json里类型为bool的值
+// 设置 live.json 里类型为 bool 的值
 func (s streamer) setBoolConfig(tag string, value bool) bool {
 	if v, ok := seekField(&s, tag); ok {
 		if v.Kind() != reflect.Bool {
@@ -417,7 +418,7 @@ func (s streamer) setBoolConfig(tag string, value bool) bool {
 	return false
 }
 
-// 递归寻找tag指定的value
+// 递归寻找 tag 指定的 value
 func seekField(iface any, tag string) (reflect.Value, bool) {
 	ifv := reflect.Indirect(reflect.ValueOf(iface))
 	for i := 0; i < ifv.NumField(); i++ {

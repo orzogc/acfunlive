@@ -1,4 +1,4 @@
-// mirai QQ通知
+// mirai QQ 通知
 package main
 
 import (
@@ -26,18 +26,18 @@ const qqQRCodeImage = "qqqrcode.png"
 const qqSessionTokenFile = "qqsession.token"
 
 var (
-	isMirai     *bool // 是否通过Mirai连接QQ
+	isMirai     *bool // 是否通过 Mirai 连接 QQ
 	miraiClient *client.QQClient
 	token       []byte
 )
 
-// Mirai相关设置数据
+// Mirai 相关设置数据
 type miraiData struct {
-	AdminQQ       int64   `json:"adminQQ"`       // 管理者的QQ，通过这个QQ发送命令
-	BotQQ         int64   `json:"botQQ"`         // bot的QQ号
-	BotQQPassword string  `json:"botQQPassword"` // bot的QQ密码
-	SendQQ        []int64 `json:"sendQQ"`        // 默认给这些QQ号发送消息，会被live.json里的设置覆盖
-	SendQQGroup   []int64 `json:"sendQQGroup"`   // 默认给这些QQ群发送消息，会被live.json里的设置覆盖
+	AdminQQ       int64   `json:"adminQQ"`       // 管理者的 QQ，通过这个 QQ 发送命令
+	BotQQ         int64   `json:"botQQ"`         // bot 的 QQ 号
+	BotQQPassword string  `json:"botQQPassword"` // bot 的 QQ 密码
+	SendQQ        []int64 `json:"sendQQ"`        // 默认给这些 QQ 号发送消息，会被 live.json 里的设置覆盖
+	SendQQGroup   []int64 `json:"sendQQGroup"`   // 默认给这些 QQ 群发送消息，会被 live.json 里的设置覆盖
 }
 
 // 在终端打印二维码
@@ -69,7 +69,7 @@ func printQRCode(imgData []byte) {
 	_, _ = colorable.NewColorableStdout().Write(buf)
 }
 
-// 使用二维码登陆QQ
+// 使用二维码登陆 QQ
 func qrCodeLogin() (e error) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -104,13 +104,13 @@ func qrCodeLogin() (e error) {
 		prevState = s.State
 		switch s.State {
 		case client.QRCodeCanceled:
-			lPrintErr("扫码登陆被用户取消，如要重新登陆QQ，请重启本程序")
+			lPrintErr("扫码登陆被用户取消，如要重新登陆 QQ，请重启本程序")
 			panic("扫码登陆被用户取消")
 		case client.QRCodeTimeout:
-			lPrintErr("二维码过期，请重启本程序以重新登陆QQ")
+			lPrintErr("二维码过期，请重启本程序以重新登陆 QQ")
 			panic("二维码过期")
 		case client.QRCodeWaitingForConfirm:
-			lPrintln("扫码成功, 请在手机端确认登录")
+			lPrintln("扫码成功，请在手机端确认登录")
 		case client.QRCodeConfirmed:
 			resp, err := miraiClient.QRCodeLogin(s.LoginInfo)
 			checkErr(err)
@@ -138,7 +138,7 @@ func handleLoginResp(resp *client.LoginResponse) (e error) {
 			case client.SliderNeededError:
 				lPrintWarn("登录需要滑条验证码，请参考文档 https://github.com/Mrs4s/go-cqhttp/blob/master/docs/slider.md 抓包获取 Ticket")
 				lPrintWarnf("请用浏览器打开 %s 并获取Ticket", resp.VerifyUrl)
-				lPrintln("请输入Ticket，按回车提交：")
+				lPrintln("请输入 Ticket，按回车提交：")
 				console := bufio.NewReader(os.Stdin)
 				ticket, err := console.ReadString('\n')
 				checkErr(err)
@@ -149,7 +149,7 @@ func handleLoginResp(resp *client.LoginResponse) (e error) {
 				imageFile := filepath.Join(*configDir, qqCaptchaImage)
 				err := os.WriteFile(imageFile, resp.CaptchaImage, 0644)
 				checkErr(err)
-				lPrintln("QQ验证码图片保存在：" + imageFile)
+				lPrintln("QQ 验证码图片保存在：" + imageFile)
 				lPrintln("请输入验证码，按回车提交：")
 				console := bufio.NewReader(os.Stdin)
 				captcha, err := console.ReadString('\n')
@@ -171,10 +171,10 @@ func handleLoginResp(resp *client.LoginResponse) (e error) {
 				checkErr(err)
 				continue
 			case client.SMSOrVerifyNeededError:
-				lPrintWarn("QQ账号已开启设备锁，请选择验证方式：")
+				lPrintWarn("QQ 账号已开启设备锁，请选择验证方式：")
 				lPrintf("1. 向手机 %s 发送短信验证码", resp.SMSPhone)
-				lPrintln("2. 使用手机QQ扫码验证")
-				lPrintln("请输入1或2，按回车提交：")
+				lPrintln("2. 使用手机 QQ 扫码验证")
+				lPrintln("请输入 1 或 2，按回车提交：")
 				console := bufio.NewReader(os.Stdin)
 				text, err := console.ReadString('\n')
 				checkErr(err)
@@ -191,10 +191,10 @@ func handleLoginResp(resp *client.LoginResponse) (e error) {
 					continue
 				}
 				lPrintWarnf("请前往 %s 验证并重启本程序", resp.VerifyUrl)
-				return fmt.Errorf("请重启本程序再次登陆QQ")
+				return fmt.Errorf("请重启本程序再次登陆 QQ")
 			case client.UnsafeDeviceError:
 				lPrintWarnf("QQ账号已开启设备锁，请前往 %s 验证并重启本程序", resp.VerifyUrl)
-				return fmt.Errorf("请重启本程序再次登陆QQ")
+				return fmt.Errorf("请重启本程序再次登陆 QQ")
 			case client.OtherLoginError, client.UnknownLoginError, client.TooManySMSRequestError:
 				msg := resp.ErrorMessage
 				lPrintErrf("QQ登陆失败，code：%v，错误信息：%s", resp.Code, msg)
@@ -202,10 +202,10 @@ func handleLoginResp(resp *client.LoginResponse) (e error) {
 					lPrintf("请删除 %s 后重试", filepath.Join(*configDir, qqDeviceFile))
 				}
 
-				return fmt.Errorf("登陆QQ失败")
+				return fmt.Errorf("登陆 QQ 失败")
 			default:
-				lPrintErrf("QQ登陆出现未处理的错误，响应为：%+v", resp)
-				return fmt.Errorf("登陆QQ失败")
+				lPrintErrf("QQ 登陆出现未处理的错误，响应为：%+v", resp)
+				return fmt.Errorf("登陆 QQ 失败")
 			}
 		} else {
 			break
@@ -222,22 +222,22 @@ func saveToken(file string) error {
 		return os.WriteFile(file, token, 0600)
 	}
 
-	return fmt.Errorf("没有登陆bot QQ")
+	return fmt.Errorf("没有登陆 bot QQ")
 }
 
-// 启动Mirai
+// 启动 Mirai
 func startMirai() bool {
 	if *isMirai {
-		lPrintWarn("已经启动过Mirai")
+		lPrintWarn("已经启动过 Mirai")
 	} else {
 		if config.Mirai.BotQQ <= 0 || config.Mirai.BotQQPassword == "" {
-			lPrintErr("请先在" + configFile + "里设置好Mirai相关配置")
+			lPrintErr("请先在" + configFile + "里设置好 Mirai 相关配置")
 			return false
 		}
 		*isMirai = true
-		lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
+		lPrintln("尝试利用 Mirai 登陆 bot QQ", config.Mirai.BotQQ)
 		if !initMirai() {
-			lPrintErr("启动Mirai失败，请重新启动本程序")
+			lPrintErr("启动 Mirai 失败，请重新启动本程序")
 			miraiClient = nil
 			*isMirai = false
 			return false
@@ -246,12 +246,12 @@ func startMirai() bool {
 	return true
 }
 
-// 初始化Mirai
+// 初始化 Mirai
 func initMirai() (result bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			lPrintErr("Recovering from panic in initMirai(), the error is:", err)
-			lPrintErr("初始化Mirai出现错误，停止启动Mirai")
+			lPrintErr("初始化 Mirai 出现错误，停止启动 Mirai")
 			if miraiClient != nil {
 				miraiClient.Disconnect()
 				miraiClient.Release()
@@ -301,7 +301,7 @@ func initMirai() (result bool) {
 			reader := binary.NewReader(data)
 			uin := reader.ReadInt64()
 			if uin != config.Mirai.BotQQ {
-				lPrintWarnf("bot的QQ号%d和会话缓存文件里的QQ号%d不一致", config.Mirai.BotQQ, uin)
+				lPrintWarnf("bot 的 QQ 号%d和会话缓存文件里的 QQ 号%d不一致", config.Mirai.BotQQ, uin)
 				lPrintWarnf("取消登陆QQ，如要登陆QQ，请删除会话缓存文件 %s 或者修改配置文件 %s 里的botQQ", SessionTokenFile, configFileLocation)
 				return false
 			}
@@ -338,14 +338,14 @@ func initMirai() (result bool) {
 	checkErr(err)
 	miraiClient.AllowSlider = true
 	lPrintf("QQ登陆 %s（%d） 成功", miraiClient.Nickname, miraiClient.Uin)
-	lPrintln("开始加载QQ好友列表")
+	lPrintln("开始加载 QQ 好友列表")
 	err = miraiClient.ReloadFriendList()
 	checkErr(err)
-	lPrintln("共加载", len(miraiClient.FriendList), "个QQ好友")
-	lPrintln("开始加载QQ群列表")
+	lPrintln("共加载", len(miraiClient.FriendList), "个 QQ 好友")
+	lPrintln("开始加载 QQ 群列表")
 	err = miraiClient.ReloadGroupList()
 	checkErr(err)
-	lPrintln("共加载", len(miraiClient.GroupList), "个QQ群")
+	lPrintln("共加载", len(miraiClient.GroupList), "个 QQ 群")
 
 	var reLoginLock sync.Mutex
 	miraiClient.DisconnectedEvent.Subscribe(func(bot *client.QQClient, e *client.ClientDisconnectedEvent) {
@@ -354,11 +354,11 @@ func initMirai() (result bool) {
 			defer reLoginLock.Unlock()
 
 			if miraiClient.Online.Load() {
-				lPrintWarn("QQ帐号已登陆，无需重连")
+				lPrintWarn("QQ 帐号已登陆，无需重连")
 				return
 			}
 
-			lPrintWarn("QQ Bot已离线，尝试重连")
+			lPrintWarn("QQ Bot 已离线，尝试重连")
 			time.Sleep(10 * time.Second)
 
 			err := miraiClient.TokenLogin(token)
@@ -385,22 +385,22 @@ func initMirai() (result bool) {
 			if !resp.Success {
 				switch resp.Error {
 				case client.NeedCaptcha:
-					lPrintErr("QQ帐号重连失败：需要验证码，请重启本程序")
+					lPrintErr("QQ 帐号重连失败：需要验证码，请重启本程序")
 				case client.UnsafeDeviceError:
-					lPrintErr("QQ帐号重连失败：设备锁")
+					lPrintErr("QQ 帐号重连失败：设备锁")
 					lPrintWarnf("QQ账号已开启设备锁，请前往 %s 验证并重启本程序", resp.VerifyUrl)
 				default:
-					lPrintErrf("QQ重连失败，请重启本程序，响应为：%+v", resp)
+					lPrintErrf("QQ 重连失败，请重启本程序，响应为：%+v", resp)
 				}
 			} else {
-				lPrintln("QQ帐号重连成功")
+				lPrintln("QQ 帐号重连成功")
 				err = saveToken(SessionTokenFile)
 				if err != nil {
 					lPrintErrf("无法保存会话缓存文件 %s ：%v", SessionTokenFile, err)
 				}
 			}
 		} else {
-			lPrintErr("miraiClient不能为nil")
+			lPrintErr("miraiClient 不能为 nil")
 		}
 	})
 
@@ -417,7 +417,7 @@ func privateMsgEvent(c *client.QQClient, m *message.PrivateMessage) {
 	handlePrivateMsg(m.Sender.Uin, m.Elements)
 }
 
-// 处理QQ bot接收到的私聊或临时会话消息
+// 处理 QQ bot 接收到的私聊或临时会话消息
 func handlePrivateMsg(qq int64, Elements []message.IMessageElement) {
 	if qq == config.Mirai.AdminQQ {
 		for _, ele := range Elements {
@@ -461,59 +461,59 @@ func groupMsgEvent(c *client.QQClient, m *message.GroupMessage) {
 	}
 }
 
-// 发送消息到指定的QQ
+// 发送消息到指定的 QQ
 func miraiSendQQ(qq int64, text string) {
 	if qq <= 0 {
-		lPrintErrf("QQ号 %d 小于等于0，取消发送消息", qq)
+		lPrintErrf("QQ 号 %d 小于等于 0，取消发送消息", qq)
 		return
 	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
-		lPrintln("给QQ", qq, "发送消息")
+		lPrintln("给 QQ", qq, "发送消息")
 		if result := miraiClient.SendPrivateMessage(qq, msg); result == nil || result.Id <= 0 {
-			lPrintErr("给QQ", qq, "发送消息失败")
+			lPrintErr("给 QQ", qq, "发送消息失败")
 		}
 	} else {
-		lPrintErr("miraiClient不能为nil")
+		lPrintErr("miraiClient 不能为 nil")
 	}
 }
 
-// 发送消息到指定的QQ群
+// 发送消息到指定的 QQ 群
 func miraiSendQQGroup(qqGroup int64, text string) {
 	if qqGroup <= 0 {
-		lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
+		lPrintErrf("QQ 群号 %d 小于等于 0，取消发送消息", qqGroup)
 		return
 	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
-		lPrintln("给QQ群", qqGroup, "发送消息")
+		lPrintln("给 QQ 群", qqGroup, "发送消息")
 		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil || result.Id <= 0 {
-			lPrintErr("给QQ群", qqGroup, "发送消息失败")
+			lPrintErr("给 QQ 群", qqGroup, "发送消息失败")
 		}
 	} else {
-		lPrintErr("miraiClient不能为nil")
+		lPrintErr("miraiClient 不能为 nil")
 	}
 }
 
-// 发送消息到指定的QQ群，并@全体成员
+// 发送消息到指定的 QQ 群，并@全体成员
 func miraiSendQQGroupAtAll(qqGroup int64, text string) {
 	if qqGroup <= 0 {
-		lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
+		lPrintErrf("QQ 群号 %d 小于等于 0，取消发送消息", qqGroup)
 		return
 	}
 	msg := message.NewSendingMessage()
 	msg.Append(message.AtAll())
 	msg.Append(message.NewText(text))
 	if miraiClient != nil {
-		lPrintln("给QQ群", qqGroup, "发送消息")
+		lPrintln("给 QQ 群", qqGroup, "发送消息")
 		if result := miraiClient.SendGroupMessage(qqGroup, msg); result == nil || result.Id <= 0 {
-			lPrintErr("给QQ群", qqGroup, "发送@全体成员的消息失败，尝试发送普通群消息")
+			lPrintErr("给 QQ 群", qqGroup, "发送@全体成员的消息失败，尝试发送普通群消息")
 			miraiSendQQGroup(qqGroup, text)
 		}
 	} else {
-		lPrintErr("miraiClient不能为nil")
+		lPrintErr("miraiClient 不能为 nil")
 	}
 }
 
@@ -537,12 +537,12 @@ func (s *streamer) sendMirai(text string, isSendGroup bool) {
 		for _, qq := range sendQQ {
 			if qq > 0 {
 				if miraiClient.FindFriend(qq) == nil {
-					lPrintErrf("QQ号 %d 不是QQ机器人的好友，取消发送消息", qq)
+					lPrintErrf("QQ 号 %d 不是 QQ 机器人的好友，取消发送消息", qq)
 					continue
 				}
 				miraiSendQQ(qq, text)
 			} else {
-				lPrintErrf("QQ号 %d 小于等于0，取消发送消息", qq)
+				lPrintErrf("QQ 号 %d 小于等于 0，取消发送消息", qq)
 			}
 		}
 
@@ -554,7 +554,7 @@ func (s *streamer) sendMirai(text string, isSendGroup bool) {
 			for _, qqGroup := range sendQQGroup {
 				if qqGroup > 0 {
 					if groupInfo := miraiClient.FindGroup(qqGroup); groupInfo == nil {
-						lPrintErrf("QQ机器人未加入QQ群 %d，取消发送消息", qqGroup)
+						lPrintErrf("QQ 机器人未加入 QQ 群 %d，取消发送消息", qqGroup)
 						continue
 					} else {
 						info := groupInfo.FindMember(config.Mirai.BotQQ)
@@ -565,14 +565,14 @@ func (s *streamer) sendMirai(text string, isSendGroup bool) {
 						}
 					}
 				} else {
-					lPrintErrf("QQ群号 %d 小于等于0，取消发送消息", qqGroup)
+					lPrintErrf("QQ 群号 %d 小于等于 0，取消发送消息", qqGroup)
 				}
 			}
 		}
 	}
 }
 
-// 设置将主播的相关提醒消息发送到指定的QQ
+// 设置将主播的相关提醒消息发送到指定的 QQ
 func addQQNotify(uid int, qq int64) bool {
 	s, ok := getStreamer(uid)
 	if ok {
@@ -586,7 +586,7 @@ func addQQNotify(uid int, qq int64) bool {
 	} else {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarnf("不存在uid为%d的用户", uid)
+			lPrintWarnf("不存在 uid 为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name, SendQQ: []int64{qq}}
@@ -598,7 +598,7 @@ func addQQNotify(uid int, qq int64) bool {
 	return true
 }
 
-// 取消设置将主播的相关提醒消息发送到指定的QQ
+// 取消设置将主播的相关提醒消息发送到指定的 QQ
 func delQQNotify(uid int, qq int64) bool {
 	if s, ok := getStreamer(uid); ok {
 		var isSet bool
@@ -616,28 +616,28 @@ func delQQNotify(uid int, qq int64) bool {
 			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ%d", s.longID(), qq)
 		}
 	} else {
-		lPrintWarnf("没有设置过uid为%d的主播的QQ提醒", uid)
+		lPrintWarnf("没有设置过 uid 为%d的主播的 QQ 提醒", uid)
 	}
 
 	saveLiveConfig()
 	return true
 }
 
-// 取消设置QQ提醒
+// 取消设置 QQ 提醒
 func cancelQQNotify(uid int) bool {
 	if s, ok := getStreamer(uid); ok {
 		s.SendQQ = []int64{}
 		setStreamer(s)
-		lPrintln("成功取消设置" + s.longID() + "的QQ提醒")
+		lPrintln("成功取消设置" + s.longID() + "的 QQ 提醒")
 	} else {
-		lPrintWarnf("没有设置过uid为%d的主播的QQ提醒", uid)
+		lPrintWarnf("没有设置过 uid 为%d的主播的 QQ 提醒", uid)
 	}
 
 	saveLiveConfig()
 	return true
 }
 
-// 设置将主播的相关提醒消息发送到指定的QQ群
+// 设置将主播的相关提醒消息发送到指定的 QQ 群
 func addQQGroup(uid int, qqGroup int64) bool {
 	s, ok := getStreamer(uid)
 	if ok {
@@ -651,7 +651,7 @@ func addQQGroup(uid int, qqGroup int64) bool {
 	} else {
 		name := getName(uid)
 		if name == "" {
-			lPrintWarnf("不存在uid为%d的用户", uid)
+			lPrintWarnf("不存在 uid 为%d的用户", uid)
 			return false
 		}
 		s = streamer{UID: uid, Name: name, SendQQGroup: []int64{qqGroup}}
@@ -663,7 +663,7 @@ func addQQGroup(uid int, qqGroup int64) bool {
 	return true
 }
 
-// 取消设置将主播的相关提醒消息发送到指定的QQ群
+// 取消设置将主播的相关提醒消息发送到指定的 QQ 群
 func delQQGroup(uid int, qqGroup int64) bool {
 	if s, ok := getStreamer(uid); ok {
 		var isSet bool
@@ -681,21 +681,21 @@ func delQQGroup(uid int, qqGroup int64) bool {
 			lPrintWarnf("没有设置过将%s的相关提醒消息发送到QQ群%d", s.longID(), qqGroup)
 		}
 	} else {
-		lPrintWarnf("没有设置过uid为%d的主播的QQ群提醒", uid)
+		lPrintWarnf("没有设置过 uid 为%d的主播的 QQ 群提醒", uid)
 	}
 
 	saveLiveConfig()
 	return true
 }
 
-// 取消设置QQ群提醒
+// 取消设置 QQ 群提醒
 func cancelQQGroup(uid int) bool {
 	if s, ok := getStreamer(uid); ok {
 		s.SendQQGroup = []int64{}
 		setStreamer(s)
-		lPrintln("成功取消设置" + s.longID() + "的QQ群提醒")
+		lPrintln("成功取消设置" + s.longID() + "的 QQ 群提醒")
 	} else {
-		lPrintWarnf("没有设置过uid为%d的主播的QQ群提醒", uid)
+		lPrintWarnf("没有设置过 uid 为%d的主播的 QQ 群提醒", uid)
 	}
 
 	saveLiveConfig()

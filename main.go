@@ -1,4 +1,4 @@
-// AcFun直播通知和下载助手
+// AcFun 直播通知和下载助手
 package main
 
 import (
@@ -16,25 +16,25 @@ import (
 
 // 命令行参数处理
 func argsHandle() {
-	const usageStr = "本程序用于AcFun主播的开播提醒和自动下载直播"
+	const usageStr = "本程序用于 AcFun 主播的开播提醒和自动下载直播"
 
 	shortHelp := flag.Bool("h", false, "输出本帮助信息")
 	longHelp := flag.Bool("help", false, "输出本帮助信息")
 	isListen = flag.Bool("listen", false, "监听主播的直播状态，自动通知主播的直播状态或下载主播的直播，运行过程中如需更改设置又不想退出本程序，可以直接输入相应命令或手动修改设置文件"+liveFile)
-	isWebAPI = flag.Bool("webapi", false, "启动web API服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令")
-	isWebUI = flag.Bool("webui", false, "启动web UI服务器，可以通过 "+address(config.WebPort+10)+" 访问web UI界面")
-	isMirai = flag.Bool("mirai", false, "利用Mirai发送直播通知到指定QQ或QQ群")
+	isWebAPI = flag.Bool("webapi", false, "启动 web API 服务器，可以通过 "+address(config.WebPort)+" 来查看状态和发送命令")
+	isWebUI = flag.Bool("webui", false, "启动 web UI 服务器，可以通过 "+address(config.WebPort+10)+" 访问 web UI 界面")
+	isMirai = flag.Bool("mirai", false, "利用 Mirai 发送直播通知到指定 QQ 或 QQ 群")
 	isListLive := flag.Bool("listlive", false, "列出正在直播的主播")
-	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
-	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的uid（在主播的网页版个人主页查看）")
-	addRecordUID := flag.Uint("addrecord", 0, "自动下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
-	delRecordUID := flag.Uint("delrecord", 0, "取消自动下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
-	addDanmuUID := flag.Uint("adddanmu", 0, "自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
-	delDanmuUID := flag.Uint("deldanmu", 0, "取消自动下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
-	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的uid（在主播的网页版个人主页查看）")
-	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播视频，需要主播的uid（在主播的网页版个人主页查看）")
-	startDlDanmu := flag.Uint("startdanmu", 0, "临时下载指定主播的直播弹幕，需要主播的uid（在主播的网页版个人主页查看）")
-	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的uid（在主播的网页版个人主页查看）")
+	addNotifyUID := flag.Uint("addnotify", 0, "订阅指定主播的开播提醒，需要主播的 uid（在主播的网页版个人主页查看）")
+	delNotifyUID := flag.Uint("delnotify", 0, "取消订阅指定主播的开播提醒，需要主播的 uid（在主播的网页版个人主页查看）")
+	addRecordUID := flag.Uint("addrecord", 0, "自动下载指定主播的直播视频，需要主播的 uid（在主播的网页版个人主页查看）")
+	delRecordUID := flag.Uint("delrecord", 0, "取消自动下载指定主播的直播视频，需要主播的 uid（在主播的网页版个人主页查看）")
+	addDanmuUID := flag.Uint("adddanmu", 0, "自动下载指定主播的直播弹幕，需要主播的 uid（在主播的网页版个人主页查看）")
+	delDanmuUID := flag.Uint("deldanmu", 0, "取消自动下载指定主播的直播弹幕，需要主播的 uid（在主播的网页版个人主页查看）")
+	getStreamURL := flag.Uint("getdlurl", 0, "查看指定主播是否在直播，如在直播输出其直播源地址，需要主播的 uid（在主播的网页版个人主页查看）")
+	startRecord := flag.Uint("startrecord", 0, "临时下载指定主播的直播视频，需要主播的 uid（在主播的网页版个人主页查看）")
+	startDlDanmu := flag.Uint("startdanmu", 0, "临时下载指定主播的直播弹幕，需要主播的 uid（在主播的网页版个人主页查看）")
+	startRecDanmu := flag.Uint("startrecdan", 0, "临时下载指定主播的直播视频和弹幕，需要主播的 uid（在主播的网页版个人主页查看）")
 	configDir = flag.String("config", "", "设置文件所在文件夹，默认是本程序所在文件夹")
 	recordDir = flag.String("record", "", "下载录播和弹幕文件到该文件夹，默认是本程序所在文件夹")
 	flag.Parse()
@@ -119,14 +119,14 @@ func argsHandle() {
 	}
 }
 
-// 检查config.json里的配置
+// 检查 config.json 里的配置
 func checkConfig() {
 	if config.Source != "hls" && config.Source != "flv" {
-		lPrintErr(configFile + "里的source必须是hls或flv")
+		lPrintErr(configFile + "里的 source 必须是 hls 或 flv")
 		os.Exit(1)
 	}
 	if config.WebPort < 1024 || config.WebPort > 65525 {
-		lPrintErr(configFile + "里的webPort必须大于1023且少于65526")
+		lPrintErr(configFile + "里的 webPort 必须大于 1023 且少于 65526")
 		os.Exit(1)
 	}
 	if config.Directory != "" {
@@ -138,7 +138,7 @@ func checkConfig() {
 		}
 	}
 	if config.Mirai.AdminQQ < 0 || config.Mirai.BotQQ < 0 {
-		lPrintErr(configFile + "里的QQ号必须大于等于0")
+		lPrintErr(configFile + "里的 QQ 号必须大于等于 0")
 		os.Exit(1)
 	}
 }
@@ -170,7 +170,7 @@ func initialize() {
 	configFileLocation = filepath.Join(*configDir, configFile)
 
 	if _, err := os.Stat(logoFileLocation); os.IsNotExist(err) {
-		lPrintln("下载AcFun的logo")
+		lPrintln("下载 AcFun 的 logo")
 		fetchAcLogo()
 	}
 
@@ -207,12 +207,19 @@ func initialize() {
 	}
 	liveRooms.rooms = liveRooms.newRooms
 
-	if config.Acfun.Account != "" && config.Acfun.Password != "" {
+	if has_acfun_cookies() {
+		err = add_acfun_cookies()
+		if err != nil {
+			lPrintErrf("添加 AcFun cookies 时出现错误：%v", err)
+		} else if is_login_acfun() {
+			lPrintln("添加 AcFun cookies 成功")
+		}
+	} else if has_acfun_account_password() {
 		err = acfun_login()
 		if err != nil {
-			lPrintErrf("登陆AcFun帐号时出现错误，取消登陆：%v", err)
+			lPrintErrf("登陆 AcFun 帐号时出现错误，取消登陆：%v", err)
 		} else if is_login_acfun() {
-			lPrintln("登陆AcFun帐号成功")
+			lPrintln("登陆 AcFun 帐号成功")
 		}
 	}
 }
@@ -225,7 +232,7 @@ func main() {
 			if *isNoGUI {
 				lPrintWarn("请订阅指定主播的开播提醒或自动下载，输入 help 查看帮助")
 			} else {
-				lPrintWarn("请在web UI界面订阅指定主播的开播提醒或自动下载")
+				lPrintWarn("请在 web UI 界面订阅指定主播的开播提醒或自动下载")
 			}
 		}
 
@@ -234,11 +241,11 @@ func main() {
 		mainCh = make(chan controlMsg, 20)
 
 		if *isMirai {
-			lPrintln("尝试利用Mirai登陆bot QQ", config.Mirai.BotQQ)
+			lPrintln("尝试利用 Mirai 登陆 bot QQ", config.Mirai.BotQQ)
 			if config.Mirai.BotQQ <= 0 || config.Mirai.BotQQPassword == "" {
-				lPrintErr("请先在" + configFile + "里设置好Mirai相关配置")
+				lPrintErr("请先在" + configFile + "里设置好 Mirai 相关配置")
 			} else if !initMirai() {
-				lPrintErr("启动Mirai失败，请重新启动本程序")
+				lPrintErr("启动 Mirai 失败，请重新启动本程序")
 				*isMirai = false
 			}
 		}
@@ -255,7 +262,7 @@ func main() {
 		go cycleFetch(ctx)
 		go cycleDelKey(ctx)
 
-		// 启动GUI时不需要处理命令输入
+		// 启动 GUI 时不需要处理命令输入
 		if *isNoGUI {
 			lPrintln("现在可以输入命令控制本程序，输入 help 查看全部命令的解释")
 			go handleInput()
@@ -283,21 +290,21 @@ func main() {
 			case startCycle:
 				go msg.s.cycle(msg.liveID)
 			case quit:
-				// 退出systray
+				// 退出 systray
 				if !*isNoGUI {
 					quitTray()
 				}
-				// 停止web UI服务器
+				// 停止 web UI 服务器
 				if *isWebUI {
 					stopWebUI()
 				}
-				// 停止web API服务器
+				// 停止 web API 服务器
 				if *isWebAPI {
 					stopWebAPI()
 				}
-				// 结束所有mainCtx的子ctx
+				// 结束所有 mainCtx 的子 ctx
 				cancel()
-				// 结束cycle()
+				// 结束 cycle()
 				lPrintln("正在退出各主播的循环")
 				sInfoMap.Lock()
 				for _, info := range sInfoMap.info {
@@ -324,11 +331,11 @@ func main() {
 					}
 				}
 				lInfoMap.RUnlock()
-				// 等待20秒，等待其他goroutine结束
+				// 等待 20 秒，等待其他 goroutine 结束
 				time.Sleep(20 * time.Second)
 				break Outer
 			default:
-				lPrintErrf("未知controlMsg：%+v", msg)
+				lPrintErrf("未知 controlMsg：%+v", msg)
 			}
 		}
 	}
