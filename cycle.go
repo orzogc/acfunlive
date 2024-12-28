@@ -213,8 +213,8 @@ func cycleFetch(ctx context.Context) {
 				liveRooms.Unlock()
 			}
 
-			// 每 10 秒循环一次
-			time.Sleep(10 * time.Second)
+			// 每 60 秒循环一次
+			time.Sleep(60 * time.Second)
 		}
 	}
 }
