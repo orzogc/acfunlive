@@ -1,7 +1,7 @@
 module github.com/orzogc/acfunlive
 
 go 1.23
-toolchain go1.23.1
+toolchain go1.24.1
 
 require (
 	github.com/Mrs4s/MiraiGo v0.0.0-20240226124653-54bdd873e3fe
@@ -59,8 +59,8 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/image v0.20.0 // indirect
-	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
