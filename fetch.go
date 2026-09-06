@@ -32,7 +32,7 @@ type httpClient struct {
 }
 
 var defaultClient = &fasthttp.Client{
-	MaxIdleConnDuration: 90 * time.Second,
+	MaxIdleConnDuration: 120 * time.Second,
 	ReadTimeout:         10 * time.Second,
 	WriteTimeout:        10 * time.Second,
 }
