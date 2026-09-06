@@ -277,8 +277,8 @@ func cycleGetMedals(ctx context.Context) {
 				lPrintErrf("%+v", err)
 			}
 
-			// 每分钟循环一次
-			time.Sleep(time.Minute)
+			// 每 10 分钟循环一次
+			time.Sleep(10 * time.Minute)
 		}
 	}
 }
